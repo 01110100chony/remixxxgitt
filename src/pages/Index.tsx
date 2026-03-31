@@ -4,25 +4,21 @@ import FileUpload from "@/components/FileUpload";
 import ArticlesTable from "@/components/ArticlesTable";
 import ArticlesSummary from "@/components/ArticlesSummary";
 import ResearcherChart from "@/components/ResearcherChart";
-import { Article, parseLattesXML } from "@/lib/lattes-parser";
+import Dashboard from "@/components/Dashboard";
+import { ResearcherInfo, parseLattesXML } from "@/lib/lattes-parser";
 import { Button } from "@/components/ui/button";
-
-interface ResearcherData {
-  name: string;
-  fileName: string;
-  articles: Article[];
-}
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Index = () => {
-  const [researchersMap, setResearchersMap] = useState<Record<string, ResearcherData>>({});
+  const [researchersMap, setResearchersMap] = useState<Record<string, ResearcherInfo & { fileName: string }>>({});
 
   const handleFilesLoad = useCallback(
     (files: { name: string; content: string }[]) => {
       setResearchersMap((prev) => {
         const next = { ...prev };
         files.forEach(({ name, content }) => {
-          const { researcher, articles } = parseLattesXML(content);
-          next[name] = { name: researcher, fileName: name, articles };
+          const info = parseLattesXML(content);
+          next[name] = { ...info, fileName: name };
         });
         return next;
       });
@@ -32,8 +28,9 @@ const Index = () => {
 
   const handleClear = () => setResearchersMap({});
 
-  const allArticles = Object.values(researchersMap).flatMap((r) => r.articles);
-  const researchers = Object.values(researchersMap).map((r) => r.name);
+  const researchersData = Object.values(researchersMap);
+  const allArticles = researchersData.flatMap((r) => r.articles);
+  const researchers = researchersData.map((r) => r.name);
   const loadedFiles = Object.keys(researchersMap);
   const hasParsed = loadedFiles.length > 0;
 
@@ -58,11 +55,30 @@ const Index = () => {
         <FileUpload onFilesLoad={handleFilesLoad} loadedFiles={loadedFiles} />
 
         {hasParsed && (
-          <>
-            <ArticlesSummary articles={allArticles} researchers={researchers} />
-            <ResearcherChart articles={allArticles} researchers={researchers} />
-            <ArticlesTable articles={allArticles} researchers={researchers} />
-          </>
+          <Tabs defaultValue="dashboard" className="space-y-6">
+            <TabsList>
+              <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+              <TabsTrigger value="quadrienio">Quadriênio</TabsTrigger>
+              <TabsTrigger value="comparativo">Comparativo</TabsTrigger>
+              <TabsTrigger value="artigos">Artigos</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="dashboard">
+              <Dashboard researchersData={researchersData} />
+            </TabsContent>
+
+            <TabsContent value="quadrienio">
+              <ArticlesSummary articles={allArticles} researchers={researchers} />
+            </TabsContent>
+
+            <TabsContent value="comparativo">
+              <ResearcherChart articles={allArticles} researchers={researchers} />
+            </TabsContent>
+
+            <TabsContent value="artigos">
+              <ArticlesTable articles={allArticles} researchers={researchers} />
+            </TabsContent>
+          </Tabs>
         )}
       </main>
     </div>

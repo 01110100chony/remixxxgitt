@@ -5,13 +5,31 @@ export interface Article {
   researcher: string;
 }
 
-export function parseLattesXML(xmlString: string): { researcher: string; articles: Article[] } {
+export interface ResearcherInfo {
+  name: string;
+  gender: string;
+  researchLines: string[];
+  articles: Article[];
+}
+
+export function parseLattesXML(xmlString: string): ResearcherInfo {
   const parser = new DOMParser();
   const doc = parser.parseFromString(xmlString, "text/xml");
 
-  // Extract researcher name from DADOS-GERAIS
   const dadosGerais = doc.querySelector("DADOS-GERAIS");
   const researcher = dadosGerais?.getAttribute("NOME-COMPLETO") || "Pesquisador desconhecido";
+
+  // Gender: SEXO attribute on DADOS-GERAIS (MASCULINO / FEMININO)
+  const sexoRaw = dadosGerais?.getAttribute("SEXO") || "";
+  const gender = sexoRaw === "MASCULINO" ? "Masculino" : sexoRaw === "FEMININO" ? "Feminino" : "Não informado";
+
+  // Research lines: LINHA-DE-PESQUISA elements
+  const linhasElements = doc.querySelectorAll("LINHA-DE-PESQUISA");
+  const researchLines: string[] = [];
+  linhasElements.forEach((el) => {
+    const titulo = el.getAttribute("TITULO-DA-LINHA-DE-PESQUISA") || "";
+    if (titulo && !researchLines.includes(titulo)) researchLines.push(titulo);
+  });
 
   const articles: Article[] = [];
   const artigos = doc.querySelectorAll("ARTIGO-PUBLICADO");
@@ -44,5 +62,5 @@ export function parseLattesXML(xmlString: string): { researcher: string; article
 
   articles.sort((a, b) => (b.year > a.year ? 1 : -1));
 
-  return { researcher, articles };
+  return { name: researcher, gender, researchLines, articles };
 }
