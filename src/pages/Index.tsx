@@ -60,6 +60,7 @@ const Index = () => {
         {hasParsed && (
           <>
             <ArticlesSummary articles={allArticles} researchers={researchers} />
+            <ResearcherChart articles={allArticles} researchers={researchers} />
             <ArticlesTable articles={allArticles} researchers={researchers} />
           </>
         )}
