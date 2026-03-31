@@ -2,6 +2,7 @@ import { useState } from "react";
 import { BookOpen } from "lucide-react";
 import FileUpload from "@/components/FileUpload";
 import ArticlesTable from "@/components/ArticlesTable";
+import ArticlesSummary from "@/components/ArticlesSummary";
 import { Article, parseLattesXML } from "@/lib/lattes-parser";
 
 const Index = () => {
@@ -28,7 +29,12 @@ const Index = () => {
       <main className="container py-10 space-y-8">
         <FileUpload onFileLoad={handleFileLoad} />
 
-        {parsed && <ArticlesTable articles={articles} />}
+        {parsed && (
+          <>
+            <ArticlesSummary articles={articles} />
+            <ArticlesTable articles={articles} />
+          </>
+        )}
       </main>
     </div>
   );
