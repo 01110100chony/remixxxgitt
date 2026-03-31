@@ -2,15 +2,18 @@ export interface Article {
   title: string;
   year: string;
   authors: string;
+  researcher: string;
 }
 
-export function parseLattesXML(xmlString: string): Article[] {
+export function parseLattesXML(xmlString: string): { researcher: string; articles: Article[] } {
   const parser = new DOMParser();
   const doc = parser.parseFromString(xmlString, "text/xml");
 
-  const articles: Article[] = [];
+  // Extract researcher name from DADOS-GERAIS
+  const dadosGerais = doc.querySelector("DADOS-GERAIS");
+  const researcher = dadosGerais?.getAttribute("NOME-COMPLETO") || "Pesquisador desconhecido";
 
-  // Lattes XML uses ARTIGO-PUBLICADO elements
+  const articles: Article[] = [];
   const artigos = doc.querySelectorAll("ARTIGO-PUBLICADO");
 
   artigos.forEach((artigo) => {
@@ -35,11 +38,11 @@ export function parseLattesXML(xmlString: string): Article[] {
       title,
       year,
       authors: authorNames.join("; ") || "—",
+      researcher,
     });
   });
 
-  // Sort by year descending
   articles.sort((a, b) => (b.year > a.year ? 1 : -1));
 
-  return articles;
+  return { researcher, articles };
 }

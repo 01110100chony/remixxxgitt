@@ -20,13 +20,15 @@ import { Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 
 interface ArticlesTableProps {
   articles: Article[];
+  researchers: string[];
 }
 
 type SortOrder = "desc" | "asc";
 
-const ArticlesTable = ({ articles }: ArticlesTableProps) => {
+const ArticlesTable = ({ articles, researchers }: ArticlesTableProps) => {
   const [search, setSearch] = useState("");
   const [yearFilter, setYearFilter] = useState("all");
+  const [researcherFilter, setResearcherFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
   const years = useMemo(() => {
@@ -39,13 +41,14 @@ const ArticlesTable = ({ articles }: ArticlesTableProps) => {
     return articles
       .filter((a) => {
         if (yearFilter !== "all" && a.year !== yearFilter) return false;
+        if (researcherFilter !== "all" && a.researcher !== researcherFilter) return false;
         if (q && !a.title.toLowerCase().includes(q) && !a.authors.toLowerCase().includes(q)) return false;
         return true;
       })
       .sort((a, b) =>
         sortOrder === "desc" ? b.year.localeCompare(a.year) : a.year.localeCompare(b.year)
       );
-  }, [articles, search, yearFilter, sortOrder]);
+  }, [articles, search, yearFilter, researcherFilter, sortOrder]);
 
   const toggleSort = () => setSortOrder((o) => (o === "desc" ? "asc" : "desc"));
 
@@ -56,6 +59,19 @@ const ArticlesTable = ({ articles }: ArticlesTableProps) => {
           {filtered.length} de {articles.length} artigo{articles.length !== 1 ? "s" : ""}
         </h2>
         <div className="flex items-center gap-3">
+          {researchers.length > 1 && (
+            <Select value={researcherFilter} onValueChange={setResearcherFilter}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Pesquisador" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                {researchers.map((r) => (
+                  <SelectItem key={r} value={r}>{r}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           <Select value={yearFilter} onValueChange={setYearFilter}>
             <SelectTrigger className="w-32">
               <SelectValue placeholder="Ano" />
