@@ -1,16 +1,37 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import { BookOpen } from "lucide-react";
+import FileUpload from "@/components/FileUpload";
+import ArticlesTable from "@/components/ArticlesTable";
+import { Article, parseLattesXML } from "@/lib/lattes-parser";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+const Index = () => {
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [parsed, setParsed] = useState(false);
+
+  const handleFileLoad = (content: string) => {
+    const result = parseLattesXML(content);
+    setArticles(result);
+    setParsed(true);
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
+    <div className="min-h-screen bg-background">
+      <header className="border-b bg-card">
+        <div className="container flex items-center gap-3 py-5">
+          <BookOpen className="h-7 w-7 text-accent" />
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">
+            Lattes <span className="text-accent">Reader</span>
+          </h1>
+        </div>
+      </header>
+
+      <main className="container py-10 space-y-8">
+        <FileUpload onFileLoad={handleFileLoad} />
+
+        {parsed && <ArticlesTable articles={articles} />}
+      </main>
     </div>
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;
