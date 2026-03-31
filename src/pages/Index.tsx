@@ -3,6 +3,7 @@ import { BookOpen, Trash2 } from "lucide-react";
 import FileUpload from "@/components/FileUpload";
 import ArticlesTable from "@/components/ArticlesTable";
 import ArticlesSummary from "@/components/ArticlesSummary";
+import ResearcherChart from "@/components/ResearcherChart";
 import { Article, parseLattesXML } from "@/lib/lattes-parser";
 import { Button } from "@/components/ui/button";
 
@@ -59,6 +60,7 @@ const Index = () => {
         {hasParsed && (
           <>
             <ArticlesSummary articles={allArticles} researchers={researchers} />
+            <ResearcherChart articles={allArticles} researchers={researchers} />
             <ArticlesTable articles={allArticles} researchers={researchers} />
           </>
         )}
