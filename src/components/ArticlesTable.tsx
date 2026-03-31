@@ -48,7 +48,7 @@ const ArticlesTable = ({ articles, researchers }: ArticlesTableProps) => {
       .sort((a, b) =>
         sortOrder === "desc" ? b.year.localeCompare(a.year) : a.year.localeCompare(b.year)
       );
-  }, [articles, search, yearFilter, sortOrder]);
+  }, [articles, search, yearFilter, researcherFilter, sortOrder]);
 
   const toggleSort = () => setSortOrder((o) => (o === "desc" ? "asc" : "desc"));
 
