@@ -16,12 +16,10 @@ const FileUpload = ({ onFileLoad }: FileUploadProps) => {
         return;
       }
       setFileName(file.name);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const text = e.target?.result as string;
+      file.arrayBuffer().then((buffer) => {
+        const text = new TextDecoder("iso-8859-1").decode(buffer);
         onFileLoad(text);
-      };
-      reader.readAsText(file, "UTF-8");
+      });
     },
     [onFileLoad]
   );
