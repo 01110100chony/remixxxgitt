@@ -29,7 +29,12 @@ const Index = () => {
       <main className="container py-10 space-y-8">
         <FileUpload onFileLoad={handleFileLoad} />
 
-        {parsed && <ArticlesTable articles={articles} />}
+        {parsed && (
+          <>
+            <ArticlesSummary articles={articles} />
+            <ArticlesTable articles={articles} />
+          </>
+        )}
       </main>
     </div>
   );
