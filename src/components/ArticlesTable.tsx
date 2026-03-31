@@ -20,13 +20,15 @@ import { Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 
 interface ArticlesTableProps {
   articles: Article[];
+  researchers: string[];
 }
 
 type SortOrder = "desc" | "asc";
 
-const ArticlesTable = ({ articles }: ArticlesTableProps) => {
+const ArticlesTable = ({ articles, researchers }: ArticlesTableProps) => {
   const [search, setSearch] = useState("");
   const [yearFilter, setYearFilter] = useState("all");
+  const [researcherFilter, setResearcherFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
   const years = useMemo(() => {
