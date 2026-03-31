@@ -1,11 +1,12 @@
 import { useCallback, useState } from "react";
 import { BookOpen, Trash2 } from "lucide-react";
 import FileUpload from "@/components/FileUpload";
-import ArticlesTable from "@/components/ArticlesTable";
-import ArticlesSummary from "@/components/ArticlesSummary";
-import ResearcherChart from "@/components/ResearcherChart";
 import Dashboard from "@/components/Dashboard";
-import { ResearcherInfo, parseLattesXML } from "@/lib/lattes-parser";
+import ProductionTable from "@/components/ProductionTable";
+import OrientationsTab from "@/components/OrientationsTab";
+import ProjectsTab from "@/components/ProjectsTab";
+import ResearcherChart from "@/components/ResearcherChart";
+import { ResearcherInfo, parseLattesXML, aggregateData } from "@/lib/lattes-parser";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -29,7 +30,7 @@ const Index = () => {
   const handleClear = () => setResearchersMap({});
 
   const researchersData = Object.values(researchersMap);
-  const allArticles = researchersData.flatMap((r) => r.articles);
+  const data = aggregateData(researchersData);
   const researchers = researchersData.map((r) => r.name);
   const loadedFiles = Object.keys(researchersMap);
   const hasParsed = loadedFiles.length > 0;
@@ -41,6 +42,7 @@ const Index = () => {
           <BookOpen className="h-7 w-7 text-accent" />
           <h1 className="text-2xl font-bold text-foreground tracking-tight">
             Lattes <span className="text-accent">Reader</span>
+            <span className="text-xs font-normal text-muted-foreground ml-2">Painel Sucupira</span>
           </h1>
           {hasParsed && (
             <Button variant="ghost" size="sm" className="ml-auto text-muted-foreground" onClick={handleClear}>
@@ -51,32 +53,37 @@ const Index = () => {
         </div>
       </header>
 
-      <main className="container py-10 space-y-8">
+      <main className="container py-8 space-y-6">
         <FileUpload onFilesLoad={handleFilesLoad} loadedFiles={loadedFiles} />
 
         {hasParsed && (
           <Tabs defaultValue="dashboard" className="space-y-6">
-            <TabsList>
+            <TabsList className="flex-wrap h-auto gap-1">
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-              <TabsTrigger value="quadrienio">Quadriênio</TabsTrigger>
-              <TabsTrigger value="comparativo">Comparativo</TabsTrigger>
-              <TabsTrigger value="artigos">Artigos</TabsTrigger>
+              <TabsTrigger value="production">Produção</TabsTrigger>
+              <TabsTrigger value="orientations">Orientações</TabsTrigger>
+              <TabsTrigger value="projects">Projetos</TabsTrigger>
+              <TabsTrigger value="comparative">Comparativo</TabsTrigger>
             </TabsList>
 
             <TabsContent value="dashboard">
-              <Dashboard researchersData={researchersData} />
+              <Dashboard data={data} />
             </TabsContent>
 
-            <TabsContent value="quadrienio">
-              <ArticlesSummary articles={allArticles} researchers={researchers} />
+            <TabsContent value="production">
+              <ProductionTable productions={data.allProductions} researchers={researchers} />
             </TabsContent>
 
-            <TabsContent value="comparativo">
-              <ResearcherChart articles={allArticles} researchers={researchers} />
+            <TabsContent value="orientations">
+              <OrientationsTab orientations={data.allOrientations} researchers={researchers} />
             </TabsContent>
 
-            <TabsContent value="artigos">
-              <ArticlesTable articles={allArticles} researchers={researchers} />
+            <TabsContent value="projects">
+              <ProjectsTab projects={data.allProjects} researchers={researchers} funders={data.funders} institutions={data.institutions} />
+            </TabsContent>
+
+            <TabsContent value="comparative">
+              <ResearcherChart data={data} />
             </TabsContent>
           </Tabs>
         )}
