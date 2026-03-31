@@ -59,6 +59,19 @@ const ArticlesTable = ({ articles, researchers }: ArticlesTableProps) => {
           {filtered.length} de {articles.length} artigo{articles.length !== 1 ? "s" : ""}
         </h2>
         <div className="flex items-center gap-3">
+          {researchers.length > 1 && (
+            <Select value={researcherFilter} onValueChange={setResearcherFilter}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Pesquisador" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                {researchers.map((r) => (
+                  <SelectItem key={r} value={r}>{r}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           <Select value={yearFilter} onValueChange={setYearFilter}>
             <SelectTrigger className="w-32">
               <SelectValue placeholder="Ano" />
