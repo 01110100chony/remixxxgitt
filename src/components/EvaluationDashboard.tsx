@@ -54,7 +54,7 @@ const EvaluationDashboard = ({ data }: Props) => {
           if (row.mode === "simplified" && row.config) {
             setWeights({ ...DEFAULT_WEIGHTS, ...(row.config as Record<string, number>) });
           } else if (row.mode === "capes" && row.config) {
-            setCapesWeights({ ...DEFAULT_CAPES_WEIGHTS, ...(row.config as CAPESWeights) });
+            setCapesWeights({ ...DEFAULT_CAPES_WEIGHTS, ...(row.config as unknown as CAPESWeights) });
           }
         }
       }
