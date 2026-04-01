@@ -160,11 +160,14 @@ const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
     const existingEntries = researcherCitations.filter(
       (c) => c.source === "scholar" && c.profile_link?.includes("openalex.org")
     );
+    let shouldUpdate = false;
     if (existingEntries.length > 0) {
-      const confirm = window.confirm(
-        `Este pesquisador já possui ${existingEntries.length} registro(s) importado(s) do OpenAlex. Deseja importar novamente? Os registros anteriores serão mantidos.`
+      const action = window.prompt(
+        `Este pesquisador já possui ${existingEntries.length} registro(s) do OpenAlex.\n\nDigite:\n• "atualizar" para substituir os dados existentes\n• "novo" para adicionar um novo registro\n• Ou cancele para não fazer nada`,
+        "atualizar"
       );
-      if (!confirm) return;
+      if (!action) return;
+      shouldUpdate = action.trim().toLowerCase() === "atualizar";
     }
 
     setImporting(true);
@@ -217,10 +220,9 @@ const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
         });
       }
 
-      // Insert entries
       const today = new Date().toISOString().slice(0, 10);
       for (const entry of entries) {
-        const { error } = await supabase.from("citation_entries").insert({
+        const payload = {
           researcher_id: selectedResearcherId,
           source: entry.source,
           total_citations: entry.total_citations,
@@ -230,13 +232,22 @@ const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
           search_name: entry.search_name,
           reference_date: today,
           is_public: true,
-        } as any);
-        if (error) console.error("Erro ao inserir citação:", error.message);
+        };
+
+        if (shouldUpdate && existingEntries.length > 0 && entry.source === "scholar") {
+          // Update existing OpenAlex entry
+          const existingId = existingEntries[0].id;
+          const { error } = await supabase.from("citation_entries").update(payload).eq("id", existingId);
+          if (error) console.error("Erro ao atualizar citação:", error.message);
+        } else {
+          const { error } = await supabase.from("citation_entries").insert(payload as any);
+          if (error) console.error("Erro ao inserir citação:", error.message);
+        }
       }
 
       toast({
-        title: "Importação concluída",
-        description: `Importados dados do OpenAlex: ${citedBy} citações, ${worksCount} trabalhos, h-index ${hIndex}.`,
+        title: shouldUpdate ? "Dados atualizados" : "Importação concluída",
+        description: `${shouldUpdate ? "Atualizados" : "Importados"} dados do OpenAlex: ${citedBy} citações, ${worksCount} trabalhos, h-index ${hIndex}.`,
       });
       await onRefresh();
     } catch (err: any) {
@@ -266,18 +277,30 @@ const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
       return;
     }
 
-    if (alreadyImported.length > 0) {
-      const confirm = window.confirm(
-        `${alreadyImported.length} pesquisador(es) já possuem dados do OpenAlex e serão ignorados. Importar para os ${toImport.length} restante(s)?`
+    let updateExisting = false;
+    if (alreadyImported.length > 0 && toImport.length > 0) {
+      const action = window.prompt(
+        `${alreadyImported.length} pesquisador(es) já possuem dados do OpenAlex.\n\nDigite:\n• "atualizar" para atualizar todos (existentes + novos)\n• "novos" para importar apenas os ${toImport.length} novos\n• Ou cancele`,
+        "atualizar"
       );
-      if (!confirm) return;
+      if (!action) return;
+      updateExisting = action.trim().toLowerCase() === "atualizar";
+    } else if (alreadyImported.length > 0 && toImport.length === 0) {
+      const action = window.prompt(
+        `Todos os ${alreadyImported.length} pesquisador(es) já possuem dados do OpenAlex.\n\nDigite "atualizar" para atualizar os dados, ou cancele.`,
+        "atualizar"
+      );
+      if (!action || action.trim().toLowerCase() !== "atualizar") return;
+      updateExisting = true;
     }
+
+    const importList = updateExisting ? withOrcid : toImport;
 
     setImporting(true);
     let imported = 0;
     let errors = 0;
 
-    for (const researcher of toImport) {
+    for (const researcher of importList) {
       try {
         const orcid = researcher.orcid!.replace(/^https?:\/\/orcid\.org\//, "");
         const authorRes = await fetch(`https://api.openalex.org/authors/https://orcid.org/${orcid}`, {
@@ -288,8 +311,7 @@ const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
 
         const author = await authorRes.json();
         const today = new Date().toISOString().slice(0, 10);
-
-        await supabase.from("citation_entries").insert({
+        const payload = {
           researcher_id: researcher.id,
           source: "scholar",
           total_citations: author.cited_by_count || 0,
@@ -299,7 +321,19 @@ const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
           search_name: author.display_name || researcher.name,
           reference_date: today,
           is_public: true,
-        } as any);
+        };
+
+        const existingEntry = citations.find(
+          (c) => c.researcher_id === researcher.id && c.source === "scholar" && c.profile_link?.includes("openalex.org")
+        );
+
+        if (updateExisting && existingEntry) {
+          const { error } = await supabase.from("citation_entries").update(payload).eq("id", existingEntry.id);
+          if (error) { errors++; continue; }
+        } else {
+          const { error } = await supabase.from("citation_entries").insert(payload as any);
+          if (error) { errors++; continue; }
+        }
 
         imported++;
       } catch {
@@ -309,7 +343,7 @@ const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
 
     toast({
       title: "Importação em lote concluída",
-      description: `${imported} pesquisador(es) importado(s)${errors > 0 ? `, ${errors} erro(s)` : ""}.`,
+      description: `${imported} pesquisador(es) ${updateExisting ? "atualizado(s)" : "importado(s)"}${errors > 0 ? `, ${errors} erro(s)` : ""}.`,
     });
     await onRefresh();
     setImporting(false);
