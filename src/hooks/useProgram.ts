@@ -62,7 +62,7 @@ export function usePrograms() {
   const createProgram = async (name: string, institution: string, extra?: { area?: string; modality?: string; program_code?: string }) => {
     const { data, error } = await supabase
       .from("programs")
-      .insert({ name, institution, created_by: user?.id, ...extra } as any)
+      .insert({ name, institution, created_by: user?.id, user_id: user?.id, ...extra } as any)
       .select()
       .single();
     if (error) {
@@ -221,6 +221,7 @@ export function useProgramData(programId: string | null) {
           .filter((p) => ["article", "book", "bookChapter", "eventWork"].includes(p.type))
           .map((p) => ({
             researcher_id: researcherId,
+            program_id: programId,
             title: p.title,
             year: p.year !== "—" ? parseInt(p.year) || null : null,
             journal: p.extra?.journal || null,
@@ -239,6 +240,7 @@ export function useProgramData(programId: string | null) {
       if (parsed.orientations.length > 0) {
         const orientations = parsed.orientations.map((o) => ({
           researcher_id: researcherId,
+          program_id: programId,
           type: o.kind,
           status: o.type === "concluded" ? "concluded" : "in_progress",
           title: o.title,
@@ -253,6 +255,7 @@ export function useProgramData(programId: string | null) {
       if (parsed.projects.length > 0) {
         const projects = parsed.projects.map((p) => ({
           researcher_id: researcherId,
+          program_id: programId,
           title: p.title,
           year_start: p.yearStart !== "—" ? parseInt(p.yearStart) || null : null,
           year_end: p.yearEnd !== "em andamento" && p.yearEnd !== "—" ? parseInt(p.yearEnd) || null : null,
@@ -272,6 +275,7 @@ export function useProgramData(programId: string | null) {
       if (techProds.length > 0) {
         const techInserts = techProds.map((p) => ({
           researcher_id: researcherId,
+          program_id: programId,
           type: p.type,
           title: p.title,
           description: p.authors,
@@ -288,6 +292,7 @@ export function useProgramData(programId: string | null) {
       if (socialProds.length > 0) {
         const socialInserts = socialProds.map((p) => ({
           researcher_id: researcherId,
+          program_id: programId,
           type: p.type,
           title: p.title,
           description: p.authors,
@@ -301,6 +306,7 @@ export function useProgramData(programId: string | null) {
       if (parsed.reviewerActivities && parsed.reviewerActivities.length > 0) {
         const reviewerInserts = parsed.reviewerActivities.map((r) => ({
           researcher_id: researcherId,
+          program_id: programId,
           journal_event: r.journalEvent,
           type: r.type || null,
           year: r.year ? parseInt(r.year) || null : null,
@@ -367,6 +373,7 @@ export function useProgramData(programId: string | null) {
   const updateMetrics = async (researcherId: string, metrics: { total_citations: number; h_index: number; i10_index: number; source: string }) => {
     await supabase.from("researcher_metrics").upsert({
       researcher_id: researcherId,
+      program_id: programId,
       ...metrics,
       user_id: user?.id,
     } as any, { onConflict: "researcher_id" });
