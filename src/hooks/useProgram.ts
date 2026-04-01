@@ -237,15 +237,16 @@ export function useProgramData(programId: string | null) {
 
       // Insert orientations
       if (parsed.orientations.length > 0) {
-        const orientations: TablesInsert<"orientations">[] = parsed.orientations.map((o) => ({
+        const orientations = parsed.orientations.map((o) => ({
           researcher_id: researcherId,
           type: o.kind,
           status: o.type === "concluded" ? "concluded" : "in_progress",
           title: o.title,
           student: o.student,
           year: o.year !== "—" ? parseInt(o.year) || null : null,
+          user_id: user?.id,
         }));
-        await supabase.from("orientations").insert(orientations);
+        await supabase.from("orientations").insert(orientations as any);
       }
 
       // Insert projects
