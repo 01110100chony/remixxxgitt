@@ -24,6 +24,7 @@ export type Database = {
           isbn: string | null
           issn: string | null
           journal: string | null
+          program_id: string | null
           qualis: string | null
           researcher_id: string
           title: string
@@ -39,6 +40,7 @@ export type Database = {
           isbn?: string | null
           issn?: string | null
           journal?: string | null
+          program_id?: string | null
           qualis?: string | null
           researcher_id: string
           title: string
@@ -54,6 +56,7 @@ export type Database = {
           isbn?: string | null
           issn?: string | null
           journal?: string | null
+          program_id?: string | null
           qualis?: string | null
           researcher_id?: string
           title?: string
@@ -61,6 +64,13 @@ export type Database = {
           year?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "articles_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "articles_researcher_id_fkey"
             columns: ["researcher_id"]
@@ -77,6 +87,7 @@ export type Database = {
           id: string
           is_public: boolean | null
           profile_link: string | null
+          program_id: string | null
           reference_date: string | null
           researcher_id: string
           researcher_id_wos: string | null
@@ -94,6 +105,7 @@ export type Database = {
           id?: string
           is_public?: boolean | null
           profile_link?: string | null
+          program_id?: string | null
           reference_date?: string | null
           researcher_id: string
           researcher_id_wos?: string | null
@@ -111,6 +123,7 @@ export type Database = {
           id?: string
           is_public?: boolean | null
           profile_link?: string | null
+          program_id?: string | null
           reference_date?: string | null
           researcher_id?: string
           researcher_id_wos?: string | null
@@ -123,6 +136,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "citation_entries_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "citation_entries_researcher_id_fkey"
             columns: ["researcher_id"]
@@ -171,6 +191,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          program_id: string | null
           researcher_id: string
           status: string
           student: string | null
@@ -182,6 +203,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          program_id?: string | null
           researcher_id: string
           status?: string
           student?: string | null
@@ -193,6 +215,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          program_id?: string | null
           researcher_id?: string
           status?: string
           student?: string | null
@@ -202,6 +225,13 @@ export type Database = {
           year?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "orientations_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orientations_researcher_id_fkey"
             columns: ["researcher_id"]
@@ -264,6 +294,7 @@ export type Database = {
           social_twitter: string | null
           social_youtube: string | null
           updated_at: string
+          user_id: string | null
           website_description: string | null
           website_languages: string | null
           website_research_lines: string | null
@@ -286,6 +317,7 @@ export type Database = {
           social_twitter?: string | null
           social_youtube?: string | null
           updated_at?: string
+          user_id?: string | null
           website_description?: string | null
           website_languages?: string | null
           website_research_lines?: string | null
@@ -308,6 +340,7 @@ export type Database = {
           social_twitter?: string | null
           social_youtube?: string | null
           updated_at?: string
+          user_id?: string | null
           website_description?: string | null
           website_languages?: string | null
           website_research_lines?: string | null
@@ -322,6 +355,7 @@ export type Database = {
           funding: string | null
           id: string
           partner_institution: string | null
+          program_id: string | null
           researcher_id: string
           title: string
           type: string | null
@@ -335,6 +369,7 @@ export type Database = {
           funding?: string | null
           id?: string
           partner_institution?: string | null
+          program_id?: string | null
           researcher_id: string
           title: string
           type?: string | null
@@ -348,6 +383,7 @@ export type Database = {
           funding?: string | null
           id?: string
           partner_institution?: string | null
+          program_id?: string | null
           researcher_id?: string
           title?: string
           type?: string | null
@@ -356,6 +392,13 @@ export type Database = {
           year_start?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "projects_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "projects_researcher_id_fkey"
             columns: ["researcher_id"]
@@ -391,6 +434,7 @@ export type Database = {
           h_index: number | null
           i10_index: number | null
           id: string
+          program_id: string | null
           researcher_id: string
           source: string | null
           total_citations: number | null
@@ -401,6 +445,7 @@ export type Database = {
           h_index?: number | null
           i10_index?: number | null
           id?: string
+          program_id?: string | null
           researcher_id: string
           source?: string | null
           total_citations?: number | null
@@ -411,6 +456,7 @@ export type Database = {
           h_index?: number | null
           i10_index?: number | null
           id?: string
+          program_id?: string | null
           researcher_id?: string
           source?: string | null
           total_citations?: number | null
@@ -418,6 +464,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "researcher_metrics_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "researcher_metrics_researcher_id_fkey"
             columns: ["researcher_id"]
@@ -488,6 +541,7 @@ export type Database = {
           created_at: string
           id: string
           journal_event: string
+          program_id: string | null
           researcher_id: string
           type: string | null
           user_id: string | null
@@ -497,6 +551,7 @@ export type Database = {
           created_at?: string
           id?: string
           journal_event: string
+          program_id?: string | null
           researcher_id: string
           type?: string | null
           user_id?: string | null
@@ -506,12 +561,20 @@ export type Database = {
           created_at?: string
           id?: string
           journal_event?: string
+          program_id?: string | null
           researcher_id?: string
           type?: string | null
           user_id?: string | null
           year?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "reviewer_activities_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "reviewer_activities_researcher_id_fkey"
             columns: ["researcher_id"]
@@ -526,6 +589,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          program_id: string | null
           researcher_id: string
           title: string | null
           type: string
@@ -536,6 +600,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          program_id?: string | null
           researcher_id: string
           title?: string | null
           type: string
@@ -546,6 +611,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          program_id?: string | null
           researcher_id?: string
           title?: string | null
           type?: string
@@ -553,6 +619,13 @@ export type Database = {
           year?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "technical_productions_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "technical_productions_researcher_id_fkey"
             columns: ["researcher_id"]
