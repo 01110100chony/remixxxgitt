@@ -299,13 +299,14 @@ export function useProgramData(programId: string | null) {
 
       // Insert reviewer activities
       if (parsed.reviewerActivities && parsed.reviewerActivities.length > 0) {
-        const reviewerInserts: TablesInsert<"reviewer_activities">[] = parsed.reviewerActivities.map((r) => ({
+        const reviewerInserts = parsed.reviewerActivities.map((r) => ({
           researcher_id: researcherId,
           journal_event: r.journalEvent,
           type: r.type || null,
           year: r.year ? parseInt(r.year) || null : null,
+          user_id: user?.id,
         }));
-        await supabase.from("reviewer_activities").insert(reviewerInserts);
+        await supabase.from("reviewer_activities").insert(reviewerInserts as any);
       }
     }
 
