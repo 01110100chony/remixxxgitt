@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import type { Researcher } from "@/hooks/useProgram";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
