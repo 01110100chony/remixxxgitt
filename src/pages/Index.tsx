@@ -162,6 +162,7 @@ const Index = () => {
               <Tabs defaultValue="dashboard" className="space-y-6">
                 <TabsList className="flex-wrap h-auto gap-1">
                   <TabsTrigger value="dashboard">Visão Geral</TabsTrigger>
+                  <TabsTrigger value="evaluation">Avaliação PPG</TabsTrigger>
                   <TabsTrigger value="articles">Artigos</TabsTrigger>
                   <TabsTrigger value="impact">Impacto</TabsTrigger>
                   <TabsTrigger value="orientations">Orientações</TabsTrigger>
