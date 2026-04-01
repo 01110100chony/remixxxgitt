@@ -346,7 +346,61 @@ export default function CAPESReport({ data }: CAPESReportProps) {
         );
       }
 
-      // ── Footer on all pages ──
+      // ── 6. INTERNACIONALIZAÇÃO ──
+      const websiteUrl = (program as any).website_url;
+      const websiteDesc = (program as any).website_description;
+      const websiteLanguages = (program as any).website_languages;
+      const websiteResearchLines = (program as any).website_research_lines;
+      const hasEnglishVersion = (program as any).has_english_version;
+      const intScore = (program as any).internationalization_score || 0;
+
+      checkPage(20);
+      title("6. INTERNACIONALIZAÇÃO E VISIBILIDADE");
+
+      if (websiteUrl) {
+        kv("Site do programa", websiteUrl);
+      }
+      if (websiteDesc) {
+        body(websiteDesc);
+      }
+
+      const intLabel = intScore >= 70 ? "alto" : intScore >= 40 ? "médio" : "baixo";
+      body(
+        `O programa possui nível de internacionalização ${intLabel} (score: ${intScore}/100). ` +
+        (hasEnglishVersion
+          ? "O site do programa possui versão em inglês, favorecendo a visibilidade internacional."
+          : "O site do programa não possui versão em inglês, o que pode limitar a visibilidade internacional.")
+      );
+
+      if (websiteLanguages) {
+        kv("Idiomas disponíveis no site", websiteLanguages);
+      }
+
+      if (websiteResearchLines) {
+        subtitle("Linhas de pesquisa (extraídas do site)");
+        websiteResearchLines.split(";").forEach((line: string) => {
+          if (line.trim()) body(`• ${line.trim()}`);
+        });
+      }
+
+      // Internationalization indicators table
+      checkPage(20);
+      subtitle("Indicadores de internacionalização");
+      autoTable(doc, {
+        startY: y,
+        margin: { left: margin, right: margin },
+        head: [["Indicador", "Status"]],
+        body: [
+          ["Site com versão em inglês", hasEnglishVersion ? "✓ Sim" : "✗ Não"],
+          ["Idiomas do site", websiteLanguages || "Apenas português"],
+          ["Score de internacionalização", `${intScore}/100 (${intLabel})`],
+          ["URL do site", websiteUrl || "Não informado"],
+        ],
+        styles: { fontSize: 8, cellPadding: 2 },
+        headStyles: { fillColor: [0, 51, 102], textColor: 255, fontStyle: "bold" },
+        alternateRowStyles: { fillColor: [240, 245, 250] },
+      });
+      y = (doc as any).lastAutoTable.finalY + 10;
       const pageCount = doc.getNumberOfPages();
       for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
