@@ -15,7 +15,9 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Shield, UserPlus, Trash2, Loader2, Users, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Shield, UserPlus, Trash2, Loader2, Users, ShieldCheck, ShieldAlert, Mail } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface AdminUser {
   id: string;
@@ -42,6 +44,9 @@ export default function AdminPanel() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [roleToAdd, setRoleToAdd] = useState<Record<string, string>>({});
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("viewer");
+  const [inviteLoading, setInviteLoading] = useState(false);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -81,6 +86,26 @@ export default function AdminPanel() {
     }
   };
 
+  const handleInvite = async () => {
+    if (!inviteEmail.trim()) return;
+    setInviteLoading(true);
+    try {
+      const res = await supabase.functions.invoke("admin-users", {
+        method: "POST",
+        body: { action: "invite_user", email: inviteEmail.trim(), invite_role: inviteRole },
+      });
+      if (res.error) throw new Error(res.error.message);
+      if (res.data?.error) throw new Error(res.data.error);
+      toast({ title: "Sucesso", description: `Convite enviado para ${inviteEmail}` });
+      setInviteEmail("");
+      await fetchUsers();
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
   const formatDate = (d: string | null) => {
     if (!d) return "—";
     return new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
@@ -96,6 +121,44 @@ export default function AdminPanel() {
 
   return (
     <div className="space-y-6">
+      {/* Invite user */}
+      <div className="rounded-lg border bg-card p-4 space-y-3">
+        <h3 className="font-semibold flex items-center gap-2 text-foreground">
+          <Mail className="h-4 w-4" /> Convidar novo usuário
+        </h3>
+        <div className="flex flex-col sm:flex-row gap-3 items-end">
+          <div className="flex-1 space-y-1">
+            <Label htmlFor="invite-email">Email</Label>
+            <Input
+              id="invite-email"
+              type="email"
+              placeholder="usuario@exemplo.com"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+            />
+          </div>
+          <div className="w-40 space-y-1">
+            <Label>Papel inicial</Label>
+            <Select value={inviteRole} onValueChange={setInviteRole}>
+              <SelectTrigger className="h-10">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ALL_ROLES.map((r) => (
+                  <SelectItem key={r} value={r}>
+                    {ROLE_LABELS[r]?.label || r}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button onClick={handleInvite} disabled={inviteLoading || !inviteEmail.trim()}>
+            {inviteLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Mail className="h-4 w-4 mr-1" />}
+            Enviar convite
+          </Button>
+        </div>
+      </div>
+
       {/* Header stats */}
       <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
         {[
