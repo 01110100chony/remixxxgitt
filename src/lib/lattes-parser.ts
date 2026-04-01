@@ -52,6 +52,12 @@ export interface Project {
   researcher: string;
 }
 
+export interface ReviewerActivityParsed {
+  journalEvent: string;
+  type: string;
+  year: string;
+}
+
 export interface ResearcherInfo {
   name: string;
   gender: string;
@@ -59,6 +65,7 @@ export interface ResearcherInfo {
   productions: Production[];
   orientations: Orientation[];
   projects: Project[];
+  reviewerActivities: ReviewerActivityParsed[];
 }
 
 export interface ParsedData {
@@ -136,6 +143,7 @@ export function parseLattesXML(xmlString: string): ResearcherInfo {
   const productions: Production[] = [];
   const orientations: Orientation[] = [];
   const projects: Project[] = [];
+  const reviewerActivities: ReviewerActivityParsed[] = [];
 
   // ---- Bibliographic production ----
 
@@ -153,6 +161,7 @@ export function parseLattesXML(xmlString: string): ResearcherInfo {
       extra: {
         journal: getAttr(det, "TITULO-DO-PERIODICO-OU-REVISTA"),
         doi: getAttr(db, "DOI"),
+        issn: getAttr(det, "ISSN"),
       },
     });
   });
@@ -365,7 +374,26 @@ export function parseLattesXML(xmlString: string): ResearcherInfo {
     });
   });
 
-  return { name, gender, researchLines, productions, orientations, projects };
+  // ---- Reviewer activities (parecerista) ----
+  doc.querySelectorAll("PARECER").forEach((el) => {
+    const db = el.querySelector("DADOS-BASICOS-DO-PARECER") || el;
+    reviewerActivities.push({
+      journalEvent: getAttr(db, "TITULO", "NOME-DO-PERIODICO", "NOME-DO-EVENTO") || getAttr(el, "TITULO") || "Sem título",
+      type: getAttr(db, "NATUREZA") || "Parecer",
+      year: getAttr(db, "ANO") || "—",
+    });
+  });
+
+  // Also try ATUACAO-PROFISSIONAL for reviewer/editorial board
+  doc.querySelectorAll("CORPO-EDITORIAL-REVISTA-CIENTIFICA, REVISOR-DE-PERIODICO").forEach((el) => {
+    reviewerActivities.push({
+      journalEvent: getAttr(el, "TITULO-DO-PERIODICO", "TITULO") || "Sem título",
+      type: el.tagName.includes("CORPO") ? "Corpo editorial" : "Revisor",
+      year: getAttr(el, "ANO") || "—",
+    });
+  });
+
+  return { name, gender, researchLines, productions, orientations, projects, reviewerActivities };
 }
 
 // ---------- Aggregation helpers ----------
