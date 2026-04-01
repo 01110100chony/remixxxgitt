@@ -160,7 +160,8 @@ export function useProgramData(programId: string | null) {
             lattes_xml_filename: file.name,
             lattes_id: parsed.lattesId || null,
             orcid: parsed.orcid || null,
-          },
+            user_id: user?.id,
+          } as any,
           { onConflict: "program_id,name", ignoreDuplicates: false }
         )
         .select()
