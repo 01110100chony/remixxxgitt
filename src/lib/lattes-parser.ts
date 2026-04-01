@@ -403,7 +403,7 @@ export function parseLattesXML(xmlString: string): ResearcherInfo {
     });
   });
 
-  return { name, gender, researchLines, productions, orientations, projects, reviewerActivities };
+  return { name, gender, lattesId, orcid, researchLines, productions, orientations, projects, reviewerActivities };
 }
 
 // ---------- Aggregation helpers ----------
