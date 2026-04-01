@@ -21,6 +21,7 @@ export type Database = {
           created_at: string
           doi: string | null
           id: string
+          isbn: string | null
           issn: string | null
           journal: string | null
           qualis: string | null
@@ -34,6 +35,7 @@ export type Database = {
           created_at?: string
           doi?: string | null
           id?: string
+          isbn?: string | null
           issn?: string | null
           journal?: string | null
           qualis?: string | null
@@ -47,6 +49,7 @@ export type Database = {
           created_at?: string
           doi?: string | null
           id?: string
+          isbn?: string | null
           issn?: string | null
           journal?: string | null
           qualis?: string | null
@@ -278,33 +281,42 @@ export type Database = {
           created_at: string
           gender: string | null
           id: string
+          lattes_id: string | null
           lattes_xml_filename: string | null
           name: string
           orcid: string | null
           program_id: string
           research_line: string | null
+          researcher_id_wos: string | null
+          scopus_id: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           gender?: string | null
           id?: string
+          lattes_id?: string | null
           lattes_xml_filename?: string | null
           name: string
           orcid?: string | null
           program_id: string
           research_line?: string | null
+          researcher_id_wos?: string | null
+          scopus_id?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           gender?: string | null
           id?: string
+          lattes_id?: string | null
           lattes_xml_filename?: string | null
           name?: string
           orcid?: string | null
           program_id?: string
           research_line?: string | null
+          researcher_id_wos?: string | null
+          scopus_id?: string | null
           updated_at?: string
         }
         Relationships: [
