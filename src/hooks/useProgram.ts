@@ -217,7 +217,7 @@ export function useProgramData(programId: string | null) {
 
       // Insert articles
       if (parsed.productions.length > 0) {
-        const articles: TablesInsert<"articles">[] = parsed.productions
+        const articles = parsed.productions
           .filter((p) => ["article", "book", "bookChapter", "eventWork"].includes(p.type))
           .map((p) => ({
             researcher_id: researcherId,
@@ -228,6 +228,7 @@ export function useProgramData(programId: string | null) {
             doi: p.extra?.doi || null,
             isbn: p.extra?.isbn || null,
             authors: p.authors,
+            user_id: user?.id,
           }));
         if (articles.length > 0) {
           await supabase.from("articles").insert(articles);
