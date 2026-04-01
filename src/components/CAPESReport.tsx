@@ -78,7 +78,7 @@ export default function CAPESReport({ data }: CAPESReportProps) {
       };
 
       // ── Data ──
-      const { program, researchers, articles, orientations, projects, technicalProductions, metrics } = data;
+      const { program, researchers, articles, orientations, projects, technicalProductions, metrics, citationEntries } = data;
 
       const quadArticles = articles.filter((a) => a.year && a.year >= quadStart);
       const qualisDist: Record<string, number> = {};
