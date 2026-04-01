@@ -270,14 +270,15 @@ export function useProgramData(programId: string | null) {
         ["software", "product", "technicalReport", "consultancy"].includes(p.type)
       );
       if (techProds.length > 0) {
-        const techInserts: TablesInsert<"technical_productions">[] = techProds.map((p) => ({
+        const techInserts = techProds.map((p) => ({
           researcher_id: researcherId,
           type: p.type,
           title: p.title,
           description: p.authors,
           year: p.year !== "—" ? parseInt(p.year) || null : null,
+          user_id: user?.id,
         }));
-        await supabase.from("technical_productions").insert(techInserts);
+        await supabase.from("technical_productions").insert(techInserts as any);
       }
 
       // Insert social insertion as technical productions
