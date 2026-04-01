@@ -178,6 +178,9 @@ const Index = () => {
                 <TabsContent value="dashboard">
                   <ProgramDashboard data={data} />
                 </TabsContent>
+                <TabsContent value="evaluation">
+                  <EvaluationDashboard data={data} />
+                </TabsContent>
                 <TabsContent value="articles">
                   <ArticlesTab articles={data.articles} researchers={data.researchers} />
                 </TabsContent>
