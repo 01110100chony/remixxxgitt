@@ -1,7 +1,8 @@
 import { useCallback, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePrograms, useProgramData } from "@/hooks/useProgram";
-import { BookOpen, Trash2, LogOut, Plus, Upload, FileText, Download } from "lucide-react";
+import { BookOpen, Trash2, LogOut, Plus, Upload, FileText, Download, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
