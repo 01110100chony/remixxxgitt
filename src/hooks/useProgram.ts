@@ -80,6 +80,7 @@ export function useProgramData(programId: string | null) {
   const [data, setData] = useState<ProgramData | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const fetchAll = useCallback(async () => {
     if (!programId) return;
