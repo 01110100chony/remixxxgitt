@@ -22,6 +22,7 @@ import CAPESReport from "@/components/CAPESReport";
 import WebsiteTab from "@/components/WebsiteTab";
 import ProgramSettings from "@/components/ProgramSettings";
 import SocialMediaTab from "@/components/SocialMediaTab";
+import AdminPanel from "@/components/AdminPanel";
 
 const Index = () => {
   const { user, signOut, isCoordinatorOrAdmin } = useAuth();
