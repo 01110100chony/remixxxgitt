@@ -18,6 +18,7 @@ import IdentifiersTab from "@/components/IdentifiersTab";
 import FileUpload from "@/components/FileUpload";
 import CAPESReport from "@/components/CAPESReport";
 import WebsiteTab from "@/components/WebsiteTab";
+import ProgramSettings from "@/components/ProgramSettings";
 
 const Index = () => {
   const { user, signOut, isCoordinatorOrAdmin } = useAuth();
@@ -167,6 +168,7 @@ const Index = () => {
                   <TabsTrigger value="reviewer">Parecerista</TabsTrigger>
                   <TabsTrigger value="identifiers">Identificadores</TabsTrigger>
                   <TabsTrigger value="website">Site</TabsTrigger>
+                  <TabsTrigger value="settings">Configurações</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="dashboard">
@@ -201,6 +203,9 @@ const Index = () => {
                 </TabsContent>
                 <TabsContent value="website">
                   <WebsiteTab program={data.program} onRefresh={fetchAll} />
+                </TabsContent>
+                <TabsContent value="settings">
+                  <ProgramSettings program={data.program} onRefresh={fetchAll} />
                 </TabsContent>
               </Tabs>
             ) : (
