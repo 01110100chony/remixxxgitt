@@ -240,6 +240,7 @@ export function useProgramData(programId: string | null) {
       if (parsed.orientations.length > 0) {
         const orientations = parsed.orientations.map((o) => ({
           researcher_id: researcherId,
+          program_id: programId,
           type: o.kind,
           status: o.type === "concluded" ? "concluded" : "in_progress",
           title: o.title,
