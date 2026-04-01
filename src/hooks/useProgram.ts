@@ -275,6 +275,7 @@ export function useProgramData(programId: string | null) {
       if (techProds.length > 0) {
         const techInserts = techProds.map((p) => ({
           researcher_id: researcherId,
+          program_id: programId,
           type: p.type,
           title: p.title,
           description: p.authors,
