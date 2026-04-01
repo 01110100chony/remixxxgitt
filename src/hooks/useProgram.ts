@@ -306,6 +306,7 @@ export function useProgramData(programId: string | null) {
       if (parsed.reviewerActivities && parsed.reviewerActivities.length > 0) {
         const reviewerInserts = parsed.reviewerActivities.map((r) => ({
           researcher_id: researcherId,
+          program_id: programId,
           journal_event: r.journalEvent,
           type: r.type || null,
           year: r.year ? parseInt(r.year) || null : null,
