@@ -235,6 +235,7 @@ const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
           search_name: entry.search_name,
           reference_date: today,
           is_public: true,
+          user_id: user?.id,
         };
 
         if (shouldUpdate && existingEntries.length > 0 && entry.source === "scholar") {
