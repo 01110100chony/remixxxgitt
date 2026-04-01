@@ -26,7 +26,7 @@ const Index = () => {
   const [newProgramInst, setNewProgramInst] = useState("");
   const qualisInputRef = useRef<HTMLInputElement>(null);
 
-  const { data, loading, fetchAll, uploadLattes, importQualis, fetchCitations, updateMetrics, exportCSV } = useProgramData(selectedProgramId);
+  const { data, loading, fetchAll, uploadLattes, importQualis, fetchCitations, updateMetrics, exportCSV } = useProgramData(selectedProgramId); // refresh
 
   const handleFilesLoad = useCallback(
     async (files: { name: string; content: string }[]) => {
