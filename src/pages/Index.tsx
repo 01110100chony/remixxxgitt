@@ -179,6 +179,9 @@ const Index = () => {
                 <TabsContent value="reviewer">
                   <ReviewerTab activities={data.reviewerActivities} researchers={data.researchers} />
                 </TabsContent>
+                <TabsContent value="identifiers">
+                  <IdentifiersTab researchers={data.researchers} onRefresh={fetchAll} />
+                </TabsContent>
               </Tabs>
             ) : (
               <div className="text-center py-12 text-muted-foreground">
