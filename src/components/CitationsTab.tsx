@@ -156,6 +156,17 @@ const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
       return;
     }
 
+    // Check for existing OpenAlex imports for this researcher
+    const existingEntries = researcherCitations.filter(
+      (c) => c.source === "scholar" && c.profile_link?.includes("openalex.org")
+    );
+    if (existingEntries.length > 0) {
+      const confirm = window.confirm(
+        `Este pesquisador já possui ${existingEntries.length} registro(s) importado(s) do OpenAlex. Deseja importar novamente? Os registros anteriores serão mantidos.`
+      );
+      if (!confirm) return;
+    }
+
     setImporting(true);
     try {
       const orcid = researcher.orcid.replace(/^https?:\/\/orcid\.org\//, "");
