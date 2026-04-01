@@ -246,8 +246,8 @@ const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
       }
 
       toast({
-        title: "Importação concluída",
-        description: `Importados dados do OpenAlex: ${citedBy} citações, ${worksCount} trabalhos, h-index ${hIndex}.`,
+        title: shouldUpdate ? "Dados atualizados" : "Importação concluída",
+        description: `${shouldUpdate ? "Atualizados" : "Importados"} dados do OpenAlex: ${citedBy} citações, ${worksCount} trabalhos, h-index ${hIndex}.`,
       });
       await onRefresh();
     } catch (err: any) {
