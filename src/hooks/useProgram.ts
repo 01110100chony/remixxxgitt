@@ -255,6 +255,7 @@ export function useProgramData(programId: string | null) {
       if (parsed.projects.length > 0) {
         const projects = parsed.projects.map((p) => ({
           researcher_id: researcherId,
+          program_id: programId,
           title: p.title,
           year_start: p.yearStart !== "—" ? parseInt(p.yearStart) || null : null,
           year_end: p.yearEnd !== "em andamento" && p.yearEnd !== "—" ? parseInt(p.yearEnd) || null : null,
