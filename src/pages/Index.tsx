@@ -41,12 +41,19 @@ const Index = () => {
 
   const handleCreateProgram = async () => {
     if (!newProgramName.trim() || !newProgramInst.trim()) return;
-    const p = await createProgram(newProgramName.trim(), newProgramInst.trim());
+    const p = await createProgram(newProgramName.trim(), newProgramInst.trim(), {
+      area: newProgramArea.trim() || undefined,
+      modality: newProgramModality.trim() || undefined,
+      program_code: newProgramCode.trim() || undefined,
+    });
     if (p) {
       setSelectedProgramId(p.id);
       setShowCreateProgram(false);
       setNewProgramName("");
       setNewProgramInst("");
+      setNewProgramArea("");
+      setNewProgramModality("");
+      setNewProgramCode("");
     }
   };
 
