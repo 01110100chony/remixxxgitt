@@ -253,6 +253,26 @@ const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
       return;
     }
 
+    // Filter out researchers that already have OpenAlex imports
+    const alreadyImported = withOrcid.filter((r) =>
+      citations.some((c) => c.researcher_id === r.id && c.source === "scholar" && c.profile_link?.includes("openalex.org"))
+    );
+    const toImport = withOrcid.filter((r) =>
+      !citations.some((c) => c.researcher_id === r.id && c.source === "scholar" && c.profile_link?.includes("openalex.org"))
+    );
+
+    if (toImport.length === 0) {
+      toast({ title: "Já importados", description: `Todos os ${alreadyImported.length} pesquisador(es) com ORCID já possuem dados do OpenAlex.` });
+      return;
+    }
+
+    if (alreadyImported.length > 0) {
+      const confirm = window.confirm(
+        `${alreadyImported.length} pesquisador(es) já possuem dados do OpenAlex e serão ignorados. Importar para os ${toImport.length} restante(s)?`
+      );
+      if (!confirm) return;
+    }
+
     setImporting(true);
     let imported = 0;
     let errors = 0;
