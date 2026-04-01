@@ -58,6 +58,7 @@ const emptyForm = {
 
 const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [selectedResearcherId, setSelectedResearcherId] = useState<string>(researchers[0]?.id || "");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
