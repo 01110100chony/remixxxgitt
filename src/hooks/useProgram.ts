@@ -158,6 +158,8 @@ export function useProgramData(programId: string | null) {
             gender: parsed.gender,
             research_line: parsed.researchLines.join("; ") || null,
             lattes_xml_filename: file.name,
+            lattes_id: parsed.lattesId || null,
+            orcid: parsed.orcid || null,
           }).eq("id", researcherId);
         } else {
           const { data: newR } = await supabase
