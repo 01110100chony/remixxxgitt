@@ -17,6 +17,7 @@ import ImpactTab from "@/components/ImpactTab";
 import IdentifiersTab from "@/components/IdentifiersTab";
 import FileUpload from "@/components/FileUpload";
 import CAPESReport from "@/components/CAPESReport";
+import WebsiteTab from "@/components/WebsiteTab";
 
 const Index = () => {
   const { user, signOut, isCoordinatorOrAdmin } = useAuth();
@@ -165,6 +166,7 @@ const Index = () => {
                   <TabsTrigger value="technical">Prod. Técnica</TabsTrigger>
                   <TabsTrigger value="reviewer">Parecerista</TabsTrigger>
                   <TabsTrigger value="identifiers">Identificadores</TabsTrigger>
+                  <TabsTrigger value="website">Site</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="dashboard">
@@ -196,6 +198,9 @@ const Index = () => {
                 </TabsContent>
                 <TabsContent value="identifiers">
                   <IdentifiersTab researchers={data.researchers} onRefresh={fetchAll} />
+                </TabsContent>
+                <TabsContent value="website">
+                  <WebsiteTab program={data.program} onRefresh={fetchAll} />
                 </TabsContent>
               </Tabs>
             ) : (
