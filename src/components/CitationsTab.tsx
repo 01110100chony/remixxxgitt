@@ -374,6 +374,14 @@ const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
         <Button variant="outline" size="sm" onClick={handleNew}>
           <Plus className="h-4 w-4 mr-1" /> Nova citação
         </Button>
+        <Button variant="outline" size="sm" onClick={handleImportOpenAlex} disabled={importing}>
+          {importing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Download className="h-4 w-4 mr-1" />}
+          Importar OpenAlex
+        </Button>
+        <Button variant="outline" size="sm" onClick={handleImportAllOpenAlex} disabled={importing}>
+          {importing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Download className="h-4 w-4 mr-1" />}
+          Importar todos
+        </Button>
       </div>
 
       {/* Form */}
