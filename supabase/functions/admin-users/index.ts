@@ -108,6 +108,23 @@ Deno.serve(async (req) => {
         });
       }
 
+      if (action === "invite_user") {
+        const { email, invite_role } = body;
+        if (!email) throw new Error("Email is required");
+        const { data: inviteData, error } = await supabase.auth.admin.inviteUserByEmail(email);
+        if (error) throw error;
+        // Assign role if specified
+        if (invite_role && inviteData?.user?.id) {
+          await supabase.from("user_roles").upsert({
+            user_id: inviteData.user.id,
+            role: invite_role,
+          }, { onConflict: "user_id,role" });
+        }
+        return new Response(JSON.stringify({ success: true, user_id: inviteData?.user?.id }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       return new Response(JSON.stringify({ error: "Unknown action" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

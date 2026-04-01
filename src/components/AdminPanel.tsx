@@ -15,7 +15,9 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Shield, UserPlus, Trash2, Loader2, Users, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Shield, UserPlus, Trash2, Loader2, Users, ShieldCheck, ShieldAlert, Mail } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface AdminUser {
   id: string;
