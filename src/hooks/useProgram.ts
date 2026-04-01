@@ -368,7 +368,8 @@ export function useProgramData(programId: string | null) {
     await supabase.from("researcher_metrics").upsert({
       researcher_id: researcherId,
       ...metrics,
-    }, { onConflict: "researcher_id" });
+      user_id: user?.id,
+    } as any, { onConflict: "researcher_id" });
     await fetchAll();
   };
 
