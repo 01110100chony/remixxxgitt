@@ -455,5 +455,22 @@ export function useProgramData(programId: string | null) {
     URL.revokeObjectURL(url);
   };
 
-  return { data, loading, fetchAll, uploadLattes, importQualis, fetchCitations, updateMetrics, exportCSV };
+  const clearMyData = async () => {
+    if (!user?.id) return;
+    const uid = user.id;
+    await Promise.all([
+      supabase.from("articles").delete().eq("user_id", uid),
+      supabase.from("orientations").delete().eq("user_id", uid),
+      supabase.from("projects").delete().eq("user_id", uid),
+      supabase.from("technical_productions").delete().eq("user_id", uid),
+      supabase.from("reviewer_activities").delete().eq("user_id", uid),
+      supabase.from("researcher_metrics").delete().eq("user_id", uid),
+      supabase.from("citation_entries").delete().eq("user_id", uid),
+    ]);
+    await supabase.from("researchers").delete().eq("user_id", uid);
+    toast({ title: "Dados limpos", description: "Todos os seus dados foram removidos." });
+    await fetchAll();
+  };
+
+  return { data, loading, fetchAll, uploadLattes, importQualis, fetchCitations, updateMetrics, exportCSV, clearMyData };
 }
