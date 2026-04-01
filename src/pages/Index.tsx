@@ -168,6 +168,7 @@ const Index = () => {
                   <TabsTrigger value="reviewer">Parecerista</TabsTrigger>
                   <TabsTrigger value="identifiers">Identificadores</TabsTrigger>
                   <TabsTrigger value="website">Site</TabsTrigger>
+                  <TabsTrigger value="settings">Configurações</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="dashboard">
@@ -202,6 +203,9 @@ const Index = () => {
                 </TabsContent>
                 <TabsContent value="website">
                   <WebsiteTab program={data.program} onRefresh={fetchAll} />
+                </TabsContent>
+                <TabsContent value="settings">
+                  <ProgramSettings program={data.program} onRefresh={fetchAll} />
                 </TabsContent>
               </Tabs>
             ) : (
