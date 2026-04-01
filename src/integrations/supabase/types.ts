@@ -148,34 +148,52 @@ export type Database = {
           area: string | null
           created_at: string
           created_by: string | null
+          has_english_version: boolean | null
           id: string
           institution: string
+          internationalization_score: number | null
           modality: string | null
           name: string
           program_code: string | null
           updated_at: string
+          website_description: string | null
+          website_languages: string | null
+          website_research_lines: string | null
+          website_url: string | null
         }
         Insert: {
           area?: string | null
           created_at?: string
           created_by?: string | null
+          has_english_version?: boolean | null
           id?: string
           institution: string
+          internationalization_score?: number | null
           modality?: string | null
           name: string
           program_code?: string | null
           updated_at?: string
+          website_description?: string | null
+          website_languages?: string | null
+          website_research_lines?: string | null
+          website_url?: string | null
         }
         Update: {
           area?: string | null
           created_at?: string
           created_by?: string | null
+          has_english_version?: boolean | null
           id?: string
           institution?: string
+          internationalization_score?: number | null
           modality?: string | null
           name?: string
           program_code?: string | null
           updated_at?: string
+          website_description?: string | null
+          website_languages?: string | null
+          website_research_lines?: string | null
+          website_url?: string | null
         }
         Relationships: []
       }
