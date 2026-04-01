@@ -62,7 +62,7 @@ export function usePrograms() {
   const createProgram = async (name: string, institution: string, extra?: { area?: string; modality?: string; program_code?: string }) => {
     const { data, error } = await supabase
       .from("programs")
-      .insert({ name, institution, created_by: user?.id, ...extra } as any)
+      .insert({ name, institution, created_by: user?.id, user_id: user?.id, ...extra } as any)
       .select()
       .single();
     if (error) {
