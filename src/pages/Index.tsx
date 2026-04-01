@@ -22,9 +22,10 @@ import CAPESReport from "@/components/CAPESReport";
 import WebsiteTab from "@/components/WebsiteTab";
 import ProgramSettings from "@/components/ProgramSettings";
 import SocialMediaTab from "@/components/SocialMediaTab";
+import AdminPanel from "@/components/AdminPanel";
 
 const Index = () => {
-  const { user, signOut, isCoordinatorOrAdmin } = useAuth();
+  const { user, signOut, isCoordinatorOrAdmin, roles } = useAuth();
   const { programs, loading: programsLoading, createProgram } = usePrograms();
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
   const [showCreateProgram, setShowCreateProgram] = useState(false);
@@ -182,6 +183,7 @@ const Index = () => {
                   <TabsTrigger value="website">Site</TabsTrigger>
                   <TabsTrigger value="social">Presença Digital</TabsTrigger>
                   <TabsTrigger value="settings">Configurações</TabsTrigger>
+                  {roles.includes("admin") && <TabsTrigger value="admin">Administração</TabsTrigger>}
                 </TabsList>
 
                 <TabsContent value="dashboard">
@@ -233,6 +235,11 @@ const Index = () => {
                 <TabsContent value="settings">
                   <ProgramSettings program={data.program} onRefresh={fetchAll} />
                 </TabsContent>
+                {roles.includes("admin") && (
+                  <TabsContent value="admin">
+                    <AdminPanel />
+                  </TabsContent>
+                )}
               </Tabs>
             ) : (
               <div className="text-center py-12 text-muted-foreground">
