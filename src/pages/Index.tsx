@@ -127,6 +127,7 @@ const Index = () => {
                 <input ref={qualisInputRef} type="file" accept=".csv,.txt" className="hidden" onChange={handleQualisImport} />
                 {data && data.articles.length > 0 && (
                   <>
+                    <CAPESReport data={data} />
                     <Button variant="outline" size="sm" onClick={() => exportCSV("articles")}>
                       <Download className="h-4 w-4 mr-1" /> Exportar artigos
                     </Button>
