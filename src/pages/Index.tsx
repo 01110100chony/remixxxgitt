@@ -183,6 +183,7 @@ const Index = () => {
                   <TabsTrigger value="website">Site</TabsTrigger>
                   <TabsTrigger value="social">Presença Digital</TabsTrigger>
                   <TabsTrigger value="settings">Configurações</TabsTrigger>
+                  {roles.includes("admin") && <TabsTrigger value="admin">Administração</TabsTrigger>}
                 </TabsList>
 
                 <TabsContent value="dashboard">
