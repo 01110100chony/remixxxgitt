@@ -16,6 +16,7 @@ import ReviewerTab from "@/components/ReviewerTab";
 import ImpactTab from "@/components/ImpactTab";
 import IdentifiersTab from "@/components/IdentifiersTab";
 import FileUpload from "@/components/FileUpload";
+import CAPESReport from "@/components/CAPESReport";
 
 const Index = () => {
   const { user, signOut, isCoordinatorOrAdmin } = useAuth();
