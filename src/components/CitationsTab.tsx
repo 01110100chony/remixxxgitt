@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Award, Plus, Save, Trash2, Eye, EyeOff, BookOpen, Globe, GraduationCap } from "lucide-react";
+import { Award, Plus, Save, Trash2, Eye, EyeOff, BookOpen, Globe, GraduationCap, Download, Loader2 } from "lucide-react";
 
 export interface CitationEntry {
   id: string;
