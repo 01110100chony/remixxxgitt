@@ -62,6 +62,7 @@ const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ ...emptyForm });
   const [saving, setSaving] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   const researcherCitations = useMemo(
     () => citations.filter((c) => c.researcher_id === selectedResearcherId),
