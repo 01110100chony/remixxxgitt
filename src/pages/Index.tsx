@@ -107,6 +107,9 @@ const Index = () => {
             <div className="space-y-2">
               <div><Label>Nome do programa</Label><Input value={newProgramName} onChange={(e) => setNewProgramName(e.target.value)} /></div>
               <div><Label>Instituição</Label><Input value={newProgramInst} onChange={(e) => setNewProgramInst(e.target.value)} /></div>
+              <div><Label>Área de avaliação</Label><Input value={newProgramArea} onChange={(e) => setNewProgramArea(e.target.value)} placeholder="Ex: Ciência da Computação" /></div>
+              <div><Label>Modalidade</Label><Input value={newProgramModality} onChange={(e) => setNewProgramModality(e.target.value)} placeholder="Acadêmico ou Profissional" /></div>
+              <div><Label>Código do programa</Label><Input value={newProgramCode} onChange={(e) => setNewProgramCode(e.target.value)} placeholder="Ex: 42001013049P5" /></div>
             </div>
             <div className="flex gap-2">
               <Button size="sm" onClick={handleCreateProgram}>Criar</Button>
