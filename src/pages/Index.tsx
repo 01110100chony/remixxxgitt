@@ -149,6 +149,7 @@ const Index = () => {
                   <TabsTrigger value="projects">Projetos</TabsTrigger>
                   <TabsTrigger value="technical">Prod. Técnica</TabsTrigger>
                   <TabsTrigger value="reviewer">Parecerista</TabsTrigger>
+                  <TabsTrigger value="identifiers">Identificadores</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="dashboard">
