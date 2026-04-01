@@ -313,9 +313,21 @@ export default function CAPESReport({ data }: CAPESReportProps) {
       // ── 5. IMPACTO ──
       checkPage(20);
       title("5. IMPACTO NA SOCIEDADE");
+
+      // Citation entries aggregation
+      const citTotalCitations = citationEntries.reduce((s, c) => s + (c.total_citations || 0), 0);
+      const citTotalWorks = citationEntries.reduce((s, c) => s + (c.total_works || 0), 0);
+      const citHIndices = citationEntries.filter((c) => c.h_index && c.h_index > 0).map((c) => c.h_index!);
+      const citAvgH = citHIndices.length > 0 ? (citHIndices.reduce((s, h) => s + h, 0) / citHIndices.length).toFixed(1) : "0";
+
+      const impactCitations = citationEntries.length > 0 ? citTotalCitations : totalCitations;
+      const impactHIndex = citationEntries.length > 0 ? citAvgH : avgHIndex;
+
       body(
-        `O programa acumula ${totalCitations} citações, com h-index médio de ${avgHIndex}. ` +
-        `As métricas são baseadas em dados do OpenAlex e fontes complementares.`
+        `O programa acumula ${impactCitations} citações, com h-index médio de ${impactHIndex}. ` +
+        (citationEntries.length > 0
+          ? `Os dados de citações incluem ${citationEntries.length} registros em bases como Web of Science, Scopus e Google Scholar.`
+          : `As métricas são baseadas em dados do OpenAlex e fontes complementares.`)
       );
 
       if (metrics.length > 0) {
@@ -326,6 +338,65 @@ export default function CAPESReport({ data }: CAPESReportProps) {
           body: metrics.map((m) => {
             const r = researchers.find((r) => r.id === m.researcher_id);
             return [r?.name || "—", String(m.total_citations || 0), String(m.h_index || 0), String(m.i10_index || 0), m.source || "—"];
+          }),
+          styles: { fontSize: 8, cellPadding: 2 },
+          headStyles: { fillColor: [0, 51, 102], textColor: 255, fontStyle: "bold" },
+          alternateRowStyles: { fillColor: [240, 245, 250] },
+        });
+        y = (doc as any).lastAutoTable.finalY + 10;
+      }
+
+      // Citation entries by source
+      if (citationEntries.length > 0) {
+        checkPage(20);
+        subtitle("Citações por base bibliográfica");
+
+        const sourceLabels: Record<string, string> = { wos: "Web of Science", scopus: "Scopus", scholar: "Google Scholar", other: "Outras Bases" };
+        const bySource: Record<string, typeof citationEntries> = {};
+        citationEntries.forEach((c) => { (bySource[c.source] ??= []).push(c); });
+
+        for (const [source, entries] of Object.entries(bySource)) {
+          const srcCitations = entries.reduce((s, e) => s + (e.total_citations || 0), 0);
+          const srcWorks = entries.reduce((s, e) => s + (e.total_works || 0), 0);
+          const srcHIndices = entries.filter((e) => e.h_index && e.h_index > 0).map((e) => e.h_index!);
+          const srcAvgH = srcHIndices.length > 0 ? (srcHIndices.reduce((s, h) => s + h, 0) / srcHIndices.length).toFixed(1) : "—";
+
+          checkPage(20);
+          autoTable(doc, {
+            startY: y,
+            margin: { left: margin, right: margin },
+            head: [[sourceLabels[source] || source, "Citações", "Trabalhos", "h-index médio", "Pesquisadores"]],
+            body: [[
+              `${entries.length} registro(s)`,
+              String(srcCitations),
+              String(srcWorks),
+              srcAvgH,
+              String(new Set(entries.map((e) => e.researcher_id)).size),
+            ]],
+            styles: { fontSize: 8, cellPadding: 2 },
+            headStyles: { fillColor: [0, 51, 102], textColor: 255, fontStyle: "bold" },
+            alternateRowStyles: { fillColor: [240, 245, 250] },
+          });
+          y = (doc as any).lastAutoTable.finalY + 5;
+        }
+
+        // Detailed table per researcher
+        checkPage(20);
+        subtitle("Detalhamento por pesquisador");
+        autoTable(doc, {
+          startY: y,
+          margin: { left: margin, right: margin },
+          head: [["Pesquisador", "Base", "Citações", "Trabalhos", "h-index", "ResearcherID"]],
+          body: citationEntries.map((c) => {
+            const r = researchers.find((r) => r.id === c.researcher_id);
+            return [
+              r?.name || "—",
+              sourceLabels[c.source] || c.source_name || c.source,
+              String(c.total_citations || 0),
+              String(c.total_works || 0),
+              String(c.h_index || "—"),
+              c.researcher_id_wos || "—",
+            ];
           }),
           styles: { fontSize: 8, cellPadding: 2 },
           headStyles: { fillColor: [0, 51, 102], textColor: 255, fontStyle: "bold" },
