@@ -41,10 +41,10 @@ export function usePrograms() {
 
   useEffect(() => { if (user) fetchPrograms(); }, [user, fetchPrograms]);
 
-  const createProgram = async (name: string, institution: string) => {
+  const createProgram = async (name: string, institution: string, extra?: { area?: string; modality?: string; program_code?: string }) => {
     const { data, error } = await supabase
       .from("programs")
-      .insert({ name, institution, created_by: user?.id })
+      .insert({ name, institution, created_by: user?.id, ...extra } as any)
       .select()
       .single();
     if (error) {

@@ -16,6 +16,7 @@ import ReviewerTab from "@/components/ReviewerTab";
 import ImpactTab from "@/components/ImpactTab";
 import IdentifiersTab from "@/components/IdentifiersTab";
 import FileUpload from "@/components/FileUpload";
+import CAPESReport from "@/components/CAPESReport";
 
 const Index = () => {
   const { user, signOut, isCoordinatorOrAdmin } = useAuth();
@@ -24,6 +25,9 @@ const Index = () => {
   const [showCreateProgram, setShowCreateProgram] = useState(false);
   const [newProgramName, setNewProgramName] = useState("");
   const [newProgramInst, setNewProgramInst] = useState("");
+  const [newProgramArea, setNewProgramArea] = useState("");
+  const [newProgramModality, setNewProgramModality] = useState("");
+  const [newProgramCode, setNewProgramCode] = useState("");
   const qualisInputRef = useRef<HTMLInputElement>(null);
 
   const { data, loading, fetchAll, uploadLattes, importQualis, fetchCitations, updateMetrics, exportCSV } = useProgramData(selectedProgramId); // refresh
@@ -37,12 +41,19 @@ const Index = () => {
 
   const handleCreateProgram = async () => {
     if (!newProgramName.trim() || !newProgramInst.trim()) return;
-    const p = await createProgram(newProgramName.trim(), newProgramInst.trim());
+    const p = await createProgram(newProgramName.trim(), newProgramInst.trim(), {
+      area: newProgramArea.trim() || undefined,
+      modality: newProgramModality.trim() || undefined,
+      program_code: newProgramCode.trim() || undefined,
+    });
     if (p) {
       setSelectedProgramId(p.id);
       setShowCreateProgram(false);
       setNewProgramName("");
       setNewProgramInst("");
+      setNewProgramArea("");
+      setNewProgramModality("");
+      setNewProgramCode("");
     }
   };
 
@@ -103,6 +114,9 @@ const Index = () => {
             <div className="space-y-2">
               <div><Label>Nome do programa</Label><Input value={newProgramName} onChange={(e) => setNewProgramName(e.target.value)} /></div>
               <div><Label>Instituição</Label><Input value={newProgramInst} onChange={(e) => setNewProgramInst(e.target.value)} /></div>
+              <div><Label>Área de avaliação</Label><Input value={newProgramArea} onChange={(e) => setNewProgramArea(e.target.value)} placeholder="Ex: Ciência da Computação" /></div>
+              <div><Label>Modalidade</Label><Input value={newProgramModality} onChange={(e) => setNewProgramModality(e.target.value)} placeholder="Acadêmico ou Profissional" /></div>
+              <div><Label>Código do programa</Label><Input value={newProgramCode} onChange={(e) => setNewProgramCode(e.target.value)} placeholder="Ex: 42001013049P5" /></div>
             </div>
             <div className="flex gap-2">
               <Button size="sm" onClick={handleCreateProgram}>Criar</Button>
@@ -123,6 +137,7 @@ const Index = () => {
                 <input ref={qualisInputRef} type="file" accept=".csv,.txt" className="hidden" onChange={handleQualisImport} />
                 {data && data.articles.length > 0 && (
                   <>
+                    <CAPESReport data={data} />
                     <Button variant="outline" size="sm" onClick={() => exportCSV("articles")}>
                       <Download className="h-4 w-4 mr-1" /> Exportar artigos
                     </Button>
