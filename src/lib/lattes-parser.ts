@@ -128,12 +128,16 @@ export function parseLattesXML(xmlString: string): ResearcherInfo {
   const parser = new DOMParser();
   const doc = parser.parseFromString(xmlString, "text/xml");
 
+  const curriculo = doc.querySelector("CURRICULO-VITAE");
+  const lattesId = getAttr(curriculo, "NUMERO-IDENTIFICADOR") || "";
+
   const dadosGerais = doc.querySelector("DADOS-GERAIS");
   const name = getAttr(dadosGerais, "NOME-COMPLETO") || "Pesquisador desconhecido";
   const sexoRaw = getAttr(dadosGerais, "SEXO");
   const gender =
     sexoRaw === "MASCULINO" ? "Homem" :
     sexoRaw === "FEMININO" ? "Mulher" : "Não informado";
+  const orcid = getAttr(dadosGerais, "ORCID-ID") || "";
 
   // Research lines
   const researchLines: string[] = [];
