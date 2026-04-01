@@ -14,16 +14,415 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      articles: {
+        Row: {
+          authors: string | null
+          citations: number | null
+          created_at: string
+          doi: string | null
+          id: string
+          issn: string | null
+          journal: string | null
+          qualis: string | null
+          researcher_id: string
+          title: string
+          year: number | null
+        }
+        Insert: {
+          authors?: string | null
+          citations?: number | null
+          created_at?: string
+          doi?: string | null
+          id?: string
+          issn?: string | null
+          journal?: string | null
+          qualis?: string | null
+          researcher_id: string
+          title: string
+          year?: number | null
+        }
+        Update: {
+          authors?: string | null
+          citations?: number | null
+          created_at?: string
+          doi?: string | null
+          id?: string
+          issn?: string | null
+          journal?: string | null
+          qualis?: string | null
+          researcher_id?: string
+          title?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "articles_researcher_id_fkey"
+            columns: ["researcher_id"]
+            isOneToOne: false
+            referencedRelation: "researchers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orientations: {
+        Row: {
+          created_at: string
+          id: string
+          researcher_id: string
+          status: string
+          student: string | null
+          title: string | null
+          type: string
+          year: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          researcher_id: string
+          status?: string
+          student?: string | null
+          title?: string | null
+          type: string
+          year?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          researcher_id?: string
+          status?: string
+          student?: string | null
+          title?: string | null
+          type?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orientations_researcher_id_fkey"
+            columns: ["researcher_id"]
+            isOneToOne: false
+            referencedRelation: "researchers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          program_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          program_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          program_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      programs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          institution: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          institution: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          institution?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          created_at: string
+          funder: string | null
+          funding: string | null
+          id: string
+          partner_institution: string | null
+          researcher_id: string
+          title: string
+          type: string | null
+          year_end: number | null
+          year_start: number | null
+        }
+        Insert: {
+          created_at?: string
+          funder?: string | null
+          funding?: string | null
+          id?: string
+          partner_institution?: string | null
+          researcher_id: string
+          title: string
+          type?: string | null
+          year_end?: number | null
+          year_start?: number | null
+        }
+        Update: {
+          created_at?: string
+          funder?: string | null
+          funding?: string | null
+          id?: string
+          partner_institution?: string | null
+          researcher_id?: string
+          title?: string
+          type?: string | null
+          year_end?: number | null
+          year_start?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_researcher_id_fkey"
+            columns: ["researcher_id"]
+            isOneToOne: false
+            referencedRelation: "researchers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qualis_reference: {
+        Row: {
+          area: string | null
+          classification: string
+          id: string
+          issn: string
+        }
+        Insert: {
+          area?: string | null
+          classification: string
+          id?: string
+          issn: string
+        }
+        Update: {
+          area?: string | null
+          classification?: string
+          id?: string
+          issn?: string
+        }
+        Relationships: []
+      }
+      researcher_metrics: {
+        Row: {
+          h_index: number | null
+          i10_index: number | null
+          id: string
+          researcher_id: string
+          source: string | null
+          total_citations: number | null
+          updated_at: string
+        }
+        Insert: {
+          h_index?: number | null
+          i10_index?: number | null
+          id?: string
+          researcher_id: string
+          source?: string | null
+          total_citations?: number | null
+          updated_at?: string
+        }
+        Update: {
+          h_index?: number | null
+          i10_index?: number | null
+          id?: string
+          researcher_id?: string
+          source?: string | null
+          total_citations?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "researcher_metrics_researcher_id_fkey"
+            columns: ["researcher_id"]
+            isOneToOne: true
+            referencedRelation: "researchers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      researchers: {
+        Row: {
+          created_at: string
+          gender: string | null
+          id: string
+          lattes_xml_filename: string | null
+          name: string
+          orcid: string | null
+          program_id: string
+          research_line: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          gender?: string | null
+          id?: string
+          lattes_xml_filename?: string | null
+          name: string
+          orcid?: string | null
+          program_id: string
+          research_line?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          gender?: string | null
+          id?: string
+          lattes_xml_filename?: string | null
+          name?: string
+          orcid?: string | null
+          program_id?: string
+          research_line?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "researchers_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviewer_activities: {
+        Row: {
+          created_at: string
+          id: string
+          journal_event: string
+          researcher_id: string
+          type: string | null
+          year: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          journal_event: string
+          researcher_id: string
+          type?: string | null
+          year?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          journal_event?: string
+          researcher_id?: string
+          type?: string | null
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviewer_activities_researcher_id_fkey"
+            columns: ["researcher_id"]
+            isOneToOne: false
+            referencedRelation: "researchers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      technical_productions: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          researcher_id: string
+          title: string | null
+          type: string
+          year: number | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          researcher_id: string
+          title?: string | null
+          type: string
+          year?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          researcher_id?: string
+          title?: string | null
+          type?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "technical_productions_researcher_id_fkey"
+            columns: ["researcher_id"]
+            isOneToOne: false
+            referencedRelation: "researchers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "coordinator" | "researcher" | "viewer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +549,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "coordinator", "researcher", "viewer"],
+    },
   },
 } as const
