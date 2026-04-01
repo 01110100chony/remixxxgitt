@@ -15,6 +15,23 @@ export type ReviewerActivity = Tables<"reviewer_activities">;
 export type ResearcherMetric = Tables<"researcher_metrics">;
 export type QualisRef = Tables<"qualis_reference">;
 
+export interface CitationEntry {
+  id: string;
+  researcher_id: string;
+  source: "wos" | "scopus" | "scholar" | "other";
+  source_name: string | null;
+  researcher_id_wos: string | null;
+  total_citations: number | null;
+  total_works: number | null;
+  h_index: number | null;
+  search_name: string | null;
+  profile_link: string | null;
+  reference_date: string | null;
+  is_public: boolean | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ProgramData {
   program: Program;
   researchers: Researcher[];
@@ -25,6 +42,7 @@ export interface ProgramData {
   reviewerActivities: ReviewerActivity[];
   metrics: ResearcherMetric[];
   qualisRef: QualisRef[];
+  citationEntries: CitationEntry[];
 }
 
 export function usePrograms() {
@@ -83,6 +101,7 @@ export function useProgramData(programId: string | null) {
       setData({
         program, researchers, articles: [], orientations: [], projects: [],
         technicalProductions: [], reviewerActivities: [], metrics: [], qualisRef: qualisRef || [],
+        citationEntries: [],
       });
       setLoading(false);
       return;
@@ -95,6 +114,7 @@ export function useProgramData(programId: string | null) {
       { data: technicalProductions },
       { data: reviewerActivities },
       { data: metrics },
+      { data: citationEntries },
     ] = await Promise.all([
       supabase.from("articles").select("*").in("researcher_id", researcherIds),
       supabase.from("orientations").select("*").in("researcher_id", researcherIds),
@@ -102,6 +122,7 @@ export function useProgramData(programId: string | null) {
       supabase.from("technical_productions").select("*").in("researcher_id", researcherIds),
       supabase.from("reviewer_activities").select("*").in("researcher_id", researcherIds),
       supabase.from("researcher_metrics").select("*").in("researcher_id", researcherIds),
+      supabase.from("citation_entries").select("*").in("researcher_id", researcherIds),
     ]);
 
     setData({
@@ -114,6 +135,7 @@ export function useProgramData(programId: string | null) {
       reviewerActivities: reviewerActivities || [],
       metrics: metrics || [],
       qualisRef: qualisRef || [],
+      citationEntries: (citationEntries as CitationEntry[]) || [],
     });
     setLoading(false);
   }, [programId]);
