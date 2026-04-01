@@ -166,6 +166,7 @@ const Index = () => {
                   <TabsTrigger value="technical">Prod. Técnica</TabsTrigger>
                   <TabsTrigger value="reviewer">Parecerista</TabsTrigger>
                   <TabsTrigger value="identifiers">Identificadores</TabsTrigger>
+                  <TabsTrigger value="website">Site</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="dashboard">
