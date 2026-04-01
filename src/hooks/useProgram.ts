@@ -113,6 +113,7 @@ export function useProgramData(programId: string | null) {
       { data: technicalProductions },
       { data: reviewerActivities },
       { data: metrics },
+      { data: citationEntries },
     ] = await Promise.all([
       supabase.from("articles").select("*").in("researcher_id", researcherIds),
       supabase.from("orientations").select("*").in("researcher_id", researcherIds),
@@ -120,6 +121,7 @@ export function useProgramData(programId: string | null) {
       supabase.from("technical_productions").select("*").in("researcher_id", researcherIds),
       supabase.from("reviewer_activities").select("*").in("researcher_id", researcherIds),
       supabase.from("researcher_metrics").select("*").in("researcher_id", researcherIds),
+      supabase.from("citation_entries").select("*").in("researcher_id", researcherIds),
     ]);
 
     setData({
@@ -132,6 +134,7 @@ export function useProgramData(programId: string | null) {
       reviewerActivities: reviewerActivities || [],
       metrics: metrics || [],
       qualisRef: qualisRef || [],
+      citationEntries: (citationEntries as CitationEntry[]) || [],
     });
     setLoading(false);
   }, [programId]);
