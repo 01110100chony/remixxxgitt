@@ -22,8 +22,8 @@ const COLORS = [
 ];
 
 const GENDER_COLORS: Record<string, string> = {
-  Masculino: "hsl(var(--primary))",
-  Feminino: "hsl(var(--accent))",
+  Homem: "hsl(var(--primary))",
+  Mulher: "hsl(var(--accent))",
   "Não informado": "hsl(var(--muted-foreground))",
 };
 

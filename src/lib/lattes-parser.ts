@@ -130,8 +130,8 @@ export function parseLattesXML(xmlString: string): ResearcherInfo {
   const name = getAttr(dadosGerais, "NOME-COMPLETO") || "Pesquisador desconhecido";
   const sexoRaw = getAttr(dadosGerais, "SEXO");
   const gender =
-    sexoRaw === "MASCULINO" ? "Masculino" :
-    sexoRaw === "FEMININO" ? "Feminino" : "Não informado";
+    sexoRaw === "MASCULINO" ? "Homem" :
+    sexoRaw === "FEMININO" ? "Mulher" : "Não informado";
 
   // Research lines
   const researchLines: string[] = [];
