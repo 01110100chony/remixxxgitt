@@ -18,8 +18,8 @@ const COLORS = [
   "#8b5cf6", "#ec4899", "#06b6d4", "#f97316", "#84cc16", "#ef4444",
 ];
 const GENDER_COLORS: Record<string, string> = {
-  Masculino: "hsl(var(--primary))",
-  Feminino: "hsl(var(--accent))",
+  Homem: "hsl(var(--primary))",
+  Mulher: "hsl(var(--accent))",
   "Não informado": "hsl(var(--muted-foreground))",
 };
 const tooltipStyle = {
