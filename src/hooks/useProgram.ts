@@ -373,6 +373,7 @@ export function useProgramData(programId: string | null) {
   const updateMetrics = async (researcherId: string, metrics: { total_citations: number; h_index: number; i10_index: number; source: string }) => {
     await supabase.from("researcher_metrics").upsert({
       researcher_id: researcherId,
+      program_id: programId,
       ...metrics,
       user_id: user?.id,
     } as any, { onConflict: "researcher_id" });
