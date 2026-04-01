@@ -160,11 +160,14 @@ const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
     const existingEntries = researcherCitations.filter(
       (c) => c.source === "scholar" && c.profile_link?.includes("openalex.org")
     );
+    let shouldUpdate = false;
     if (existingEntries.length > 0) {
-      const confirm = window.confirm(
-        `Este pesquisador já possui ${existingEntries.length} registro(s) importado(s) do OpenAlex. Deseja importar novamente? Os registros anteriores serão mantidos.`
+      const action = window.prompt(
+        `Este pesquisador já possui ${existingEntries.length} registro(s) do OpenAlex.\n\nDigite:\n• "atualizar" para substituir os dados existentes\n• "novo" para adicionar um novo registro\n• Ou cancele para não fazer nada`,
+        "atualizar"
       );
-      if (!confirm) return;
+      if (!action) return;
+      shouldUpdate = action.trim().toLowerCase() === "atualizar";
     }
 
     setImporting(true);
