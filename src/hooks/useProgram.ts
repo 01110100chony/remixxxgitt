@@ -286,14 +286,15 @@ export function useProgramData(programId: string | null) {
         ["interview", "mediaParticipation", "eventOrganization"].includes(p.type)
       );
       if (socialProds.length > 0) {
-        const socialInserts: TablesInsert<"technical_productions">[] = socialProds.map((p) => ({
+        const socialInserts = socialProds.map((p) => ({
           researcher_id: researcherId,
           type: p.type,
           title: p.title,
           description: p.authors,
           year: p.year !== "—" ? parseInt(p.year) || null : null,
+          user_id: user?.id,
         }));
-        await supabase.from("technical_productions").insert(socialInserts);
+        await supabase.from("technical_productions").insert(socialInserts as any);
       }
 
       // Insert reviewer activities
