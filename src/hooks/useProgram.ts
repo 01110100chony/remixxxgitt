@@ -101,6 +101,7 @@ export function useProgramData(programId: string | null) {
       setData({
         program, researchers, articles: [], orientations: [], projects: [],
         technicalProductions: [], reviewerActivities: [], metrics: [], qualisRef: qualisRef || [],
+        citationEntries: [],
       });
       setLoading(false);
       return;
