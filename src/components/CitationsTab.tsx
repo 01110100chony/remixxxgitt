@@ -325,6 +325,7 @@ const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
           search_name: author.display_name || researcher.name,
           reference_date: today,
           is_public: true,
+          user_id: user?.id,
         };
 
         const existingEntry = citations.find(
