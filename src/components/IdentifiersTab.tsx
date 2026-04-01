@@ -169,7 +169,7 @@ const IdentifiersTab = ({ researchers, onRefresh }: Props) => {
                     <td key={f.key} className="p-3">
                       {val ? (
                         <span className="inline-flex items-center gap-1">
-                          <Check className="h-3 w-3 text-green-500" />
+                          <Check className="h-3 w-3 text-primary" />
                           <span className="text-foreground text-xs font-mono">{val}</span>
                           {f.linkFn && (
                             <a href={f.linkFn(val)} target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent/80">
