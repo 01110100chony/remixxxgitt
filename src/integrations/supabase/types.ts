@@ -27,6 +27,7 @@ export type Database = {
           qualis: string | null
           researcher_id: string
           title: string
+          user_id: string | null
           year: number | null
         }
         Insert: {
@@ -41,6 +42,7 @@ export type Database = {
           qualis?: string | null
           researcher_id: string
           title: string
+          user_id?: string | null
           year?: number | null
         }
         Update: {
@@ -55,6 +57,7 @@ export type Database = {
           qualis?: string | null
           researcher_id?: string
           title?: string
+          user_id?: string | null
           year?: number | null
         }
         Relationships: [
@@ -83,6 +86,7 @@ export type Database = {
           total_citations: number | null
           total_works: number | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -99,6 +103,7 @@ export type Database = {
           total_citations?: number | null
           total_works?: number | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -115,6 +120,7 @@ export type Database = {
           total_citations?: number | null
           total_works?: number | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -170,6 +176,7 @@ export type Database = {
           student: string | null
           title: string | null
           type: string
+          user_id: string | null
           year: number | null
         }
         Insert: {
@@ -180,6 +187,7 @@ export type Database = {
           student?: string | null
           title?: string | null
           type: string
+          user_id?: string | null
           year?: number | null
         }
         Update: {
@@ -190,6 +198,7 @@ export type Database = {
           student?: string | null
           title?: string | null
           type?: string
+          user_id?: string | null
           year?: number | null
         }
         Relationships: [
@@ -316,6 +325,7 @@ export type Database = {
           researcher_id: string
           title: string
           type: string | null
+          user_id: string | null
           year_end: number | null
           year_start: number | null
         }
@@ -328,6 +338,7 @@ export type Database = {
           researcher_id: string
           title: string
           type?: string | null
+          user_id?: string | null
           year_end?: number | null
           year_start?: number | null
         }
@@ -340,6 +351,7 @@ export type Database = {
           researcher_id?: string
           title?: string
           type?: string | null
+          user_id?: string | null
           year_end?: number | null
           year_start?: number | null
         }
@@ -383,6 +395,7 @@ export type Database = {
           source: string | null
           total_citations: number | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           h_index?: number | null
@@ -392,6 +405,7 @@ export type Database = {
           source?: string | null
           total_citations?: number | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           h_index?: number | null
@@ -401,6 +415,7 @@ export type Database = {
           source?: string | null
           total_citations?: number | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -426,6 +441,7 @@ export type Database = {
           researcher_id_wos: string | null
           scopus_id: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -440,6 +456,7 @@ export type Database = {
           researcher_id_wos?: string | null
           scopus_id?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -454,6 +471,7 @@ export type Database = {
           researcher_id_wos?: string | null
           scopus_id?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -472,6 +490,7 @@ export type Database = {
           journal_event: string
           researcher_id: string
           type: string | null
+          user_id: string | null
           year: number | null
         }
         Insert: {
@@ -480,6 +499,7 @@ export type Database = {
           journal_event: string
           researcher_id: string
           type?: string | null
+          user_id?: string | null
           year?: number | null
         }
         Update: {
@@ -488,6 +508,7 @@ export type Database = {
           journal_event?: string
           researcher_id?: string
           type?: string | null
+          user_id?: string | null
           year?: number | null
         }
         Relationships: [
@@ -508,6 +529,7 @@ export type Database = {
           researcher_id: string
           title: string | null
           type: string
+          user_id: string | null
           year: number | null
         }
         Insert: {
@@ -517,6 +539,7 @@ export type Database = {
           researcher_id: string
           title?: string | null
           type: string
+          user_id?: string | null
           year?: number | null
         }
         Update: {
@@ -526,6 +549,7 @@ export type Database = {
           researcher_id?: string
           title?: string | null
           type?: string
+          user_id?: string | null
           year?: number | null
         }
         Relationships: [
