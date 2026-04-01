@@ -235,6 +235,11 @@ const Index = () => {
                 <TabsContent value="settings">
                   <ProgramSettings program={data.program} onRefresh={fetchAll} />
                 </TabsContent>
+                {roles.includes("admin") && (
+                  <TabsContent value="admin">
+                    <AdminPanel />
+                  </TabsContent>
+                )}
               </Tabs>
             ) : (
               <div className="text-center py-12 text-muted-foreground">
