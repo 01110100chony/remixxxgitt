@@ -152,6 +152,13 @@ const Index = () => {
                     <Button variant="outline" size="sm" onClick={() => exportCSV("projects")}>
                       <Download className="h-4 w-4 mr-1" /> Exportar projetos
                     </Button>
+                    <Button variant="destructive" size="sm" onClick={async () => {
+                      if (window.confirm("Tem certeza que deseja limpar TODOS os seus dados? Esta ação não pode ser desfeita.")) {
+                        await clearMyData();
+                      }
+                    }}>
+                      <Trash2 className="h-4 w-4 mr-1" /> Limpar meus dados
+                    </Button>
                   </>
                 )}
               </div>
