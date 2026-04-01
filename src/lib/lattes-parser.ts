@@ -61,6 +61,8 @@ export interface ReviewerActivityParsed {
 export interface ResearcherInfo {
   name: string;
   gender: string;
+  lattesId: string;
+  orcid: string;
   researchLines: string[];
   productions: Production[];
   orientations: Orientation[];
