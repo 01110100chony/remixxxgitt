@@ -14,6 +14,7 @@ import ProjectsDbTab from "@/components/ProjectsDbTab";
 import TechnicalProductionsTab from "@/components/TechnicalProductionsTab";
 import ReviewerTab from "@/components/ReviewerTab";
 import ImpactTab from "@/components/ImpactTab";
+import IdentifiersTab from "@/components/IdentifiersTab";
 import FileUpload from "@/components/FileUpload";
 
 const Index = () => {
@@ -25,7 +26,7 @@ const Index = () => {
   const [newProgramInst, setNewProgramInst] = useState("");
   const qualisInputRef = useRef<HTMLInputElement>(null);
 
-  const { data, loading, uploadLattes, importQualis, fetchCitations, updateMetrics, exportCSV } = useProgramData(selectedProgramId);
+  const { data, loading, fetchAll, uploadLattes, importQualis, fetchCitations, updateMetrics, exportCSV } = useProgramData(selectedProgramId);
 
   const handleFilesLoad = useCallback(
     async (files: { name: string; content: string }[]) => {
@@ -148,6 +149,7 @@ const Index = () => {
                   <TabsTrigger value="projects">Projetos</TabsTrigger>
                   <TabsTrigger value="technical">Prod. Técnica</TabsTrigger>
                   <TabsTrigger value="reviewer">Parecerista</TabsTrigger>
+                  <TabsTrigger value="identifiers">Identificadores</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="dashboard">
@@ -176,6 +178,9 @@ const Index = () => {
                 </TabsContent>
                 <TabsContent value="reviewer">
                   <ReviewerTab activities={data.reviewerActivities} researchers={data.researchers} />
+                </TabsContent>
+                <TabsContent value="identifiers">
+                  <IdentifiersTab researchers={data.researchers} onRefresh={fetchAll} />
                 </TabsContent>
               </Tabs>
             ) : (

@@ -135,6 +135,8 @@ export function useProgramData(programId: string | null) {
             gender: parsed.gender,
             research_line: parsed.researchLines.join("; ") || null,
             lattes_xml_filename: file.name,
+            lattes_id: parsed.lattesId || null,
+            orcid: parsed.orcid || null,
           },
           { onConflict: "program_id,name", ignoreDuplicates: false }
         )
@@ -156,6 +158,8 @@ export function useProgramData(programId: string | null) {
             gender: parsed.gender,
             research_line: parsed.researchLines.join("; ") || null,
             lattes_xml_filename: file.name,
+            lattes_id: parsed.lattesId || null,
+            orcid: parsed.orcid || null,
           }).eq("id", researcherId);
         } else {
           const { data: newR } = await supabase
@@ -166,6 +170,8 @@ export function useProgramData(programId: string | null) {
               gender: parsed.gender,
               research_line: parsed.researchLines.join("; ") || null,
               lattes_xml_filename: file.name,
+              lattes_id: parsed.lattesId || null,
+              orcid: parsed.orcid || null,
             })
             .select()
             .single();
@@ -187,7 +193,7 @@ export function useProgramData(programId: string | null) {
       // Insert articles
       if (parsed.productions.length > 0) {
         const articles: TablesInsert<"articles">[] = parsed.productions
-          .filter((p) => p.type === "article")
+          .filter((p) => ["article", "book", "bookChapter", "eventWork"].includes(p.type))
           .map((p) => ({
             researcher_id: researcherId,
             title: p.title,
@@ -195,6 +201,7 @@ export function useProgramData(programId: string | null) {
             journal: p.extra?.journal || null,
             issn: p.extra?.issn || null,
             doi: p.extra?.doi || null,
+            isbn: p.extra?.isbn || null,
             authors: p.authors,
           }));
         if (articles.length > 0) {

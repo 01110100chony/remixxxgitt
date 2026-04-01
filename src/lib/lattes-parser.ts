@@ -61,6 +61,8 @@ export interface ReviewerActivityParsed {
 export interface ResearcherInfo {
   name: string;
   gender: string;
+  lattesId: string;
+  orcid: string;
   researchLines: string[];
   productions: Production[];
   orientations: Orientation[];
@@ -126,12 +128,16 @@ export function parseLattesXML(xmlString: string): ResearcherInfo {
   const parser = new DOMParser();
   const doc = parser.parseFromString(xmlString, "text/xml");
 
+  const curriculo = doc.querySelector("CURRICULO-VITAE");
+  const lattesId = getAttr(curriculo, "NUMERO-IDENTIFICADOR") || "";
+
   const dadosGerais = doc.querySelector("DADOS-GERAIS");
   const name = getAttr(dadosGerais, "NOME-COMPLETO") || "Pesquisador desconhecido";
   const sexoRaw = getAttr(dadosGerais, "SEXO");
   const gender =
     sexoRaw === "MASCULINO" ? "Homem" :
     sexoRaw === "FEMININO" ? "Mulher" : "Não informado";
+  const orcid = getAttr(dadosGerais, "ORCID-ID") || "";
 
   // Research lines
   const researchLines: string[] = [];
@@ -176,7 +182,9 @@ export function parseLattesXML(xmlString: string): ResearcherInfo {
       year: getAttr(db, "ANO") || "—",
       authors: getAuthors(el),
       researcher: name,
-      extra: {},
+      extra: {
+        isbn: getAttr(el.querySelector("DETALHAMENTO-DO-LIVRO"), "ISBN"),
+      },
     });
   });
 
@@ -190,7 +198,9 @@ export function parseLattesXML(xmlString: string): ResearcherInfo {
       year: getAttr(db, "ANO") || "—",
       authors: getAuthors(el),
       researcher: name,
-      extra: {},
+      extra: {
+        isbn: getAttr(el.querySelector("DETALHAMENTO-DO-CAPITULO"), "ISBN"),
+      },
     });
   });
 
@@ -393,7 +403,7 @@ export function parseLattesXML(xmlString: string): ResearcherInfo {
     });
   });
 
-  return { name, gender, researchLines, productions, orientations, projects, reviewerActivities };
+  return { name, gender, lattesId, orcid, researchLines, productions, orientations, projects, reviewerActivities };
 }
 
 // ---------- Aggregation helpers ----------
