@@ -295,6 +295,12 @@ const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
     }
 
     const importList = updateExisting ? withOrcid : toImport;
+
+    setImporting(true);
+    let imported = 0;
+    let errors = 0;
+
+    for (const researcher of importList) {
       try {
         const orcid = researcher.orcid!.replace(/^https?:\/\/orcid\.org\//, "");
         const authorRes = await fetch(`https://api.openalex.org/authors/https://orcid.org/${orcid}`, {
@@ -305,8 +311,7 @@ const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
 
         const author = await authorRes.json();
         const today = new Date().toISOString().slice(0, 10);
-
-        await supabase.from("citation_entries").insert({
+        const payload = {
           researcher_id: researcher.id,
           source: "scholar",
           total_citations: author.cited_by_count || 0,
@@ -316,7 +321,19 @@ const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
           search_name: author.display_name || researcher.name,
           reference_date: today,
           is_public: true,
-        } as any);
+        };
+
+        const existingEntry = citations.find(
+          (c) => c.researcher_id === researcher.id && c.source === "scholar" && c.profile_link?.includes("openalex.org")
+        );
+
+        if (updateExisting && existingEntry) {
+          const { error } = await supabase.from("citation_entries").update(payload).eq("id", existingEntry.id);
+          if (error) { errors++; continue; }
+        } else {
+          const { error } = await supabase.from("citation_entries").insert(payload as any);
+          if (error) { errors++; continue; }
+        }
 
         imported++;
       } catch {
