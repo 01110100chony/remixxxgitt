@@ -35,7 +35,7 @@ const Index = () => {
   const [newProgramCode, setNewProgramCode] = useState("");
   const qualisInputRef = useRef<HTMLInputElement>(null);
 
-  const { data, loading, fetchAll, uploadLattes, importQualis, fetchCitations, updateMetrics, exportCSV } = useProgramData(selectedProgramId); // refresh
+  const { data, loading, fetchAll, uploadLattes, importQualis, fetchCitations, updateMetrics, exportCSV, clearMyData } = useProgramData(selectedProgramId);
 
   const handleFilesLoad = useCallback(
     async (files: { name: string; content: string }[]) => {
@@ -151,6 +151,13 @@ const Index = () => {
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => exportCSV("projects")}>
                       <Download className="h-4 w-4 mr-1" /> Exportar projetos
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={async () => {
+                      if (window.confirm("Tem certeza que deseja limpar TODOS os seus dados? Esta ação não pode ser desfeita.")) {
+                        await clearMyData();
+                      }
+                    }}>
+                      <Trash2 className="h-4 w-4 mr-1" /> Limpar meus dados
                     </Button>
                   </>
                 )}

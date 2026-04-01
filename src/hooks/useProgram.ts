@@ -80,6 +80,7 @@ export function useProgramData(programId: string | null) {
   const [data, setData] = useState<ProgramData | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const fetchAll = useCallback(async () => {
     if (!programId) return;
@@ -159,7 +160,8 @@ export function useProgramData(programId: string | null) {
             lattes_xml_filename: file.name,
             lattes_id: parsed.lattesId || null,
             orcid: parsed.orcid || null,
-          },
+            user_id: user?.id,
+          } as any,
           { onConflict: "program_id,name", ignoreDuplicates: false }
         )
         .select()
@@ -194,7 +196,8 @@ export function useProgramData(programId: string | null) {
               lattes_xml_filename: file.name,
               lattes_id: parsed.lattesId || null,
               orcid: parsed.orcid || null,
-            })
+              user_id: user?.id,
+            } as any)
             .select()
             .single();
           researcherId = newR!.id;
@@ -214,7 +217,7 @@ export function useProgramData(programId: string | null) {
 
       // Insert articles
       if (parsed.productions.length > 0) {
-        const articles: TablesInsert<"articles">[] = parsed.productions
+        const articles = parsed.productions
           .filter((p) => ["article", "book", "bookChapter", "eventWork"].includes(p.type))
           .map((p) => ({
             researcher_id: researcherId,
@@ -225,6 +228,7 @@ export function useProgramData(programId: string | null) {
             doi: p.extra?.doi || null,
             isbn: p.extra?.isbn || null,
             authors: p.authors,
+            user_id: user?.id,
           }));
         if (articles.length > 0) {
           await supabase.from("articles").insert(articles);
@@ -233,20 +237,21 @@ export function useProgramData(programId: string | null) {
 
       // Insert orientations
       if (parsed.orientations.length > 0) {
-        const orientations: TablesInsert<"orientations">[] = parsed.orientations.map((o) => ({
+        const orientations = parsed.orientations.map((o) => ({
           researcher_id: researcherId,
           type: o.kind,
           status: o.type === "concluded" ? "concluded" : "in_progress",
           title: o.title,
           student: o.student,
           year: o.year !== "—" ? parseInt(o.year) || null : null,
+          user_id: user?.id,
         }));
-        await supabase.from("orientations").insert(orientations);
+        await supabase.from("orientations").insert(orientations as any);
       }
 
       // Insert projects
       if (parsed.projects.length > 0) {
-        const projects: TablesInsert<"projects">[] = parsed.projects.map((p) => ({
+        const projects = parsed.projects.map((p) => ({
           researcher_id: researcherId,
           title: p.title,
           year_start: p.yearStart !== "—" ? parseInt(p.yearStart) || null : null,
@@ -255,8 +260,9 @@ export function useProgramData(programId: string | null) {
           partner_institution: p.institution !== "—" ? p.institution : null,
           funder: p.funder !== "—" ? p.funder : null,
           type: p.type,
+          user_id: user?.id,
         }));
-        await supabase.from("projects").insert(projects);
+        await supabase.from("projects").insert(projects as any);
       }
 
       // Insert technical productions
@@ -264,14 +270,15 @@ export function useProgramData(programId: string | null) {
         ["software", "product", "technicalReport", "consultancy"].includes(p.type)
       );
       if (techProds.length > 0) {
-        const techInserts: TablesInsert<"technical_productions">[] = techProds.map((p) => ({
+        const techInserts = techProds.map((p) => ({
           researcher_id: researcherId,
           type: p.type,
           title: p.title,
           description: p.authors,
           year: p.year !== "—" ? parseInt(p.year) || null : null,
+          user_id: user?.id,
         }));
-        await supabase.from("technical_productions").insert(techInserts);
+        await supabase.from("technical_productions").insert(techInserts as any);
       }
 
       // Insert social insertion as technical productions
@@ -279,25 +286,27 @@ export function useProgramData(programId: string | null) {
         ["interview", "mediaParticipation", "eventOrganization"].includes(p.type)
       );
       if (socialProds.length > 0) {
-        const socialInserts: TablesInsert<"technical_productions">[] = socialProds.map((p) => ({
+        const socialInserts = socialProds.map((p) => ({
           researcher_id: researcherId,
           type: p.type,
           title: p.title,
           description: p.authors,
           year: p.year !== "—" ? parseInt(p.year) || null : null,
+          user_id: user?.id,
         }));
-        await supabase.from("technical_productions").insert(socialInserts);
+        await supabase.from("technical_productions").insert(socialInserts as any);
       }
 
       // Insert reviewer activities
       if (parsed.reviewerActivities && parsed.reviewerActivities.length > 0) {
-        const reviewerInserts: TablesInsert<"reviewer_activities">[] = parsed.reviewerActivities.map((r) => ({
+        const reviewerInserts = parsed.reviewerActivities.map((r) => ({
           researcher_id: researcherId,
           journal_event: r.journalEvent,
           type: r.type || null,
           year: r.year ? parseInt(r.year) || null : null,
+          user_id: user?.id,
         }));
-        await supabase.from("reviewer_activities").insert(reviewerInserts);
+        await supabase.from("reviewer_activities").insert(reviewerInserts as any);
       }
     }
 
@@ -359,7 +368,8 @@ export function useProgramData(programId: string | null) {
     await supabase.from("researcher_metrics").upsert({
       researcher_id: researcherId,
       ...metrics,
-    }, { onConflict: "researcher_id" });
+      user_id: user?.id,
+    } as any, { onConflict: "researcher_id" });
     await fetchAll();
   };
 
@@ -445,5 +455,22 @@ export function useProgramData(programId: string | null) {
     URL.revokeObjectURL(url);
   };
 
-  return { data, loading, fetchAll, uploadLattes, importQualis, fetchCitations, updateMetrics, exportCSV };
+  const clearMyData = async () => {
+    if (!user?.id) return;
+    const uid = user.id;
+    await Promise.all([
+      supabase.from("articles").delete().eq("user_id", uid),
+      supabase.from("orientations").delete().eq("user_id", uid),
+      supabase.from("projects").delete().eq("user_id", uid),
+      supabase.from("technical_productions").delete().eq("user_id", uid),
+      supabase.from("reviewer_activities").delete().eq("user_id", uid),
+      supabase.from("researcher_metrics").delete().eq("user_id", uid),
+      supabase.from("citation_entries").delete().eq("user_id", uid),
+    ]);
+    await supabase.from("researchers").delete().eq("user_id", uid);
+    toast({ title: "Dados limpos", description: "Todos os seus dados foram removidos." });
+    await fetchAll();
+  };
+
+  return { data, loading, fetchAll, uploadLattes, importQualis, fetchCitations, updateMetrics, exportCSV, clearMyData };
 }

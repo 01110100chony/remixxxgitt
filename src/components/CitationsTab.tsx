@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import type { Researcher } from "@/hooks/useProgram";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,6 +58,7 @@ const emptyForm = {
 
 const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [selectedResearcherId, setSelectedResearcherId] = useState<string>(researchers[0]?.id || "");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -116,6 +118,7 @@ const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
       profile_link: form.profile_link || null,
       reference_date: form.reference_date || null,
       is_public: form.is_public,
+      user_id: user?.id,
     };
 
     let error;
@@ -232,6 +235,7 @@ const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
           search_name: entry.search_name,
           reference_date: today,
           is_public: true,
+          user_id: user?.id,
         };
 
         if (shouldUpdate && existingEntries.length > 0 && entry.source === "scholar") {
@@ -321,6 +325,7 @@ const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
           search_name: author.display_name || researcher.name,
           reference_date: today,
           is_public: true,
+          user_id: user?.id,
         };
 
         const existingEntry = citations.find(
