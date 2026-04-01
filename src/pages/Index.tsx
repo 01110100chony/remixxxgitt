@@ -87,8 +87,11 @@ const Index = () => {
             Lattes <span className="text-accent">Reader</span>
             <span className="text-xs font-normal text-muted-foreground ml-2">Painel PPG</span>
           </h1>
-          <div className="ml-auto flex items-center gap-3">
+          <div className="ml-auto flex items-center gap-2">
             <span className="text-sm text-muted-foreground hidden sm:inline">{user?.email}</span>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
+              <User className="h-4 w-4 mr-1" /> Perfil
+            </Button>
             <Button variant="ghost" size="sm" onClick={signOut}>
               <LogOut className="h-4 w-4 mr-1" /> Sair
             </Button>
