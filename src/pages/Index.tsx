@@ -14,6 +14,7 @@ import ProjectsDbTab from "@/components/ProjectsDbTab";
 import TechnicalProductionsTab from "@/components/TechnicalProductionsTab";
 import ReviewerTab from "@/components/ReviewerTab";
 import ImpactTab from "@/components/ImpactTab";
+import IdentifiersTab from "@/components/IdentifiersTab";
 import FileUpload from "@/components/FileUpload";
 
 const Index = () => {
