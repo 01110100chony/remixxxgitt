@@ -277,7 +277,7 @@ const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
     let imported = 0;
     let errors = 0;
 
-    for (const researcher of withOrcid) {
+    for (const researcher of toImport) {
       try {
         const orcid = researcher.orcid!.replace(/^https?:\/\/orcid\.org\//, "");
         const authorRes = await fetch(`https://api.openalex.org/authors/https://orcid.org/${orcid}`, {
