@@ -251,7 +251,7 @@ export function useProgramData(programId: string | null) {
 
       // Insert projects
       if (parsed.projects.length > 0) {
-        const projects: TablesInsert<"projects">[] = parsed.projects.map((p) => ({
+        const projects = parsed.projects.map((p) => ({
           researcher_id: researcherId,
           title: p.title,
           year_start: p.yearStart !== "—" ? parseInt(p.yearStart) || null : null,
@@ -260,8 +260,9 @@ export function useProgramData(programId: string | null) {
           partner_institution: p.institution !== "—" ? p.institution : null,
           funder: p.funder !== "—" ? p.funder : null,
           type: p.type,
+          user_id: user?.id,
         }));
-        await supabase.from("projects").insert(projects);
+        await supabase.from("projects").insert(projects as any);
       }
 
       // Insert technical productions
