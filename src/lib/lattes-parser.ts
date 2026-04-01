@@ -143,6 +143,7 @@ export function parseLattesXML(xmlString: string): ResearcherInfo {
   const productions: Production[] = [];
   const orientations: Orientation[] = [];
   const projects: Project[] = [];
+  const reviewerActivities: ReviewerActivityParsed[] = [];
 
   // ---- Bibliographic production ----
 
