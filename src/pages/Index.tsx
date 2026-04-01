@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ProgramDashboard from "@/components/ProgramDashboard";
+import EvaluationDashboard from "@/components/EvaluationDashboard";
 import ArticlesTab from "@/components/ArticlesTab";
 import OrientationsDbTab from "@/components/OrientationsDbTab";
 import ProjectsDbTab from "@/components/ProjectsDbTab";
@@ -161,6 +162,7 @@ const Index = () => {
               <Tabs defaultValue="dashboard" className="space-y-6">
                 <TabsList className="flex-wrap h-auto gap-1">
                   <TabsTrigger value="dashboard">Visão Geral</TabsTrigger>
+                  <TabsTrigger value="evaluation">Avaliação PPG</TabsTrigger>
                   <TabsTrigger value="articles">Artigos</TabsTrigger>
                   <TabsTrigger value="impact">Impacto</TabsTrigger>
                   <TabsTrigger value="orientations">Orientações</TabsTrigger>
@@ -175,6 +177,9 @@ const Index = () => {
 
                 <TabsContent value="dashboard">
                   <ProgramDashboard data={data} />
+                </TabsContent>
+                <TabsContent value="evaluation">
+                  <EvaluationDashboard data={data} />
                 </TabsContent>
                 <TabsContent value="articles">
                   <ArticlesTab articles={data.articles} researchers={data.researchers} />
