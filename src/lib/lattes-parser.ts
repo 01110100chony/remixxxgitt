@@ -52,6 +52,12 @@ export interface Project {
   researcher: string;
 }
 
+export interface ReviewerActivityParsed {
+  journalEvent: string;
+  type: string;
+  year: string;
+}
+
 export interface ResearcherInfo {
   name: string;
   gender: string;
@@ -59,6 +65,7 @@ export interface ResearcherInfo {
   productions: Production[];
   orientations: Orientation[];
   projects: Project[];
+  reviewerActivities: ReviewerActivityParsed[];
 }
 
 export interface ParsedData {
