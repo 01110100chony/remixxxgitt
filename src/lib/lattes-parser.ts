@@ -182,7 +182,9 @@ export function parseLattesXML(xmlString: string): ResearcherInfo {
       year: getAttr(db, "ANO") || "—",
       authors: getAuthors(el),
       researcher: name,
-      extra: {},
+      extra: {
+        isbn: getAttr(el.querySelector("DETALHAMENTO-DO-LIVRO"), "ISBN"),
+      },
     });
   });
 
@@ -196,7 +198,9 @@ export function parseLattesXML(xmlString: string): ResearcherInfo {
       year: getAttr(db, "ANO") || "—",
       authors: getAuthors(el),
       researcher: name,
-      extra: {},
+      extra: {
+        isbn: getAttr(el.querySelector("DETALHAMENTO-DO-CAPITULO"), "ISBN"),
+      },
     });
   });
 
