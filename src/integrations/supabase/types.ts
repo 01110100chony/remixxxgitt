@@ -126,6 +126,41 @@ export type Database = {
           },
         ]
       }
+      evaluation_weights: {
+        Row: {
+          config: Json
+          created_at: string
+          id: string
+          mode: string
+          program_id: string
+          updated_at: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          id?: string
+          mode?: string
+          program_id: string
+          updated_at?: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          id?: string
+          mode?: string
+          program_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluation_weights_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orientations: {
         Row: {
           created_at: string
