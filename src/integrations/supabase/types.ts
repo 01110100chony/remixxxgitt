@@ -145,27 +145,36 @@ export type Database = {
       }
       programs: {
         Row: {
+          area: string | null
           created_at: string
           created_by: string | null
           id: string
           institution: string
+          modality: string | null
           name: string
+          program_code: string | null
           updated_at: string
         }
         Insert: {
+          area?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
           institution: string
+          modality?: string | null
           name: string
+          program_code?: string | null
           updated_at?: string
         }
         Update: {
+          area?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
           institution?: string
+          modality?: string | null
           name?: string
+          program_code?: string | null
           updated_at?: string
         }
         Relationships: []
