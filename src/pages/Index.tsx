@@ -19,6 +19,7 @@ import FileUpload from "@/components/FileUpload";
 import CAPESReport from "@/components/CAPESReport";
 import WebsiteTab from "@/components/WebsiteTab";
 import ProgramSettings from "@/components/ProgramSettings";
+import SocialMediaTab from "@/components/SocialMediaTab";
 
 const Index = () => {
   const { user, signOut, isCoordinatorOrAdmin } = useAuth();
@@ -168,6 +169,7 @@ const Index = () => {
                   <TabsTrigger value="reviewer">Parecerista</TabsTrigger>
                   <TabsTrigger value="identifiers">Identificadores</TabsTrigger>
                   <TabsTrigger value="website">Site</TabsTrigger>
+                  <TabsTrigger value="social">Presença Digital</TabsTrigger>
                   <TabsTrigger value="settings">Configurações</TabsTrigger>
                 </TabsList>
 
@@ -203,6 +205,9 @@ const Index = () => {
                 </TabsContent>
                 <TabsContent value="website">
                   <WebsiteTab program={data.program} onRefresh={fetchAll} />
+                </TabsContent>
+                <TabsContent value="social">
+                  <SocialMediaTab program={data.program} onRefresh={fetchAll} />
                 </TabsContent>
                 <TabsContent value="settings">
                   <ProgramSettings program={data.program} onRefresh={fetchAll} />

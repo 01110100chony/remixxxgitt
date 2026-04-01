@@ -155,6 +155,11 @@ export type Database = {
           modality: string | null
           name: string
           program_code: string | null
+          social_facebook: string | null
+          social_instagram: string | null
+          social_linkedin: string | null
+          social_twitter: string | null
+          social_youtube: string | null
           updated_at: string
           website_description: string | null
           website_languages: string | null
@@ -172,6 +177,11 @@ export type Database = {
           modality?: string | null
           name: string
           program_code?: string | null
+          social_facebook?: string | null
+          social_instagram?: string | null
+          social_linkedin?: string | null
+          social_twitter?: string | null
+          social_youtube?: string | null
           updated_at?: string
           website_description?: string | null
           website_languages?: string | null
@@ -189,6 +199,11 @@ export type Database = {
           modality?: string | null
           name?: string
           program_code?: string | null
+          social_facebook?: string | null
+          social_instagram?: string | null
+          social_linkedin?: string | null
+          social_twitter?: string | null
+          social_youtube?: string | null
           updated_at?: string
           website_description?: string | null
           website_languages?: string | null
