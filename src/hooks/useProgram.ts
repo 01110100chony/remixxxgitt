@@ -15,6 +15,23 @@ export type ReviewerActivity = Tables<"reviewer_activities">;
 export type ResearcherMetric = Tables<"researcher_metrics">;
 export type QualisRef = Tables<"qualis_reference">;
 
+export interface CitationEntry {
+  id: string;
+  researcher_id: string;
+  source: "wos" | "scopus" | "scholar" | "other";
+  source_name: string | null;
+  researcher_id_wos: string | null;
+  total_citations: number | null;
+  total_works: number | null;
+  h_index: number | null;
+  search_name: string | null;
+  profile_link: string | null;
+  reference_date: string | null;
+  is_public: boolean | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ProgramData {
   program: Program;
   researchers: Researcher[];
@@ -25,6 +42,7 @@ export interface ProgramData {
   reviewerActivities: ReviewerActivity[];
   metrics: ResearcherMetric[];
   qualisRef: QualisRef[];
+  citationEntries: CitationEntry[];
 }
 
 export function usePrograms() {
