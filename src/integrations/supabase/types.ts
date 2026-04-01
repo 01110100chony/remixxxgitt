@@ -67,6 +67,65 @@ export type Database = {
           },
         ]
       }
+      citation_entries: {
+        Row: {
+          created_at: string
+          h_index: number | null
+          id: string
+          is_public: boolean | null
+          profile_link: string | null
+          reference_date: string | null
+          researcher_id: string
+          researcher_id_wos: string | null
+          search_name: string | null
+          source: string
+          source_name: string | null
+          total_citations: number | null
+          total_works: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          h_index?: number | null
+          id?: string
+          is_public?: boolean | null
+          profile_link?: string | null
+          reference_date?: string | null
+          researcher_id: string
+          researcher_id_wos?: string | null
+          search_name?: string | null
+          source: string
+          source_name?: string | null
+          total_citations?: number | null
+          total_works?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          h_index?: number | null
+          id?: string
+          is_public?: boolean | null
+          profile_link?: string | null
+          reference_date?: string | null
+          researcher_id?: string
+          researcher_id_wos?: string | null
+          search_name?: string | null
+          source?: string
+          source_name?: string | null
+          total_citations?: number | null
+          total_works?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "citation_entries_researcher_id_fkey"
+            columns: ["researcher_id"]
+            isOneToOne: false
+            referencedRelation: "researchers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orientations: {
         Row: {
           created_at: string
