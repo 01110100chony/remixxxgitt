@@ -161,6 +161,7 @@ export function parseLattesXML(xmlString: string): ResearcherInfo {
       extra: {
         journal: getAttr(det, "TITULO-DO-PERIODICO-OU-REVISTA"),
         doi: getAttr(db, "DOI"),
+        issn: getAttr(det, "ISSN"),
       },
     });
   });
