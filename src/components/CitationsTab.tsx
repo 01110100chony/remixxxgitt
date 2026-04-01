@@ -118,6 +118,7 @@ const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
       profile_link: form.profile_link || null,
       reference_date: form.reference_date || null,
       is_public: form.is_public,
+      user_id: user?.id,
     };
 
     let error;
