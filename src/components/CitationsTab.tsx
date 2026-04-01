@@ -149,6 +149,141 @@ const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
     setShowForm(true);
   };
 
+  const handleImportOpenAlex = async () => {
+    const researcher = researchers.find((r) => r.id === selectedResearcherId);
+    if (!researcher?.orcid) {
+      toast({ title: "ORCID ausente", description: "Este pesquisador não possui ORCID cadastrado. Cadastre o ORCID na aba Identificadores.", variant: "destructive" });
+      return;
+    }
+
+    setImporting(true);
+    try {
+      const orcid = researcher.orcid.replace(/^https?:\/\/orcid\.org\//, "");
+      const authorRes = await fetch(`https://api.openalex.org/authors/https://orcid.org/${orcid}`, {
+        headers: { "Accept": "application/json", "User-Agent": "LattesReader/1.0 (mailto:admin@example.com)" },
+      });
+
+      if (!authorRes.ok) {
+        throw new Error(`Autor não encontrado no OpenAlex (status ${authorRes.status})`);
+      }
+
+      const author = await authorRes.json();
+      const citedBy = author.cited_by_count || 0;
+      const worksCount = author.works_count || 0;
+      const hIndex = author.summary_stats?.h_index || 0;
+      const scholarId = author.ids?.openalex || "";
+
+      // Determine sources to create
+      const entries: Array<{
+        source: string;
+        total_citations: number;
+        total_works: number;
+        h_index: number | null;
+        profile_link: string | null;
+        search_name: string;
+      }> = [];
+
+      // Main OpenAlex aggregate entry (maps to "scholar" since it aggregates multiple sources)
+      entries.push({
+        source: "scholar",
+        total_citations: citedBy,
+        total_works: worksCount,
+        h_index: hIndex,
+        profile_link: scholarId ? `https://openalex.org/authors/${scholarId.split("/").pop()}` : null,
+        search_name: author.display_name || researcher.name,
+      });
+
+      // Check for Scopus data from OpenAlex
+      if (author.ids?.scopus) {
+        const scopusUrl = author.ids.scopus;
+        entries.push({
+          source: "scopus",
+          total_citations: citedBy,
+          total_works: worksCount,
+          h_index: null,
+          profile_link: scopusUrl,
+          search_name: author.display_name || researcher.name,
+        });
+      }
+
+      // Insert entries
+      const today = new Date().toISOString().slice(0, 10);
+      for (const entry of entries) {
+        const { error } = await supabase.from("citation_entries").insert({
+          researcher_id: selectedResearcherId,
+          source: entry.source,
+          total_citations: entry.total_citations,
+          total_works: entry.total_works,
+          h_index: entry.h_index,
+          profile_link: entry.profile_link,
+          search_name: entry.search_name,
+          reference_date: today,
+          is_public: true,
+        } as any);
+        if (error) console.error("Erro ao inserir citação:", error.message);
+      }
+
+      toast({
+        title: "Importação concluída",
+        description: `Importados dados do OpenAlex: ${citedBy} citações, ${worksCount} trabalhos, h-index ${hIndex}.`,
+      });
+      await onRefresh();
+    } catch (err: any) {
+      toast({ title: "Erro na importação", description: err.message, variant: "destructive" });
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const handleImportAllOpenAlex = async () => {
+    const withOrcid = researchers.filter((r) => r.orcid);
+    if (withOrcid.length === 0) {
+      toast({ title: "Nenhum ORCID", description: "Nenhum pesquisador possui ORCID cadastrado.", variant: "destructive" });
+      return;
+    }
+
+    setImporting(true);
+    let imported = 0;
+    let errors = 0;
+
+    for (const researcher of withOrcid) {
+      try {
+        const orcid = researcher.orcid!.replace(/^https?:\/\/orcid\.org\//, "");
+        const authorRes = await fetch(`https://api.openalex.org/authors/https://orcid.org/${orcid}`, {
+          headers: { "Accept": "application/json", "User-Agent": "LattesReader/1.0 (mailto:admin@example.com)" },
+        });
+
+        if (!authorRes.ok) { errors++; continue; }
+
+        const author = await authorRes.json();
+        const today = new Date().toISOString().slice(0, 10);
+
+        await supabase.from("citation_entries").insert({
+          researcher_id: researcher.id,
+          source: "scholar",
+          total_citations: author.cited_by_count || 0,
+          total_works: author.works_count || 0,
+          h_index: author.summary_stats?.h_index || 0,
+          profile_link: author.ids?.openalex ? `https://openalex.org/authors/${author.ids.openalex.split("/").pop()}` : null,
+          search_name: author.display_name || researcher.name,
+          reference_date: today,
+          is_public: true,
+        } as any);
+
+        imported++;
+      } catch {
+        errors++;
+      }
+    }
+
+    toast({
+      title: "Importação em lote concluída",
+      description: `${imported} pesquisador(es) importado(s)${errors > 0 ? `, ${errors} erro(s)` : ""}.`,
+    });
+    await onRefresh();
+    setImporting(false);
+  };
+
   const renderSourceSection = (source: string, entries: CitationEntry[]) => {
     const { label, icon: Icon } = SOURCE_LABELS[source];
     return (
