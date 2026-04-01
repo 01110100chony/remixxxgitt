@@ -221,6 +221,7 @@ export function useProgramData(programId: string | null) {
           .filter((p) => ["article", "book", "bookChapter", "eventWork"].includes(p.type))
           .map((p) => ({
             researcher_id: researcherId,
+            program_id: programId,
             title: p.title,
             year: p.year !== "—" ? parseInt(p.year) || null : null,
             journal: p.extra?.journal || null,
