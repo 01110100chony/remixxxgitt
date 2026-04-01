@@ -277,18 +277,24 @@ const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
       return;
     }
 
-    if (alreadyImported.length > 0) {
-      const confirm = window.confirm(
-        `${alreadyImported.length} pesquisador(es) já possuem dados do OpenAlex e serão ignorados. Importar para os ${toImport.length} restante(s)?`
+    let updateExisting = false;
+    if (alreadyImported.length > 0 && toImport.length > 0) {
+      const action = window.prompt(
+        `${alreadyImported.length} pesquisador(es) já possuem dados do OpenAlex.\n\nDigite:\n• "atualizar" para atualizar todos (existentes + novos)\n• "novos" para importar apenas os ${toImport.length} novos\n• Ou cancele`,
+        "atualizar"
       );
-      if (!confirm) return;
+      if (!action) return;
+      updateExisting = action.trim().toLowerCase() === "atualizar";
+    } else if (alreadyImported.length > 0 && toImport.length === 0) {
+      const action = window.prompt(
+        `Todos os ${alreadyImported.length} pesquisador(es) já possuem dados do OpenAlex.\n\nDigite "atualizar" para atualizar os dados, ou cancele.`,
+        "atualizar"
+      );
+      if (!action || action.trim().toLowerCase() !== "atualizar") return;
+      updateExisting = true;
     }
 
-    setImporting(true);
-    let imported = 0;
-    let errors = 0;
-
-    for (const researcher of toImport) {
+    const importList = updateExisting ? withOrcid : toImport;
       try {
         const orcid = researcher.orcid!.replace(/^https?:\/\/orcid\.org\//, "");
         const authorRes = await fetch(`https://api.openalex.org/authors/https://orcid.org/${orcid}`, {
