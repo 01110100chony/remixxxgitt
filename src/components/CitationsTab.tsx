@@ -343,7 +343,7 @@ const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
 
     toast({
       title: "Importação em lote concluída",
-      description: `${imported} pesquisador(es) importado(s)${errors > 0 ? `, ${errors} erro(s)` : ""}.`,
+      description: `${imported} pesquisador(es) ${updateExisting ? "atualizado(s)" : "importado(s)"}${errors > 0 ? `, ${errors} erro(s)` : ""}.`,
     });
     await onRefresh();
     setImporting(false);
