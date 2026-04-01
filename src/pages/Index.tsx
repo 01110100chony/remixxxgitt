@@ -25,6 +25,9 @@ const Index = () => {
   const [showCreateProgram, setShowCreateProgram] = useState(false);
   const [newProgramName, setNewProgramName] = useState("");
   const [newProgramInst, setNewProgramInst] = useState("");
+  const [newProgramArea, setNewProgramArea] = useState("");
+  const [newProgramModality, setNewProgramModality] = useState("");
+  const [newProgramCode, setNewProgramCode] = useState("");
   const qualisInputRef = useRef<HTMLInputElement>(null);
 
   const { data, loading, fetchAll, uploadLattes, importQualis, fetchCitations, updateMetrics, exportCSV } = useProgramData(selectedProgramId); // refresh
