@@ -292,6 +292,7 @@ export function useProgramData(programId: string | null) {
       if (socialProds.length > 0) {
         const socialInserts = socialProds.map((p) => ({
           researcher_id: researcherId,
+          program_id: programId,
           type: p.type,
           title: p.title,
           description: p.authors,
