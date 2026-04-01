@@ -220,10 +220,9 @@ const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
         });
       }
 
-      // Insert entries
       const today = new Date().toISOString().slice(0, 10);
       for (const entry of entries) {
-        const { error } = await supabase.from("citation_entries").insert({
+        const payload = {
           researcher_id: selectedResearcherId,
           source: entry.source,
           total_citations: entry.total_citations,
@@ -233,8 +232,17 @@ const CitationsTab = ({ researchers, citations, onRefresh }: Props) => {
           search_name: entry.search_name,
           reference_date: today,
           is_public: true,
-        } as any);
-        if (error) console.error("Erro ao inserir citação:", error.message);
+        };
+
+        if (shouldUpdate && existingEntries.length > 0 && entry.source === "scholar") {
+          // Update existing OpenAlex entry
+          const existingId = existingEntries[0].id;
+          const { error } = await supabase.from("citation_entries").update(payload).eq("id", existingId);
+          if (error) console.error("Erro ao atualizar citação:", error.message);
+        } else {
+          const { error } = await supabase.from("citation_entries").insert(payload as any);
+          if (error) console.error("Erro ao inserir citação:", error.message);
+        }
       }
 
       toast({
