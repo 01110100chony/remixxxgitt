@@ -25,7 +25,7 @@ import SocialMediaTab from "@/components/SocialMediaTab";
 import AdminPanel from "@/components/AdminPanel";
 
 const Index = () => {
-  const { user, signOut, isCoordinatorOrAdmin } = useAuth();
+  const { user, signOut, isCoordinatorOrAdmin, roles } = useAuth();
   const { programs, loading: programsLoading, createProgram } = usePrograms();
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
   const [showCreateProgram, setShowCreateProgram] = useState(false);
