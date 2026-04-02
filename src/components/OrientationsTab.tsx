@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, GraduationCap, CalendarDays, Info } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 interface OrientationsTabProps {
   orientations: Orientation[];
@@ -52,6 +53,18 @@ const OrientationsTab = ({ orientations, researchers }: OrientationsTabProps) =>
   const doutorado = pgPeriod.filter((o) => isDoutorado(o.kind)).length;
   const nonPG = orientations.length - pgOnly.length;
 
+  const chartData = useMemo(() => {
+    const yearMap = new Map<number, { year: number; mestrado: number; doutorado: number }>();
+    pgPeriod.forEach((o) => {
+      const y = parseInt(o.year);
+      if (isNaN(y)) return;
+      if (!yearMap.has(y)) yearMap.set(y, { year: y, mestrado: 0, doutorado: 0 });
+      const entry = yearMap.get(y)!;
+      if (isMestrado(o.kind)) entry.mestrado++;
+      else if (isDoutorado(o.kind)) entry.doutorado++;
+    });
+    return Array.from(yearMap.values()).sort((a, b) => a.year - b.year);
+  }, [pgPeriod]);
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
     return orientations.filter((o) => {
@@ -145,7 +158,23 @@ const OrientationsTab = ({ orientations, researchers }: OrientationsTabProps) =>
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Chart */}
+      {chartData.length > 0 && (
+        <div className="rounded-lg border bg-card p-4 space-y-3">
+          <h3 className="text-sm font-semibold text-foreground">Evolução de orientações PG por ano</h3>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <XAxis dataKey="year" className="text-xs" />
+              <YAxis allowDecimals={false} className="text-xs" />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="mestrado" name="Mestrado" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="doutorado" name="Doutorado" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-2">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
