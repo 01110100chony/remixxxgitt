@@ -215,6 +215,7 @@ const EvaluationDashboard = ({ data }: Props) => {
         </div>
       </div>
 
+      {mode === "simplified" ? (
         /* =================== SIMPLIFIED MODE =================== */
         <>
           {/* Overall Score */}
