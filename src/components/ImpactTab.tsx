@@ -1,12 +1,16 @@
 import { useMemo, useState } from "react";
 import type { Article, Researcher, ResearcherMetric } from "@/hooks/useProgram";
+import { getQuadrienio } from "@/lib/orientation-utils";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Zap, TrendingUp, Award, RefreshCw } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Zap, TrendingUp, Award, RefreshCw, CalendarDays } from "lucide-react";
+
+type PeriodMode = "quadrienio" | "custom" | "all";
 
 interface Props {
   articles: Article[];
@@ -27,9 +31,30 @@ const ImpactTab = ({ articles, researchers, metrics, onFetchCitations, onUpdateM
   const [fetchingId, setFetchingId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState({ total_citations: 0, h_index: 0, i10_index: 0 });
+  const [periodMode, setPeriodMode] = useState<PeriodMode>("quadrienio");
 
-  const articlesByDoi = articles.filter((a) => a.doi).length;
-  const articlesByIssn = articles.filter((a) => a.issn).length;
+  const [qStart, qEnd] = getQuadrienio();
+  const years = useMemo(() => {
+    const set = new Set<number>();
+    articles.forEach((a) => { if (a.year) set.add(a.year); });
+    return Array.from(set).sort((a, b) => a - b);
+  }, [articles]);
+
+  const [customStart, setCustomStart] = useState<number>(years[0] || qStart);
+  const [customEnd, setCustomEnd] = useState<number>(years[years.length - 1] || qEnd);
+
+  const effectiveStart = periodMode === "quadrienio" ? qStart : periodMode === "custom" ? customStart : 0;
+  const effectiveEnd = periodMode === "quadrienio" ? qEnd : periodMode === "custom" ? customEnd : 9999;
+
+  const filteredArticles = useMemo(() =>
+    periodMode === "all"
+      ? articles
+      : articles.filter((a) => a.year && a.year >= effectiveStart && a.year <= effectiveEnd),
+    [articles, effectiveStart, effectiveEnd, periodMode]
+  );
+
+  const articlesByDoi = filteredArticles.filter((a) => a.doi).length;
+  const articlesByIssn = filteredArticles.filter((a) => a.issn).length;
   const hasMetrics = metrics.length > 0 && metrics.some((m) => (m.total_citations || 0) > 0 || (m.h_index || 0) > 0);
   const totalCitations = metrics.reduce((s, m) => s + (m.total_citations || 0), 0);
   const avgHIndex = researchers.length > 0 ? (metrics.reduce((s, m) => s + (m.h_index || 0), 0) / researchers.length).toFixed(1) : "—";
@@ -37,12 +62,12 @@ const ImpactTab = ({ articles, researchers, metrics, onFetchCitations, onUpdateM
   // Qualis distribution
   const qualisDist = useMemo(() => {
     const map: Record<string, number> = {};
-    articles.forEach((a) => {
+    filteredArticles.forEach((a) => {
       const q = a.qualis || "Sem Qualis";
       map[q] = (map[q] || 0) + 1;
     });
     return Object.entries(map).sort(([a], [b]) => a.localeCompare(b)).map(([name, count]) => ({ name, count }));
-  }, [articles]);
+  }, [filteredArticles]);
 
   const handleFetch = async (researcherId: string) => {
     setFetchingId(researcherId);
@@ -59,15 +84,46 @@ const ImpactTab = ({ articles, researchers, metrics, onFetchCitations, onUpdateM
 
   return (
     <div className="space-y-6">
+      {/* Period filter */}
+      <div className="flex flex-wrap items-end gap-3 rounded-lg border bg-card p-4">
+        <CalendarDays className="h-4 w-4 text-accent" />
+        <div className="space-y-1">
+          <Label className="text-xs">Período</Label>
+          <Select value={periodMode} onValueChange={(v) => setPeriodMode(v as PeriodMode)}>
+            <SelectTrigger className="w-40 h-8"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="quadrienio">Quadriênio ({qStart}–{qEnd})</SelectItem>
+              <SelectItem value="custom">Personalizado</SelectItem>
+              <SelectItem value="all">Todos</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {periodMode === "custom" && (
+          <>
+            <div className="space-y-1">
+              <Label className="text-xs">Início</Label>
+              <Input type="number" className="w-24 h-8" value={customStart} onChange={(e) => setCustomStart(+e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Fim</Label>
+              <Input type="number" className="w-24 h-8" value={customEnd} onChange={(e) => setCustomEnd(+e.target.value)} />
+            </div>
+          </>
+        )}
+        <span className="text-xs text-muted-foreground ml-auto">
+          {filteredArticles.length} artigos no período
+        </span>
+      </div>
+
       {/* KPIs */}
       <div className="grid gap-3 grid-cols-2 sm:grid-cols-4 lg:grid-cols-6">
         {[
-          { label: "Total artigos", value: articles.length, icon: TrendingUp },
+          { label: "Total artigos", value: filteredArticles.length, icon: TrendingUp },
           { label: "Com DOI", value: articlesByDoi, icon: Zap },
           { label: "Com ISSN", value: articlesByIssn, icon: Zap },
           { label: "Citações totais", value: hasMetrics ? totalCitations : "—", icon: Award },
           { label: "h-index médio", value: hasMetrics ? avgHIndex : "—", icon: Award },
-          { label: "Qualificados", value: articles.filter((a) => a.qualis && a.qualis !== "Sem Qualis").length, icon: Award },
+          { label: "Qualificados", value: filteredArticles.filter((a) => a.qualis && a.qualis !== "Sem Qualis").length, icon: Award },
         ].map(({ label, value, icon: Icon }) => (
           <div key={label} className="rounded-lg border bg-card p-4 text-center">
             <Icon className="h-4 w-4 text-accent mx-auto mb-1" />
@@ -110,7 +166,7 @@ const ImpactTab = ({ articles, researchers, metrics, onFetchCitations, onUpdateM
         <div className="space-y-3">
           {researchers.map((r) => {
             const m = getMetric(r.id);
-            const rArticles = articles.filter((a) => a.researcher_id === r.id);
+            const rArticles = filteredArticles.filter((a) => a.researcher_id === r.id);
             const withDoi = rArticles.filter((a) => a.doi).length;
             const isEditing = editingId === r.id;
 
