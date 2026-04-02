@@ -89,7 +89,7 @@ const ProgramDashboard = ({ data }: Props) => {
         {[
           { label: "Artigos", value: articles.length, icon: BookOpen },
           { label: "Pesquisadores", value: researchers.length, icon: Users },
-          { label: "Orientações", value: orientations.length, icon: GraduationCap },
+          { label: "Orientações PG", value: pgOrientations.length, icon: GraduationCap },
           { label: "Projetos", value: projects.length, icon: FolderKanban },
           { label: "Prod. técnica", value: technicalProductions.length, icon: Wrench },
           { label: "Pareceres", value: reviewerActivities.length, icon: ClipboardCheck },
