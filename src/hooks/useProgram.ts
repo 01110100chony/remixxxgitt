@@ -509,5 +509,5 @@ export function useProgramData(programId: string | null) {
     await fetchAll();
   };
 
-  return { data, loading, fetchAll, uploadLattes, importQualis, fetchCitations, updateMetrics, exportCSV, clearMyData };
+  return { data, loading, fetchAll, uploadLattes, importQualis, fetchCitations, fetchAllCitations, updateMetrics, exportCSV, clearMyData };
 }
