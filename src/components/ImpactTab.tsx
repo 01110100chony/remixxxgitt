@@ -30,8 +30,9 @@ const ImpactTab = ({ articles, researchers, metrics, onFetchCitations, onUpdateM
 
   const articlesByDoi = articles.filter((a) => a.doi).length;
   const articlesByIssn = articles.filter((a) => a.issn).length;
+  const hasMetrics = metrics.length > 0 && metrics.some((m) => (m.total_citations || 0) > 0 || (m.h_index || 0) > 0);
   const totalCitations = metrics.reduce((s, m) => s + (m.total_citations || 0), 0);
-  const avgHIndex = researchers.length > 0 ? (metrics.reduce((s, m) => s + (m.h_index || 0), 0) / researchers.length).toFixed(1) : "0";
+  const avgHIndex = researchers.length > 0 ? (metrics.reduce((s, m) => s + (m.h_index || 0), 0) / researchers.length).toFixed(1) : "—";
 
   // Qualis distribution
   const qualisDist = useMemo(() => {
