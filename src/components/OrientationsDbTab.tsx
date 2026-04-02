@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import type { OrientationRow, Researcher } from "@/hooks/useProgram";
+import { isPGOrientation, isMestrado, isDoutorado, getQuadrienio } from "@/lib/orientation-utils";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, GraduationCap } from "lucide-react";
+import { Search, GraduationCap, Info } from "lucide-react";
 
 interface Props {
   orientations: OrientationRow[];
