@@ -20,8 +20,14 @@ const OrientationsDbTab = ({ orientations, researchers }: Props) => {
   const [researcherFilter, setResearcherFilter] = useState("all");
 
   const types = useMemo(() => Array.from(new Set(orientations.map((o) => o.type))).sort(), [orientations]);
-  const concluded = orientations.filter((o) => o.status === "concluded").length;
-  const inProgress = orientations.filter((o) => o.status === "in_progress").length;
+  const pgOnly = useMemo(() => orientations.filter((o) => isPGOrientation(o.type)), [orientations]);
+  const [qStart, qEnd] = getQuadrienio();
+  const pgQuadrienio = useMemo(() => pgOnly.filter((o) => o.year && o.year >= qStart && o.year <= qEnd), [pgOnly, qStart, qEnd]);
+  const concluded = pgQuadrienio.filter((o) => o.status === "concluded").length;
+  const inProgress = pgQuadrienio.filter((o) => o.status === "in_progress").length;
+  const mestrado = pgQuadrienio.filter((o) => isMestrado(o.type)).length;
+  const doutorado = pgQuadrienio.filter((o) => isDoutorado(o.type)).length;
+  const nonPG = orientations.length - pgOnly.length;
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
