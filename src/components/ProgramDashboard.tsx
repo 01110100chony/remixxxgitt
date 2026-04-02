@@ -196,6 +196,34 @@ const ProgramDashboard = ({ data }: Props) => {
         </div>
       </div>
 
+      {/* By year and Qualis */}
+      <div className="rounded-lg border bg-card p-5 space-y-3">
+        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <Award className="h-4 w-4 text-accent" /> Artigos por ano e Qualis
+        </div>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={byYearQualis} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="year" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} />
+              <YAxis allowDecimals={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} />
+              <Tooltip contentStyle={tooltipStyle} />
+              {activeQualis.map((q) => (
+                <Bar key={q} dataKey={q} name={q} stackId="qualis" fill={QUALIS_COLORS[q] || "#94a3b8"} />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="flex flex-wrap gap-2 justify-center">
+          {activeQualis.map((q) => (
+            <div key={q} className="flex items-center gap-1 text-xs text-muted-foreground">
+              <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: QUALIS_COLORS[q] || "#94a3b8" }} />
+              {q}
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* By research line */}
       <div className="rounded-lg border bg-card p-5 space-y-3">
         <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
