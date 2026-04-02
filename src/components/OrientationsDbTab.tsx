@@ -6,27 +6,51 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, GraduationCap, Info } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, GraduationCap, Info, CalendarDays } from "lucide-react";
 
 interface Props {
   orientations: OrientationRow[];
   researchers: Researcher[];
 }
 
+type PeriodMode = "quadrienio" | "custom" | "all";
+
 const OrientationsDbTab = ({ orientations, researchers }: Props) => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [researcherFilter, setResearcherFilter] = useState("all");
+  const [periodMode, setPeriodMode] = useState<PeriodMode>("quadrienio");
+
+  const [qStart, qEnd] = getQuadrienio();
+  const years = useMemo(() => {
+    const set = new Set<number>();
+    orientations.forEach((o) => { if (o.year) set.add(o.year); });
+    return Array.from(set).sort((a, b) => a - b);
+  }, [orientations]);
+
+  const [customStart, setCustomStart] = useState<number>(years[0] || qStart);
+  const [customEnd, setCustomEnd] = useState<number>(years[years.length - 1] || qEnd);
+
+  // Ensure custom range updates when years change
+  const effectiveStart = periodMode === "quadrienio" ? qStart : periodMode === "custom" ? customStart : 0;
+  const effectiveEnd = periodMode === "quadrienio" ? qEnd : periodMode === "custom" ? customEnd : 9999;
 
   const types = useMemo(() => Array.from(new Set(orientations.map((o) => o.type))).sort(), [orientations]);
   const pgOnly = useMemo(() => orientations.filter((o) => isPGOrientation(o.type)), [orientations]);
-  const [qStart, qEnd] = getQuadrienio();
-  const pgQuadrienio = useMemo(() => pgOnly.filter((o) => o.year && o.year >= qStart && o.year <= qEnd), [pgOnly, qStart, qEnd]);
-  const concluded = pgQuadrienio.filter((o) => o.status === "concluded").length;
-  const inProgress = pgQuadrienio.filter((o) => o.status === "in_progress").length;
-  const mestrado = pgQuadrienio.filter((o) => isMestrado(o.type)).length;
-  const doutorado = pgQuadrienio.filter((o) => isDoutorado(o.type)).length;
+
+  const pgPeriod = useMemo(() =>
+    periodMode === "all"
+      ? pgOnly
+      : pgOnly.filter((o) => o.year && o.year >= effectiveStart && o.year <= effectiveEnd),
+    [pgOnly, effectiveStart, effectiveEnd, periodMode]
+  );
+
+  const concluded = pgPeriod.filter((o) => o.status === "concluded").length;
+  const inProgress = pgPeriod.filter((o) => o.status === "in_progress").length;
+  const mestrado = pgPeriod.filter((o) => isMestrado(o.type)).length;
+  const doutorado = pgPeriod.filter((o) => isDoutorado(o.type)).length;
   const nonPG = orientations.length - pgOnly.length;
 
   const filtered = useMemo(() => {
@@ -35,12 +59,19 @@ const OrientationsDbTab = ({ orientations, researchers }: Props) => {
       if (statusFilter !== "all" && o.status !== statusFilter) return false;
       if (typeFilter !== "all" && o.type !== typeFilter) return false;
       if (researcherFilter !== "all" && o.researcher_id !== researcherFilter) return false;
+      if (periodMode !== "all" && o.year && (o.year < effectiveStart || o.year > effectiveEnd)) return false;
       if (q && !(o.title || "").toLowerCase().includes(q) && !(o.student || "").toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [orientations, search, statusFilter, typeFilter, researcherFilter]);
+  }, [orientations, search, statusFilter, typeFilter, researcherFilter, periodMode, effectiveStart, effectiveEnd]);
 
   const getResearcherName = (id: string) => researchers.find((r) => r.id === id)?.name || "—";
+
+  const periodLabel = periodMode === "quadrienio"
+    ? `Quadriênio ${qStart}–${qEnd}`
+    : periodMode === "custom"
+      ? `${customStart}–${customEnd}`
+      : "Todos os anos";
 
   return (
     <div className="space-y-6">
@@ -52,15 +83,78 @@ const OrientationsDbTab = ({ orientations, researchers }: Props) => {
         </div>
       )}
 
+      {/* Period selector */}
+      <div className="rounded-lg border bg-card p-4 space-y-3">
+        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <CalendarDays className="h-4 w-4 text-accent" />
+          Período: {periodLabel}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant={periodMode === "quadrienio" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setPeriodMode("quadrienio")}
+          >
+            Quadriênio ({qStart}–{qEnd})
+          </Button>
+          <Button
+            variant={periodMode === "custom" ? "default" : "outline"}
+            size="sm"
+            onClick={() => {
+              setPeriodMode("custom");
+              if (!customStart && years.length > 0) setCustomStart(years[0]);
+              if (!customEnd && years.length > 0) setCustomEnd(years[years.length - 1]);
+            }}
+          >
+            Personalizado
+          </Button>
+          <Button
+            variant={periodMode === "all" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setPeriodMode("all")}
+          >
+            Todos
+          </Button>
+
+          {periodMode === "custom" && (
+            <>
+              <div className="flex items-center gap-1 ml-2">
+                <span className="text-xs text-muted-foreground">De:</span>
+                <Input
+                  type="number"
+                  value={customStart}
+                  onChange={(e) => setCustomStart(Number(e.target.value))}
+                  className="w-20 h-8 text-sm"
+                  min={1900}
+                  max={2100}
+                />
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-muted-foreground">Até:</span>
+                <Input
+                  type="number"
+                  value={customEnd}
+                  onChange={(e) => setCustomEnd(Number(e.target.value))}
+                  className="w-20 h-8 text-sm"
+                  min={1900}
+                  max={2100}
+                />
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* KPIs */}
       <div className="grid gap-3 grid-cols-2 sm:grid-cols-6">
         <div className="rounded-lg border bg-card p-4 text-center">
           <GraduationCap className="h-4 w-4 text-accent mx-auto mb-1" />
           <div className="text-2xl font-bold text-foreground">{orientations.length}</div>
-          <div className="text-xs text-muted-foreground">Total</div>
+          <div className="text-xs text-muted-foreground">Total geral</div>
         </div>
         <div className="rounded-lg border bg-card p-4 text-center">
-          <div className="text-2xl font-bold text-foreground">{pgQuadrienio.length}</div>
-          <div className="text-xs text-muted-foreground">PG no quadriênio</div>
+          <div className="text-2xl font-bold text-foreground">{pgPeriod.length}</div>
+          <div className="text-xs text-muted-foreground">PG no período</div>
         </div>
         <div className="rounded-lg border bg-card p-4 text-center">
           <div className="text-2xl font-bold text-foreground">{mestrado}</div>
@@ -76,12 +170,13 @@ const OrientationsDbTab = ({ orientations, researchers }: Props) => {
         </div>
         <div className="rounded-lg border bg-card p-4 text-center">
           <div className="text-2xl font-bold text-foreground">
-            {researchers.length > 0 ? (pgQuadrienio.length / researchers.length).toFixed(1) : 0}
+            {researchers.length > 0 ? (pgPeriod.length / researchers.length).toFixed(1) : 0}
           </div>
           <div className="text-xs text-muted-foreground">Média / docente</div>
         </div>
       </div>
 
+      {/* Filters */}
       <div className="flex flex-wrap items-center gap-2">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
@@ -113,6 +208,7 @@ const OrientationsDbTab = ({ orientations, researchers }: Props) => {
         </div>
       </div>
 
+      {/* Table */}
       <div className="rounded-lg border bg-card overflow-hidden">
         <Table>
           <TableHeader>
