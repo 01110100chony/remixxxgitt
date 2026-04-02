@@ -119,7 +119,7 @@ const ProgramDashboard = ({ data }: Props) => {
           { label: "Projetos", value: projects.length, icon: FolderKanban },
           { label: "Prod. técnica", value: technicalProductions.length, icon: Wrench },
           { label: "Pareceres", value: reviewerActivities.length, icon: ClipboardCheck },
-          { label: "Citações", value: totalCitations, icon: Award },
+          { label: "Citações", value: hasMetricsData ? totalCitations : "—", icon: Award },
         ].map(({ label, value, icon: Icon }) => (
           <div key={label} className="rounded-lg border bg-card p-4 text-center">
             <Icon className="h-4 w-4 text-accent mx-auto mb-1.5" />
