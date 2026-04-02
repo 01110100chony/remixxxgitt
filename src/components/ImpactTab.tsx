@@ -62,7 +62,7 @@ const ImpactTab = ({ articles, researchers, metrics, onFetchCitations, onUpdateM
   // Qualis distribution
   const qualisDist = useMemo(() => {
     const map: Record<string, number> = {};
-    articles.forEach((a) => {
+    filteredArticles.forEach((a) => {
       const q = a.qualis || "Sem Qualis";
       map[q] = (map[q] || 0) + 1;
     });
