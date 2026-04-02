@@ -36,6 +36,7 @@ function getQuadrienioRange(): [number, number] {
 
 const ProgramDashboard = ({ data }: Props) => {
   const { researchers, articles, orientations, projects, technicalProductions, reviewerActivities, metrics } = data;
+  const pgOrientations = useMemo(() => orientations.filter((o) => isPGOrientation(o.type)), [orientations]);
   const [qStart, qEnd] = getQuadrienioRange();
   const qArticles = articles.filter((a) => a.year && a.year >= qStart && a.year <= qEnd);
 
