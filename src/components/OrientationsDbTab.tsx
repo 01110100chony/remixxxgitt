@@ -54,6 +54,17 @@ const OrientationsDbTab = ({ orientations, researchers }: Props) => {
   const doutorado = pgPeriod.filter((o) => isDoutorado(o.type)).length;
   const nonPG = orientations.length - pgOnly.length;
 
+  const chartData = useMemo(() => {
+    const yearMap = new Map<number, { year: number; mestrado: number; doutorado: number }>();
+    pgPeriod.forEach((o) => {
+      if (!o.year) return;
+      if (!yearMap.has(o.year)) yearMap.set(o.year, { year: o.year, mestrado: 0, doutorado: 0 });
+      const entry = yearMap.get(o.year)!;
+      if (isMestrado(o.type)) entry.mestrado++;
+      else if (isDoutorado(o.type)) entry.doutorado++;
+    });
+    return Array.from(yearMap.values()).sort((a, b) => a.year - b.year);
+  }, [pgPeriod]);
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
     return orientations.filter((o) => {
