@@ -157,7 +157,64 @@ const EvaluationDashboard = ({ data }: Props) => {
         </span>
       </div>
 
-      {mode === "simplified" ? (
+      {/* Period selector */}
+      <div className="rounded-lg border bg-card p-4 space-y-3">
+        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <CalendarDays className="h-4 w-4 text-accent" />
+          Período de avaliação: {periodLabel}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant={periodMode === "quadrienio" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setPeriodMode("quadrienio")}
+          >
+            Quadriênio ({qStart}–{qEnd})
+          </Button>
+          <Button
+            variant={periodMode === "custom" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setPeriodMode("custom")}
+          >
+            Personalizado
+          </Button>
+          <Button
+            variant={periodMode === "all" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setPeriodMode("all")}
+          >
+            Todos
+          </Button>
+
+          {periodMode === "custom" && (
+            <>
+              <div className="flex items-center gap-1 ml-2">
+                <span className="text-xs text-muted-foreground">De:</span>
+                <Input
+                  type="number"
+                  value={customStart}
+                  onChange={(e) => setCustomStart(Number(e.target.value))}
+                  className="w-20 h-8 text-sm"
+                  min={1900}
+                  max={2100}
+                />
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-muted-foreground">Até:</span>
+                <Input
+                  type="number"
+                  value={customEnd}
+                  onChange={(e) => setCustomEnd(Number(e.target.value))}
+                  className="w-20 h-8 text-sm"
+                  min={1900}
+                  max={2100}
+                />
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
         /* =================== SIMPLIFIED MODE =================== */
         <>
           {/* Overall Score */}
