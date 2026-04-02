@@ -105,6 +105,7 @@ const ProgramDashboard = ({ data }: Props) => {
   }, [researchers, articles]);
 
   const maxLine = Math.max(...byResearchLine.map((d) => d.count), 1);
+  const hasMetricsData = metrics.length > 0 && metrics.some((m) => (m.total_citations || 0) > 0 || (m.h_index || 0) > 0);
   const totalCitations = metrics.reduce((s, m) => s + (m.total_citations || 0), 0);
 
   return (
