@@ -137,9 +137,30 @@ const ImpactTab = ({ articles, researchers, metrics, onFetchCitations, onFetchAl
       </div>
 
       {/* No data warning */}
-      {!hasMetrics && researchers.length > 0 && (
-        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-700 dark:text-amber-400">
-          <strong>Sem dados de citações disponíveis.</strong> Use os botões abaixo para buscar citações via DOI ou inserir manualmente para cada pesquisador.
+      {researchers.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            variant="default"
+            size="sm"
+            disabled={fetchingAll || articles.filter((a) => a.doi).length === 0}
+            onClick={async () => {
+              setFetchingAll(true);
+              setFetchProgress("Iniciando...");
+              await onFetchAllCitations((current, total, name) => {
+                setFetchProgress(`${current}/${total} — ${name}`);
+              });
+              setFetchingAll(false);
+              setFetchProgress("");
+            }}
+          >
+            <RefreshCw className={`h-4 w-4 mr-1 ${fetchingAll ? "animate-spin" : ""}`} />
+            {fetchingAll ? fetchProgress : `Buscar todas as citações (${articles.filter((a) => a.doi).length} DOIs)`}
+          </Button>
+          {!hasMetrics && (
+            <span className="text-sm text-amber-600 dark:text-amber-400">
+              Sem dados de citações — busque via DOI ou insira manualmente.
+            </span>
+          )}
         </div>
       )}
 
