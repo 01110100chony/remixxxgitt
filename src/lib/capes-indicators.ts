@@ -67,16 +67,11 @@ function clamp(v: number, min = 0, max = 5): number {
   return Math.max(min, Math.min(max, v));
 }
 
-function getQuadrienio(): [number, number] {
-  return getQ();
-}
-
-function calcPrograma(data: ProgramData, subWeights: Record<string, number>): CAPESQuesito {
-  const [qS, qE] = getQuadrienio();
+function calcPrograma(data: ProgramData, subWeights: Record<string, number>, period: [number, number]): CAPESQuesito {
+  const [qS, qE] = period;
   const { program, researchers, projects } = data;
   const nDocentes = researchers.length || 1;
 
-  // Proposta do programa
   const hasArea = !!program.area;
   const hasModality = !!program.modality;
   const hasCode = !!program.program_code;
@@ -85,20 +80,16 @@ function calcPrograma(data: ProgramData, subWeights: Record<string, number>): CA
     (hasArea ? 1 : 0) + (hasModality ? 1 : 0) + (hasCode ? 1 : 0) + (hasResearchLines ? 2 : 0)
   );
 
-  // Corpo docente
   const docenteScore = clamp(
     nDocentes >= 15 ? 5 : nDocentes >= 10 ? 4 : nDocentes >= 5 ? 3 : nDocentes >= 3 ? 2 : 1
   );
 
-  // Infraestrutura (based on website and digital presence)
   const hasWebsite = !!program.website_url;
   const infraScore = clamp(hasWebsite ? 3 : 1);
 
-  // Planejamento (projects as proxy)
   const qProjects = projects.filter((p) => p.year_start && p.year_start >= qS);
   const planScore = clamp(qProjects.length >= 10 ? 5 : qProjects.length >= 5 ? 4 : qProjects.length >= 2 ? 3 : qProjects.length >= 1 ? 2 : 1);
 
-  // Internacionalização do programa
   const hasEnglish = program.has_english_version || false;
   const intProjects = projects.filter((p) => {
     const inst = (p.partner_institution || "").toLowerCase();
@@ -110,7 +101,7 @@ function calcPrograma(data: ProgramData, subWeights: Record<string, number>): CA
     { label: "Proposta do Programa", key: "proposta", score: propostaScore, description: `Área: ${hasArea ? "Sim" : "Não"}, Modalidade: ${hasModality ? "Sim" : "Não"}, Linhas: ${hasResearchLines ? "Sim" : "Não"}` },
     { label: "Corpo Docente", key: "corpo_docente", score: docenteScore, description: `${nDocentes} docentes permanentes` },
     { label: "Infraestrutura", key: "infraestrutura", score: infraScore, description: `Site: ${hasWebsite ? "Sim" : "Não"}` },
-    { label: "Planejamento", key: "planejamento", score: planScore, description: `${qProjects.length} projetos no quadriênio` },
+    { label: "Planejamento", key: "planejamento", score: planScore, description: `${qProjects.length} projetos no período` },
     { label: "Internacionalização", key: "internacionalizacao", score: intScore, description: `Inglês: ${hasEnglish ? "Sim" : "Não"}, ${intProjects.length} projetos internacionais` },
   ];
 
@@ -124,12 +115,11 @@ function calcPrograma(data: ProgramData, subWeights: Record<string, number>): CA
   };
 }
 
-function calcFormacaoCAPES(data: ProgramData, subWeights: Record<string, number>): CAPESQuesito {
-  const [qS, qE] = getQuadrienio();
+function calcFormacaoCAPES(data: ProgramData, subWeights: Record<string, number>, period: [number, number]): CAPESQuesito {
+  const [qS, qE] = period;
   const { orientations, researchers, articles } = data;
   const nDocentes = researchers.length || 1;
 
-  // Filter PG-only orientations
   const pgOrientations = orientations.filter((o) => isPGOrientation(o.type));
   const qOrient = pgOrientations.filter((o) => o.year && o.year >= qS && o.year <= qE);
   const concluded = qOrient.filter((o) => o.status === "concluded");
@@ -137,23 +127,18 @@ function calcFormacaoCAPES(data: ProgramData, subWeights: Record<string, number>
   const doutorado = concluded.filter((o) => isDoutorado(o.type));
   const inProgress = qOrient.filter((o) => o.status !== "concluded");
 
-  // Orientações concluídas
   const mediaOrient = concluded.length / nDocentes;
   const orientScore = clamp(mediaOrient >= 4 ? 5 : mediaOrient >= 3 ? 4 : mediaOrient >= 2 ? 3 : mediaOrient >= 1 ? 2 : 1);
 
-  // Qualidade das teses (proxy: Qualis dos artigos dos orientandos)
   const qArticles = articles.filter((a) => a.year && a.year >= qS && a.year <= qE);
   const qualificados = qArticles.filter((a) => ["A1", "A2", "A3", "A4"].includes(a.qualis || "")).length;
   const pctQual = qArticles.length > 0 ? qualificados / qArticles.length : 0;
   const teseScore = clamp(pctQual >= 0.6 ? 5 : pctQual >= 0.4 ? 4 : pctQual >= 0.2 ? 3 : pctQual >= 0.1 ? 2 : 1);
 
-  // Tempo de formação (proxy: volume)
   const tempoScore = clamp(concluded.length >= 20 ? 5 : concluded.length >= 10 ? 4 : concluded.length >= 5 ? 3 : concluded.length >= 2 ? 2 : 1);
 
-  // Destino egressos (not available, default moderate)
   const egressosScore = 3;
 
-  // Produção discente
   const discenteScore = clamp(doutorado.length >= 5 ? 5 : doutorado.length >= 3 ? 4 : doutorado.length >= 1 ? 3 : mestrado.length >= 5 ? 2 : 1);
 
   const excluded = orientations.length - pgOrientations.length;
@@ -171,33 +156,29 @@ function calcFormacaoCAPES(data: ProgramData, subWeights: Record<string, number>
   return {
     name: "2. Formação", key: "formacao", weight: 0, score: Math.round(score * 10) / 10,
     subItems,
-    autoText: `No quadriênio ${qS}–${qE}, foram concluídas ${concluded.length} orientações de pós-graduação (${mestrado.length} mestrados, ${doutorado.length} doutorados), média de ${mediaOrient.toFixed(1)} por docente.` +
+    autoText: `No período ${qS}–${qE}, foram concluídas ${concluded.length} orientações de pós-graduação (${mestrado.length} mestrados, ${doutorado.length} doutorados), média de ${mediaOrient.toFixed(1)} por docente.` +
       (excluded > 0 ? ` (${excluded} orientações de graduação/IC/TCC excluídas)` : ""),
   };
 }
 
-function calcImpactoCAPES(data: ProgramData, subWeights: Record<string, number>): CAPESQuesito {
-  const [qS, qE] = getQuadrienio();
+function calcImpactoCAPES(data: ProgramData, subWeights: Record<string, number>, period: [number, number]): CAPESQuesito {
+  const [qS, qE] = period;
   const { articles, technicalProductions, reviewerActivities, program, researchers, metrics, citationEntries } = data;
   const nDocentes = researchers.length || 1;
   const qArticles = articles.filter((a) => a.year && a.year >= qS && a.year <= qE);
 
-  // Produção intelectual
   const mediaDoc = qArticles.length / nDocentes;
   const qualificados = qArticles.filter((a) => ["A1", "A2"].includes(a.qualis || "")).length;
   const prodScore = clamp(mediaDoc >= 3 ? 5 : mediaDoc >= 2 ? 4 : mediaDoc >= 1 ? 3 : mediaDoc >= 0.5 ? 2 : 1);
 
-  // Produção técnica
   const qTech = technicalProductions.filter((t) => t.year && t.year >= qS && t.year <= qE);
   const techScore = clamp(qTech.length >= 10 ? 5 : qTech.length >= 5 ? 4 : qTech.length >= 2 ? 3 : qTech.length >= 1 ? 2 : 1);
 
-  // Inserção social
   const socialTypes = ["interview", "mediaParticipation", "eventOrganization"];
   const socialProds = technicalProductions.filter((p) => socialTypes.includes(p.type));
   const pareceres = reviewerActivities.length;
   const socialScore = clamp((socialProds.length + pareceres) >= 15 ? 5 : (socialProds.length + pareceres) >= 8 ? 4 : (socialProds.length + pareceres) >= 3 ? 3 : 2);
 
-  // Internacionalização - impacto
   const totalCit = citationEntries.reduce((s, c) => s + (c.total_citations || 0), 0) ||
     metrics.reduce((s, m) => s + (m.total_citations || 0), 0);
   const avgH = citationEntries.length > 0
@@ -205,14 +186,13 @@ function calcImpactoCAPES(data: ProgramData, subWeights: Record<string, number>)
     : metrics.length > 0 ? metrics.reduce((s, m) => s + (m.h_index || 0), 0) / nDocentes : 0;
   const intImpScore = clamp(avgH >= 15 ? 5 : avgH >= 10 ? 4 : avgH >= 5 ? 3 : avgH >= 2 ? 2 : 1);
 
-  // Presença digital
   const socials = [program.social_instagram, program.social_linkedin, program.social_youtube, program.social_twitter, program.social_facebook];
   const activeSocials = socials.filter(Boolean).length;
   const digScore = clamp(activeSocials >= 4 ? 5 : activeSocials >= 3 ? 4 : activeSocials >= 2 ? 3 : activeSocials >= 1 ? 2 : 1);
 
   const subItems: CAPESSubItem[] = [
     { label: "Produção Intelectual", key: "producao_intelectual", score: prodScore, description: `${qArticles.length} artigos (${mediaDoc.toFixed(1)}/docente), ${qualificados} A1-A2` },
-    { label: "Produção Técnica/Tecnológica", key: "producao_tecnica", score: techScore, description: `${qTech.length} produções técnicas no quadriênio` },
+    { label: "Produção Técnica/Tecnológica", key: "producao_tecnica", score: techScore, description: `${qTech.length} produções técnicas no período` },
     { label: "Inserção Social", key: "insercao_social", score: socialScore, description: `${socialProds.length} produções sociais, ${pareceres} pareceres` },
     { label: "Internacionalização e Impacto", key: "internacionalizacao_impacto", score: intImpScore, description: `${totalCit} citações, h-index médio ${avgH.toFixed(1)}` },
     { label: "Presença Digital", key: "presenca_digital", score: digScore, description: `${activeSocials}/5 redes sociais ativas` },
@@ -224,7 +204,7 @@ function calcImpactoCAPES(data: ProgramData, subWeights: Record<string, number>)
   return {
     name: "3. Impacto na Sociedade", key: "impacto", weight: 0, score: Math.round(score * 10) / 10,
     subItems,
-    autoText: `O programa produziu ${qArticles.length} artigos no quadriênio com ${qualificados} em A1-A2. Acumula ${totalCit} citações com h-index médio de ${avgH.toFixed(1)}.`,
+    autoText: `O programa produziu ${qArticles.length} artigos no período com ${qualificados} em A1-A2. Acumula ${totalCit} citações com h-index médio de ${avgH.toFixed(1)}.`,
   };
 }
 
@@ -238,18 +218,19 @@ function scoreToConceito(score: number): string {
 }
 
 function scoreTo7(score: number): number {
-  // Convert 0-5 scale to 1-7 CAPES scale
   return Math.round(Math.min(7, Math.max(1, 1 + (score / 5) * 6)) * 10) / 10;
 }
 
-export function evaluateCAPES(data: ProgramData, weights: CAPESWeights = DEFAULT_CAPES_WEIGHTS): CAPESResult {
-  const programa = calcPrograma(data, weights.programa.subWeights);
+export function evaluateCAPES(data: ProgramData, weights: CAPESWeights = DEFAULT_CAPES_WEIGHTS, period?: [number, number]): CAPESResult {
+  const effectivePeriod = period || getQ();
+
+  const programa = calcPrograma(data, weights.programa.subWeights, effectivePeriod);
   programa.weight = weights.programa.weight;
 
-  const formacao = calcFormacaoCAPES(data, weights.formacao.subWeights);
+  const formacao = calcFormacaoCAPES(data, weights.formacao.subWeights, effectivePeriod);
   formacao.weight = weights.formacao.weight;
 
-  const impacto = calcImpactoCAPES(data, weights.impacto.subWeights);
+  const impacto = calcImpactoCAPES(data, weights.impacto.subWeights, effectivePeriod);
   impacto.weight = weights.impacto.weight;
 
   const quesitos = [programa, formacao, impacto];
