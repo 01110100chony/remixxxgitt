@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import type { ProgramData } from "@/hooks/useProgram";
+import { isPGOrientation, isMestrado, isDoutorado, getQuadrienio } from "@/lib/orientation-utils";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   PieChart, Pie, Cell,
