@@ -44,23 +44,39 @@ const OrientationsDbTab = ({ orientations, researchers }: Props) => {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
+      {/* Info banner */}
+      {nonPG > 0 && (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
+          <Info className="h-4 w-4 shrink-0" />
+          <span>O relatório CAPES considera apenas orientações de pós-graduação (mestrado/doutorado). {nonPG} orientação(ões) de graduação/IC/TCC/especialização estão excluídas do cálculo.</span>
+        </div>
+      )}
+
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-6">
         <div className="rounded-lg border bg-card p-4 text-center">
           <GraduationCap className="h-4 w-4 text-accent mx-auto mb-1" />
           <div className="text-2xl font-bold text-foreground">{orientations.length}</div>
           <div className="text-xs text-muted-foreground">Total</div>
         </div>
         <div className="rounded-lg border bg-card p-4 text-center">
-          <div className="text-2xl font-bold text-foreground">{concluded}</div>
-          <div className="text-xs text-muted-foreground">Concluídas</div>
+          <div className="text-2xl font-bold text-foreground">{pgQuadrienio.length}</div>
+          <div className="text-xs text-muted-foreground">PG no quadriênio</div>
         </div>
         <div className="rounded-lg border bg-card p-4 text-center">
-          <div className="text-2xl font-bold text-foreground">{inProgress}</div>
-          <div className="text-xs text-muted-foreground">Em andamento</div>
+          <div className="text-2xl font-bold text-foreground">{mestrado}</div>
+          <div className="text-xs text-muted-foreground">Mestrados</div>
+        </div>
+        <div className="rounded-lg border bg-card p-4 text-center">
+          <div className="text-2xl font-bold text-foreground">{doutorado}</div>
+          <div className="text-xs text-muted-foreground">Doutorados</div>
+        </div>
+        <div className="rounded-lg border bg-card p-4 text-center">
+          <div className="text-2xl font-bold text-foreground">{concluded}</div>
+          <div className="text-xs text-muted-foreground">Concluídas (PG)</div>
         </div>
         <div className="rounded-lg border bg-card p-4 text-center">
           <div className="text-2xl font-bold text-foreground">
-            {researchers.length > 0 ? (orientations.length / researchers.length).toFixed(1) : 0}
+            {researchers.length > 0 ? (pgQuadrienio.length / researchers.length).toFixed(1) : 0}
           </div>
           <div className="text-xs text-muted-foreground">Média / docente</div>
         </div>
