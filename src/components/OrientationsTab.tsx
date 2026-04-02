@@ -1,27 +1,56 @@
 import { useMemo, useState } from "react";
 import { Orientation } from "@/lib/lattes-parser";
+import { isPGOrientation, isMestrado, isDoutorado, getQuadrienio } from "@/lib/orientation-utils";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, GraduationCap } from "lucide-react";
+import { Search, GraduationCap, CalendarDays, Info } from "lucide-react";
 
 interface OrientationsTabProps {
   orientations: Orientation[];
   researchers: string[];
 }
 
+type PeriodMode = "quadrienio" | "custom" | "all";
+
 const OrientationsTab = ({ orientations, researchers }: OrientationsTabProps) => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [kindFilter, setKindFilter] = useState("all");
   const [researcherFilter, setResearcherFilter] = useState("all");
+  const [periodMode, setPeriodMode] = useState<PeriodMode>("quadrienio");
+
+  const [qStart, qEnd] = getQuadrienio();
+  const years = useMemo(() => {
+    const set = new Set<number>();
+    orientations.forEach((o) => { const y = parseInt(o.year); if (!isNaN(y)) set.add(y); });
+    return Array.from(set).sort((a, b) => a - b);
+  }, [orientations]);
+
+  const [customStart, setCustomStart] = useState<number>(years[0] || qStart);
+  const [customEnd, setCustomEnd] = useState<number>(years[years.length - 1] || qEnd);
+
+  const effectiveStart = periodMode === "quadrienio" ? qStart : periodMode === "custom" ? customStart : 0;
+  const effectiveEnd = periodMode === "quadrienio" ? qEnd : periodMode === "custom" ? customEnd : 9999;
 
   const kinds = useMemo(() => Array.from(new Set(orientations.map((o) => o.kind))).sort(), [orientations]);
 
-  const concluded = orientations.filter((o) => o.type === "concluded").length;
-  const inProgress = orientations.filter((o) => o.type === "inProgress").length;
+  const pgOnly = useMemo(() => orientations.filter((o) => isPGOrientation(o.kind)), [orientations]);
+  const pgPeriod = useMemo(() =>
+    periodMode === "all"
+      ? pgOnly
+      : pgOnly.filter((o) => { const y = parseInt(o.year); return !isNaN(y) && y >= effectiveStart && y <= effectiveEnd; }),
+    [pgOnly, effectiveStart, effectiveEnd, periodMode]
+  );
+
+  const concluded = pgPeriod.filter((o) => o.type === "concluded").length;
+  const inProgress = pgPeriod.filter((o) => o.type === "inProgress").length;
+  const mestrado = pgPeriod.filter((o) => isMestrado(o.kind)).length;
+  const doutorado = pgPeriod.filter((o) => isDoutorado(o.kind)).length;
+  const nonPG = orientations.length - pgOnly.length;
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -29,31 +58,88 @@ const OrientationsTab = ({ orientations, researchers }: OrientationsTabProps) =>
       if (statusFilter !== "all" && o.type !== statusFilter) return false;
       if (kindFilter !== "all" && o.kind !== kindFilter) return false;
       if (researcherFilter !== "all" && o.researcher !== researcherFilter) return false;
+      if (periodMode !== "all") {
+        const y = parseInt(o.year);
+        if (!isNaN(y) && (y < effectiveStart || y > effectiveEnd)) return false;
+      }
       if (q && !o.title.toLowerCase().includes(q) && !o.student.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [orientations, search, statusFilter, kindFilter, researcherFilter]);
+  }, [orientations, search, statusFilter, kindFilter, researcherFilter, periodMode, effectiveStart, effectiveEnd]);
+
+  const periodLabel = periodMode === "quadrienio"
+    ? `Quadriênio ${qStart}–${qEnd}`
+    : periodMode === "custom"
+      ? `${customStart}–${customEnd}`
+      : "Todos os anos";
 
   return (
     <div className="space-y-6">
+      {/* Info banner */}
+      {nonPG > 0 && (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
+          <Info className="h-4 w-4 shrink-0" />
+          <span>O relatório CAPES considera apenas orientações de pós-graduação. {nonPG} orientação(ões) de graduação/IC/TCC/especialização excluídas do cálculo.</span>
+        </div>
+      )}
+
+      {/* Period selector */}
+      <div className="rounded-lg border bg-card p-4 space-y-3">
+        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <CalendarDays className="h-4 w-4 text-accent" />
+          Período: {periodLabel}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant={periodMode === "quadrienio" ? "default" : "outline"} size="sm" onClick={() => setPeriodMode("quadrienio")}>
+            Quadriênio ({qStart}–{qEnd})
+          </Button>
+          <Button variant={periodMode === "custom" ? "default" : "outline"} size="sm" onClick={() => setPeriodMode("custom")}>
+            Personalizado
+          </Button>
+          <Button variant={periodMode === "all" ? "default" : "outline"} size="sm" onClick={() => setPeriodMode("all")}>
+            Todos
+          </Button>
+          {periodMode === "custom" && (
+            <>
+              <div className="flex items-center gap-1 ml-2">
+                <span className="text-xs text-muted-foreground">De:</span>
+                <Input type="number" value={customStart} onChange={(e) => setCustomStart(Number(e.target.value))} className="w-20 h-8 text-sm" min={1900} max={2100} />
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-muted-foreground">Até:</span>
+                <Input type="number" value={customEnd} onChange={(e) => setCustomEnd(Number(e.target.value))} className="w-20 h-8 text-sm" min={1900} max={2100} />
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
       {/* KPIs */}
-      <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-6">
         <div className="rounded-lg border bg-card p-4 text-center">
           <GraduationCap className="h-4 w-4 text-accent mx-auto mb-1" />
           <div className="text-2xl font-bold text-foreground">{orientations.length}</div>
-          <div className="text-xs text-muted-foreground">Total</div>
+          <div className="text-xs text-muted-foreground">Total geral</div>
+        </div>
+        <div className="rounded-lg border bg-card p-4 text-center">
+          <div className="text-2xl font-bold text-foreground">{pgPeriod.length}</div>
+          <div className="text-xs text-muted-foreground">PG no período</div>
+        </div>
+        <div className="rounded-lg border bg-card p-4 text-center">
+          <div className="text-2xl font-bold text-foreground">{mestrado}</div>
+          <div className="text-xs text-muted-foreground">Mestrados</div>
+        </div>
+        <div className="rounded-lg border bg-card p-4 text-center">
+          <div className="text-2xl font-bold text-foreground">{doutorado}</div>
+          <div className="text-xs text-muted-foreground">Doutorados</div>
         </div>
         <div className="rounded-lg border bg-card p-4 text-center">
           <div className="text-2xl font-bold text-foreground">{concluded}</div>
-          <div className="text-xs text-muted-foreground">Concluídas</div>
-        </div>
-        <div className="rounded-lg border bg-card p-4 text-center">
-          <div className="text-2xl font-bold text-foreground">{inProgress}</div>
-          <div className="text-xs text-muted-foreground">Em andamento</div>
+          <div className="text-xs text-muted-foreground">Concluídas (PG)</div>
         </div>
         <div className="rounded-lg border bg-card p-4 text-center">
           <div className="text-2xl font-bold text-foreground">
-            {researchers.length > 0 ? (orientations.length / researchers.length).toFixed(1) : 0}
+            {researchers.length > 0 ? (pgPeriod.length / researchers.length).toFixed(1) : 0}
           </div>
           <div className="text-xs text-muted-foreground">Média / docente</div>
         </div>
