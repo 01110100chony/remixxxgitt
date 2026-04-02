@@ -31,9 +31,30 @@ const ImpactTab = ({ articles, researchers, metrics, onFetchCitations, onUpdateM
   const [fetchingId, setFetchingId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState({ total_citations: 0, h_index: 0, i10_index: 0 });
+  const [periodMode, setPeriodMode] = useState<PeriodMode>("quadrienio");
 
-  const articlesByDoi = articles.filter((a) => a.doi).length;
-  const articlesByIssn = articles.filter((a) => a.issn).length;
+  const [qStart, qEnd] = getQuadrienio();
+  const years = useMemo(() => {
+    const set = new Set<number>();
+    articles.forEach((a) => { if (a.year) set.add(a.year); });
+    return Array.from(set).sort((a, b) => a - b);
+  }, [articles]);
+
+  const [customStart, setCustomStart] = useState<number>(years[0] || qStart);
+  const [customEnd, setCustomEnd] = useState<number>(years[years.length - 1] || qEnd);
+
+  const effectiveStart = periodMode === "quadrienio" ? qStart : periodMode === "custom" ? customStart : 0;
+  const effectiveEnd = periodMode === "quadrienio" ? qEnd : periodMode === "custom" ? customEnd : 9999;
+
+  const filteredArticles = useMemo(() =>
+    periodMode === "all"
+      ? articles
+      : articles.filter((a) => a.year && a.year >= effectiveStart && a.year <= effectiveEnd),
+    [articles, effectiveStart, effectiveEnd, periodMode]
+  );
+
+  const articlesByDoi = filteredArticles.filter((a) => a.doi).length;
+  const articlesByIssn = filteredArticles.filter((a) => a.issn).length;
   const hasMetrics = metrics.length > 0 && metrics.some((m) => (m.total_citations || 0) > 0 || (m.h_index || 0) > 0);
   const totalCitations = metrics.reduce((s, m) => s + (m.total_citations || 0), 0);
   const avgHIndex = researchers.length > 0 ? (metrics.reduce((s, m) => s + (m.h_index || 0), 0) / researchers.length).toFixed(1) : "—";
