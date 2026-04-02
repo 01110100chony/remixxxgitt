@@ -17,6 +17,7 @@ interface Props {
   researchers: Researcher[];
   metrics: ResearcherMetric[];
   onFetchCitations: (researcherId: string) => Promise<void>;
+  onFetchAllCitations: (onProgress?: (current: number, total: number, name: string) => void) => Promise<void>;
   onUpdateMetrics: (researcherId: string, m: { total_citations: number; h_index: number; i10_index: number; source: string }) => Promise<void>;
 }
 
