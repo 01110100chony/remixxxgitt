@@ -218,8 +218,12 @@ export function evaluateProgram(data: ProgramData, weights = DEFAULT_WEIGHTS, pe
     calcPresencaDigital(data),
   ];
 
-  const totalWeight = Object.values(weights).reduce((s, w) => s + w, 0) || 1;
+  const totalWeight = dimensions.reduce((s, d) => {
+    if (d.score < 0) return s; // exclude no-data dimensions
+    return s + (weights[d.key] || 0);
+  }, 0) || 1;
   const overallScore = dimensions.reduce((s, d) => {
+    if (d.score < 0) return s; // exclude no-data dimensions
     const w = weights[d.key] || 0;
     return s + (d.score * w) / totalWeight;
   }, 0);
