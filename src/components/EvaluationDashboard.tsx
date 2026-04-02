@@ -96,8 +96,8 @@ const EvaluationDashboard = ({ data }: Props) => {
     }
   };
 
-  const result = useMemo(() => evaluateProgram(data, weights), [data, weights]);
-  const capesResult = useMemo(() => evaluateCAPES(data, capesWeights), [data, capesWeights]);
+  const result = useMemo(() => evaluateProgram(data, weights, effectivePeriod), [data, weights, effectivePeriod]);
+  const capesResult = useMemo(() => evaluateCAPES(data, capesWeights, effectivePeriod), [data, capesWeights, effectivePeriod]);
 
   const radarData = result.dimensions.map((d) => ({
     dimension: d.name, score: d.score, fullMark: 10,
