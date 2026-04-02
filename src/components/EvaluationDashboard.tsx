@@ -44,6 +44,22 @@ const EvaluationDashboard = ({ data }: Props) => {
   const [showWeights, setShowWeights] = useState(false);
   const [expandedQuesito, setExpandedQuesito] = useState<string | null>(null);
   const [savingWeights, setSavingWeights] = useState(false);
+  const [periodMode, setPeriodMode] = useState<PeriodMode>("quadrienio");
+  const [qStart, qEnd] = getQuadrienio();
+  const [customStart, setCustomStart] = useState<number>(qStart);
+  const [customEnd, setCustomEnd] = useState<number>(qEnd);
+
+  const effectivePeriod = useMemo<[number, number]>(() => {
+    if (periodMode === "quadrienio") return [qStart, qEnd];
+    if (periodMode === "custom") return [customStart, customEnd];
+    return [1900, 9999];
+  }, [periodMode, qStart, qEnd, customStart, customEnd]);
+
+  const periodLabel = periodMode === "quadrienio"
+    ? `Quadriênio ${qStart}–${qEnd}`
+    : periodMode === "custom"
+      ? `${customStart}–${customEnd}`
+      : "Todos os anos";
 
   // Load saved weights from DB
   useEffect(() => {
