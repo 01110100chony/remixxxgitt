@@ -257,7 +257,7 @@ const ProgramDashboard = ({ data }: Props) => {
         </div>
         <div className="rounded-lg border bg-card p-4 text-center">
           <div className="text-2xl font-bold text-foreground">
-            {metrics.length > 0 ? (metrics.reduce((s, m) => s + (m.h_index || 0), 0) / researchers.length).toFixed(1) : "—"}
+            {metrics.length > 0 && hasMetricsData ? (metrics.reduce((s, m) => s + (m.h_index || 0), 0) / researchers.length).toFixed(1) : "—"}
           </div>
           <div className="text-xs text-muted-foreground">h-index médio</div>
         </div>
