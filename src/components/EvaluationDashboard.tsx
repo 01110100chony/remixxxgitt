@@ -286,10 +286,10 @@ const EvaluationDashboard = ({ data }: Props) => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-foreground">{d.name}</span>
-                        <span className="text-sm font-bold" style={{ color: COLORS[i % COLORS.length] }}>{d.score.toFixed(1)}</span>
+                        <span className="text-sm font-bold" style={{ color: COLORS[i % COLORS.length] }}>{d.score < 0 ? "N/D" : d.score.toFixed(1)}</span>
                       </div>
                       <div className="h-1.5 rounded bg-muted/50 mt-1 overflow-hidden">
-                        <div className="h-full rounded transition-all" style={{ width: `${(d.score / 10) * 100}%`, backgroundColor: COLORS[i % COLORS.length] }} />
+                        <div className="h-full rounded transition-all" style={{ width: `${(Math.max(0, d.score) / 10) * 100}%`, backgroundColor: COLORS[i % COLORS.length] }} />
                       </div>
                     </div>
                   </div>
