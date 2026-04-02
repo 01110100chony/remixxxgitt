@@ -1,4 +1,5 @@
 import type { ProgramData } from "@/hooks/useProgram";
+import { isPGOrientation, isMestrado, isDoutorado, getQuadrienio as getQ } from "@/lib/orientation-utils";
 
 export interface CAPESSubItem {
   label: string;
@@ -67,8 +68,7 @@ function clamp(v: number, min = 0, max = 5): number {
 }
 
 function getQuadrienio(): [number, number] {
-  const y = new Date().getFullYear();
-  return [y - 3, y];
+  return getQ();
 }
 
 function calcPrograma(data: ProgramData, subWeights: Record<string, number>): CAPESQuesito {
@@ -128,10 +128,14 @@ function calcFormacaoCAPES(data: ProgramData, subWeights: Record<string, number>
   const [qS, qE] = getQuadrienio();
   const { orientations, researchers, articles } = data;
   const nDocentes = researchers.length || 1;
-  const qOrient = orientations.filter((o) => o.year && o.year >= qS && o.year <= qE);
+
+  // Filter PG-only orientations
+  const pgOrientations = orientations.filter((o) => isPGOrientation(o.type));
+  const qOrient = pgOrientations.filter((o) => o.year && o.year >= qS && o.year <= qE);
   const concluded = qOrient.filter((o) => o.status === "concluded");
-  const mestrado = concluded.filter((o) => o.type.toLowerCase().includes("mestrado"));
-  const doutorado = concluded.filter((o) => o.type.toLowerCase().includes("doutorado"));
+  const mestrado = concluded.filter((o) => isMestrado(o.type));
+  const doutorado = concluded.filter((o) => isDoutorado(o.type));
+  const inProgress = qOrient.filter((o) => o.status !== "concluded");
 
   // Orientações concluídas
   const mediaOrient = concluded.length / nDocentes;
@@ -152,8 +156,9 @@ function calcFormacaoCAPES(data: ProgramData, subWeights: Record<string, number>
   // Produção discente
   const discenteScore = clamp(doutorado.length >= 5 ? 5 : doutorado.length >= 3 ? 4 : doutorado.length >= 1 ? 3 : mestrado.length >= 5 ? 2 : 1);
 
+  const excluded = orientations.length - pgOrientations.length;
   const subItems: CAPESSubItem[] = [
-    { label: "Orientações Concluídas", key: "orientacoes", score: orientScore, description: `${concluded.length} concluídas (${mediaOrient.toFixed(1)}/docente)` },
+    { label: "Orientações PG Concluídas", key: "orientacoes", score: orientScore, description: `${concluded.length} concluídas (${mediaOrient.toFixed(1)}/docente), ${inProgress.length} em andamento` },
     { label: "Qualidade das Teses/Dissertações", key: "qualidade_teses", score: teseScore, description: `${(pctQual * 100).toFixed(0)}% artigos qualificados (A1-A4)` },
     { label: "Tempo de Formação", key: "tempo_formacao", score: tempoScore, description: `${concluded.length} formações no período` },
     { label: "Destino dos Egressos", key: "destino_egressos", score: egressosScore, description: "Dados de egressos não disponíveis" },
@@ -166,7 +171,8 @@ function calcFormacaoCAPES(data: ProgramData, subWeights: Record<string, number>
   return {
     name: "2. Formação", key: "formacao", weight: 0, score: Math.round(score * 10) / 10,
     subItems,
-    autoText: `No quadriênio ${qS}–${qE}, foram concluídas ${concluded.length} orientações (${mestrado.length} mestrados, ${doutorado.length} doutorados), média de ${mediaOrient.toFixed(1)} por docente.`,
+    autoText: `No quadriênio ${qS}–${qE}, foram concluídas ${concluded.length} orientações de pós-graduação (${mestrado.length} mestrados, ${doutorado.length} doutorados), média de ${mediaOrient.toFixed(1)} por docente.` +
+      (excluded > 0 ? ` (${excluded} orientações de graduação/IC/TCC excluídas)` : ""),
   };
 }
 

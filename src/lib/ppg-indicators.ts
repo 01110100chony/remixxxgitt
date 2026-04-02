@@ -1,4 +1,5 @@
 import type { ProgramData } from "@/hooks/useProgram";
+import { isPGOrientation, isMestrado, isDoutorado, getQuadrienio as getQ } from "@/lib/orientation-utils";
 
 export interface DimensionScore {
   name: string;
@@ -28,8 +29,7 @@ function clamp(v: number, min = 0, max = 10): number {
 }
 
 function getQuadrienio(): [number, number] {
-  const y = new Date().getFullYear();
-  return [y - 3, y];
+  return getQ();
 }
 
 function calcProducao(data: ProgramData): DimensionScore {
@@ -69,25 +69,32 @@ function calcFormacao(data: ProgramData): DimensionScore {
   const [qS, qE] = getQuadrienio();
   const { orientations, researchers } = data;
   const nDocentes = researchers.length || 1;
-  const qOrient = orientations.filter((o) => o.year && o.year >= qS && o.year <= qE);
+
+  // Filter PG-only orientations (mestrado, doutorado, pós-doutorado)
+  const pgOrientations = orientations.filter((o) => isPGOrientation(o.type));
+  const qOrient = pgOrientations.filter((o) => o.year && o.year >= qS && o.year <= qE);
   const concluded = qOrient.filter((o) => o.status === "concluded");
-  const mestrado = concluded.filter((o) => o.type.toLowerCase().includes("mestrado"));
-  const doutorado = concluded.filter((o) => o.type.toLowerCase().includes("doutorado"));
+  const mestrado = concluded.filter((o) => isMestrado(o.type));
+  const doutorado = concluded.filter((o) => isDoutorado(o.type));
+  const inProgress = qOrient.filter((o) => o.status !== "concluded");
   const mediaOrient = concluded.length / nDocentes;
 
   let score = clamp(mediaOrient * 2);
   if (doutorado.length >= nDocentes) score = clamp(score + 1);
 
-  const autoText = `No quadriênio, foram concluídas ${concluded.length} orientações (${mestrado.length} mestrados, ${doutorado.length} doutorados), ` +
-    `representando uma média de ${mediaOrient.toFixed(1)} por docente. ` +
+  const excluded = orientations.length - pgOrientations.length;
+  const autoText = `No quadriênio ${qS}–${qE}, foram concluídas ${concluded.length} orientações de pós-graduação (${mestrado.length} mestrados, ${doutorado.length} doutorados), ` +
+    `com ${inProgress.length} em andamento. Média de ${mediaOrient.toFixed(1)} por docente. ` +
+    (excluded > 0 ? `(${excluded} orientações de graduação/IC/TCC/especialização excluídas do cálculo) ` : "") +
     (mediaOrient >= 3 ? "A formação discente é robusta." : "Há espaço para ampliação da formação.");
 
   return {
     name: "Formação", key: "formacao", score,
     indicators: [
-      { label: "Orientações concluídas", value: concluded.length },
+      { label: "Orientações PG concluídas", value: concluded.length },
       { label: "Mestrados", value: mestrado.length },
       { label: "Doutorados", value: doutorado.length },
+      { label: "Em andamento (PG)", value: inProgress.length },
       { label: "Média por docente", value: mediaOrient.toFixed(1) },
     ],
     autoText,

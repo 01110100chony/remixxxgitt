@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import type { ProgramData } from "@/hooks/useProgram";
+import { isPGOrientation, isMestrado, isDoutorado, getQuadrienio } from "@/lib/orientation-utils";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   PieChart, Pie, Cell,
@@ -30,12 +31,12 @@ const tooltipStyle = {
 };
 
 function getQuadrienioRange(): [number, number] {
-  const y = new Date().getFullYear();
-  return [y - 3, y];
+  return getQuadrienio();
 }
 
 const ProgramDashboard = ({ data }: Props) => {
   const { researchers, articles, orientations, projects, technicalProductions, reviewerActivities, metrics } = data;
+  const pgOrientations = useMemo(() => orientations.filter((o) => isPGOrientation(o.type)), [orientations]);
   const [qStart, qEnd] = getQuadrienioRange();
   const qArticles = articles.filter((a) => a.year && a.year >= qStart && a.year <= qEnd);
 
@@ -89,7 +90,7 @@ const ProgramDashboard = ({ data }: Props) => {
         {[
           { label: "Artigos", value: articles.length, icon: BookOpen },
           { label: "Pesquisadores", value: researchers.length, icon: Users },
-          { label: "Orientações", value: orientations.length, icon: GraduationCap },
+          { label: "Orientações PG", value: pgOrientations.length, icon: GraduationCap },
           { label: "Projetos", value: projects.length, icon: FolderKanban },
           { label: "Prod. técnica", value: technicalProductions.length, icon: Wrench },
           { label: "Pareceres", value: reviewerActivities.length, icon: ClipboardCheck },
