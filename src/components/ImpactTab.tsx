@@ -1,12 +1,16 @@
 import { useMemo, useState } from "react";
 import type { Article, Researcher, ResearcherMetric } from "@/hooks/useProgram";
+import { getQuadrienio } from "@/lib/orientation-utils";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Zap, TrendingUp, Award, RefreshCw } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Zap, TrendingUp, Award, RefreshCw, CalendarDays } from "lucide-react";
+
+type PeriodMode = "quadrienio" | "custom" | "all";
 
 interface Props {
   articles: Article[];
