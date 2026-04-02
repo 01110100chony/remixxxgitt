@@ -29,8 +29,7 @@ function clamp(v: number, min = 0, max = 10): number {
 }
 
 function getQuadrienio(): [number, number] {
-  const y = new Date().getFullYear();
-  return [y - 3, y];
+  return getQ();
 }
 
 function calcProducao(data: ProgramData): DimensionScore {
