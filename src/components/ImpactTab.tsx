@@ -30,8 +30,9 @@ const ImpactTab = ({ articles, researchers, metrics, onFetchCitations, onUpdateM
 
   const articlesByDoi = articles.filter((a) => a.doi).length;
   const articlesByIssn = articles.filter((a) => a.issn).length;
+  const hasMetrics = metrics.length > 0 && metrics.some((m) => (m.total_citations || 0) > 0 || (m.h_index || 0) > 0);
   const totalCitations = metrics.reduce((s, m) => s + (m.total_citations || 0), 0);
-  const avgHIndex = researchers.length > 0 ? (metrics.reduce((s, m) => s + (m.h_index || 0), 0) / researchers.length).toFixed(1) : "0";
+  const avgHIndex = researchers.length > 0 ? (metrics.reduce((s, m) => s + (m.h_index || 0), 0) / researchers.length).toFixed(1) : "—";
 
   // Qualis distribution
   const qualisDist = useMemo(() => {
@@ -64,8 +65,8 @@ const ImpactTab = ({ articles, researchers, metrics, onFetchCitations, onUpdateM
           { label: "Total artigos", value: articles.length, icon: TrendingUp },
           { label: "Com DOI", value: articlesByDoi, icon: Zap },
           { label: "Com ISSN", value: articlesByIssn, icon: Zap },
-          { label: "Citações totais", value: totalCitations, icon: Award },
-          { label: "h-index médio", value: avgHIndex, icon: Award },
+          { label: "Citações totais", value: hasMetrics ? totalCitations : "—", icon: Award },
+          { label: "h-index médio", value: hasMetrics ? avgHIndex : "—", icon: Award },
           { label: "Qualificados", value: articles.filter((a) => a.qualis && a.qualis !== "Sem Qualis").length, icon: Award },
         ].map(({ label, value, icon: Icon }) => (
           <div key={label} className="rounded-lg border bg-card p-4 text-center">
@@ -75,6 +76,13 @@ const ImpactTab = ({ articles, researchers, metrics, onFetchCitations, onUpdateM
           </div>
         ))}
       </div>
+
+      {/* No data warning */}
+      {!hasMetrics && researchers.length > 0 && (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-700 dark:text-amber-400">
+          <strong>Sem dados de citações disponíveis.</strong> Use os botões abaixo para buscar citações via DOI ou inserir manualmente para cada pesquisador.
+        </div>
+      )}
 
       {/* Qualis distribution */}
       {qualisDist.length > 0 && (

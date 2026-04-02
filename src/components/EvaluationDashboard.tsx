@@ -100,7 +100,7 @@ const EvaluationDashboard = ({ data }: Props) => {
   const capesResult = useMemo(() => evaluateCAPES(data, capesWeights, effectivePeriod), [data, capesWeights, effectivePeriod]);
 
   const radarData = result.dimensions.map((d) => ({
-    dimension: d.name, score: d.score, fullMark: 10,
+    dimension: d.name, score: d.score < 0 ? 0 : d.score, fullMark: 10,
   }));
 
   const capesRadarData = capesResult.quesitos.map((q) => ({
@@ -286,10 +286,10 @@ const EvaluationDashboard = ({ data }: Props) => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-foreground">{d.name}</span>
-                        <span className="text-sm font-bold" style={{ color: COLORS[i % COLORS.length] }}>{d.score.toFixed(1)}</span>
+                        <span className="text-sm font-bold" style={{ color: COLORS[i % COLORS.length] }}>{d.score < 0 ? "N/D" : d.score.toFixed(1)}</span>
                       </div>
                       <div className="h-1.5 rounded bg-muted/50 mt-1 overflow-hidden">
-                        <div className="h-full rounded transition-all" style={{ width: `${(d.score / 10) * 100}%`, backgroundColor: COLORS[i % COLORS.length] }} />
+                        <div className="h-full rounded transition-all" style={{ width: `${(Math.max(0, d.score) / 10) * 100}%`, backgroundColor: COLORS[i % COLORS.length] }} />
                       </div>
                     </div>
                   </div>
@@ -373,7 +373,7 @@ const EvaluationDashboard = ({ data }: Props) => {
                   <div className="flex items-center gap-2">
                     <Icon className="h-5 w-5" style={{ color: COLORS[i % COLORS.length] }} />
                     <span className="font-semibold text-foreground">{d.name}</span>
-                    <span className="ml-auto text-lg font-bold" style={{ color: COLORS[i % COLORS.length] }}>{d.score.toFixed(1)}/10</span>
+                    <span className="ml-auto text-lg font-bold" style={{ color: COLORS[i % COLORS.length] }}>{d.score < 0 ? "Sem dados" : `${d.score.toFixed(1)}/10`}</span>
                   </div>
                   <div className="grid gap-2 grid-cols-2 sm:grid-cols-4">
                     {d.indicators.map((ind) => (

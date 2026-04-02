@@ -105,6 +105,7 @@ const ProgramDashboard = ({ data }: Props) => {
   }, [researchers, articles]);
 
   const maxLine = Math.max(...byResearchLine.map((d) => d.count), 1);
+  const hasMetricsData = metrics.length > 0 && metrics.some((m) => (m.total_citations || 0) > 0 || (m.h_index || 0) > 0);
   const totalCitations = metrics.reduce((s, m) => s + (m.total_citations || 0), 0);
 
   return (
@@ -118,7 +119,7 @@ const ProgramDashboard = ({ data }: Props) => {
           { label: "Projetos", value: projects.length, icon: FolderKanban },
           { label: "Prod. técnica", value: technicalProductions.length, icon: Wrench },
           { label: "Pareceres", value: reviewerActivities.length, icon: ClipboardCheck },
-          { label: "Citações", value: totalCitations, icon: Award },
+          { label: "Citações", value: hasMetricsData ? totalCitations : "—", icon: Award },
         ].map(({ label, value, icon: Icon }) => (
           <div key={label} className="rounded-lg border bg-card p-4 text-center">
             <Icon className="h-4 w-4 text-accent mx-auto mb-1.5" />
@@ -256,7 +257,7 @@ const ProgramDashboard = ({ data }: Props) => {
         </div>
         <div className="rounded-lg border bg-card p-4 text-center">
           <div className="text-2xl font-bold text-foreground">
-            {metrics.length > 0 ? (metrics.reduce((s, m) => s + (m.h_index || 0), 0) / researchers.length).toFixed(1) : "—"}
+            {metrics.length > 0 && hasMetricsData ? (metrics.reduce((s, m) => s + (m.h_index || 0), 0) / researchers.length).toFixed(1) : "—"}
           </div>
           <div className="text-xs text-muted-foreground">h-index médio</div>
         </div>
