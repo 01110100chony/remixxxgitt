@@ -84,15 +84,46 @@ const ImpactTab = ({ articles, researchers, metrics, onFetchCitations, onUpdateM
 
   return (
     <div className="space-y-6">
+      {/* Period filter */}
+      <div className="flex flex-wrap items-end gap-3 rounded-lg border bg-card p-4">
+        <CalendarDays className="h-4 w-4 text-accent" />
+        <div className="space-y-1">
+          <Label className="text-xs">Período</Label>
+          <Select value={periodMode} onValueChange={(v) => setPeriodMode(v as PeriodMode)}>
+            <SelectTrigger className="w-40 h-8"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="quadrienio">Quadriênio ({qStart}–{qEnd})</SelectItem>
+              <SelectItem value="custom">Personalizado</SelectItem>
+              <SelectItem value="all">Todos</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {periodMode === "custom" && (
+          <>
+            <div className="space-y-1">
+              <Label className="text-xs">Início</Label>
+              <Input type="number" className="w-24 h-8" value={customStart} onChange={(e) => setCustomStart(+e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Fim</Label>
+              <Input type="number" className="w-24 h-8" value={customEnd} onChange={(e) => setCustomEnd(+e.target.value)} />
+            </div>
+          </>
+        )}
+        <span className="text-xs text-muted-foreground ml-auto">
+          {filteredArticles.length} artigos no período
+        </span>
+      </div>
+
       {/* KPIs */}
       <div className="grid gap-3 grid-cols-2 sm:grid-cols-4 lg:grid-cols-6">
         {[
-          { label: "Total artigos", value: articles.length, icon: TrendingUp },
+          { label: "Total artigos", value: filteredArticles.length, icon: TrendingUp },
           { label: "Com DOI", value: articlesByDoi, icon: Zap },
           { label: "Com ISSN", value: articlesByIssn, icon: Zap },
           { label: "Citações totais", value: hasMetrics ? totalCitations : "—", icon: Award },
           { label: "h-index médio", value: hasMetrics ? avgHIndex : "—", icon: Award },
-          { label: "Qualificados", value: articles.filter((a) => a.qualis && a.qualis !== "Sem Qualis").length, icon: Award },
+          { label: "Qualificados", value: filteredArticles.filter((a) => a.qualis && a.qualis !== "Sem Qualis").length, icon: Award },
         ].map(({ label, value, icon: Icon }) => (
           <div key={label} className="rounded-lg border bg-card p-4 text-center">
             <Icon className="h-4 w-4 text-accent mx-auto mb-1" />
