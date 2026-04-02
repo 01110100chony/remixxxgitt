@@ -38,7 +38,7 @@ const Index = () => {
   const [newProgramCode, setNewProgramCode] = useState("");
   const qualisInputRef = useRef<HTMLInputElement>(null);
 
-  const { data, loading, fetchAll, uploadLattes, importQualis, fetchCitations, updateMetrics, exportCSV, clearMyData } = useProgramData(selectedProgramId);
+  const { data, loading, fetchAll, uploadLattes, importQualis, fetchCitations, fetchAllCitations, updateMetrics, exportCSV, clearMyData } = useProgramData(selectedProgramId);
 
   const handleFilesLoad = useCallback(
     async (files: { name: string; content: string }[]) => {
@@ -206,6 +206,7 @@ const Index = () => {
                     researchers={data.researchers}
                     metrics={data.metrics}
                     onFetchCitations={fetchCitations}
+                    onFetchAllCitations={fetchAllCitations}
                     onUpdateMetrics={updateMetrics}
                   />
                 </TabsContent>
