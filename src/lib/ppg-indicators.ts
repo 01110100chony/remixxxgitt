@@ -28,12 +28,8 @@ function clamp(v: number, min = 0, max = 10): number {
   return Math.max(min, Math.min(max, v));
 }
 
-function getQuadrienio(): [number, number] {
-  return getQ();
-}
-
-function calcProducao(data: ProgramData): DimensionScore {
-  const [qS, qE] = getQuadrienio();
+function calcProducao(data: ProgramData, period: [number, number]): DimensionScore {
+  const [qS, qE] = period;
   const { articles, researchers } = data;
   const qArticles = articles.filter((a) => a.year && a.year >= qS && a.year <= qE);
   const nDocentes = researchers.length || 1;
@@ -44,19 +40,18 @@ function calcProducao(data: ProgramData): DimensionScore {
   const qualificados = (qualisCounts["A1"] || 0) + (qualisCounts["A2"] || 0) + (qualisCounts["A3"] || 0) + (qualisCounts["A4"] || 0);
   const pctQualificado = qArticles.length > 0 ? (qualificados / qArticles.length) * 100 : 0;
 
-  // Score: média/docente ≥3 → 10; qualificados ≥60% adds bonus
   let score = clamp(mediaDocente * 2.5);
   if (pctQualificado >= 60) score = clamp(score + 1);
   if (pctQualificado >= 80) score = clamp(score + 1);
 
-  const autoText = `No quadriênio ${qS}–${qE}, o programa produziu ${qArticles.length} artigos (média de ${mediaDocente.toFixed(1)} por docente). ` +
+  const autoText = `No período ${qS}–${qE}, o programa produziu ${qArticles.length} artigos (média de ${mediaDocente.toFixed(1)} por docente). ` +
     `${qualificados} artigos (${pctQualificado.toFixed(0)}%) possuem classificação Qualis A1–A4. ` +
     (mediaDocente >= 3 ? "A produtividade do corpo docente é considerada elevada." : mediaDocente >= 1.5 ? "A produtividade está em nível intermediário." : "A produtividade necessita de atenção.");
 
   return {
     name: "Produção Científica", key: "producao", score,
     indicators: [
-      { label: "Artigos no quadriênio", value: qArticles.length },
+      { label: "Artigos no período", value: qArticles.length },
       { label: "Média por docente", value: mediaDocente.toFixed(1) },
       { label: "Artigos qualificados (A1–A4)", value: `${qualificados} (${pctQualificado.toFixed(0)}%)` },
       { label: "Total geral de artigos", value: articles.length },
@@ -65,12 +60,11 @@ function calcProducao(data: ProgramData): DimensionScore {
   };
 }
 
-function calcFormacao(data: ProgramData): DimensionScore {
-  const [qS, qE] = getQuadrienio();
+function calcFormacao(data: ProgramData, period: [number, number]): DimensionScore {
+  const [qS, qE] = period;
   const { orientations, researchers } = data;
   const nDocentes = researchers.length || 1;
 
-  // Filter PG-only orientations (mestrado, doutorado, pós-doutorado)
   const pgOrientations = orientations.filter((o) => isPGOrientation(o.type));
   const qOrient = pgOrientations.filter((o) => o.year && o.year >= qS && o.year <= qE);
   const concluded = qOrient.filter((o) => o.status === "concluded");
@@ -83,7 +77,7 @@ function calcFormacao(data: ProgramData): DimensionScore {
   if (doutorado.length >= nDocentes) score = clamp(score + 1);
 
   const excluded = orientations.length - pgOrientations.length;
-  const autoText = `No quadriênio ${qS}–${qE}, foram concluídas ${concluded.length} orientações de pós-graduação (${mestrado.length} mestrados, ${doutorado.length} doutorados), ` +
+  const autoText = `No período ${qS}–${qE}, foram concluídas ${concluded.length} orientações de pós-graduação (${mestrado.length} mestrados, ${doutorado.length} doutorados), ` +
     `com ${inProgress.length} em andamento. Média de ${mediaOrient.toFixed(1)} por docente. ` +
     (excluded > 0 ? `(${excluded} orientações de graduação/IC/TCC/especialização excluídas do cálculo) ` : "") +
     (mediaOrient >= 3 ? "A formação discente é robusta." : "Há espaço para ampliação da formação.");
@@ -207,10 +201,11 @@ function calcPresencaDigital(data: ProgramData): DimensionScore {
   };
 }
 
-export function evaluateProgram(data: ProgramData, weights = DEFAULT_WEIGHTS): EvaluationResult {
+export function evaluateProgram(data: ProgramData, weights = DEFAULT_WEIGHTS, period?: [number, number]): EvaluationResult {
+  const effectivePeriod = period || getQ();
   const dimensions = [
-    calcProducao(data),
-    calcFormacao(data),
+    calcProducao(data, effectivePeriod),
+    calcFormacao(data, effectivePeriod),
     calcImpacto(data),
     calcInternacionalizacao(data),
     calcInsercaoSocial(data),
