@@ -166,7 +166,7 @@ const ImpactTab = ({ articles, researchers, metrics, onFetchCitations, onUpdateM
         <div className="space-y-3">
           {researchers.map((r) => {
             const m = getMetric(r.id);
-            const rArticles = articles.filter((a) => a.researcher_id === r.id);
+            const rArticles = filteredArticles.filter((a) => a.researcher_id === r.id);
             const withDoi = rArticles.filter((a) => a.doi).length;
             const isEditing = editingId === r.id;
 
