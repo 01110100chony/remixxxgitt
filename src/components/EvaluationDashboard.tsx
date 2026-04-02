@@ -32,6 +32,8 @@ const tooltipStyle = {
   fontSize: "13px",
 };
 
+type PeriodMode = "quadrienio" | "custom" | "all";
+
 interface Props { data: ProgramData; }
 
 const EvaluationDashboard = ({ data }: Props) => {
