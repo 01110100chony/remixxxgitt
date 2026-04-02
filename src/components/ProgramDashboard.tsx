@@ -31,8 +31,7 @@ const tooltipStyle = {
 };
 
 function getQuadrienioRange(): [number, number] {
-  const y = new Date().getFullYear();
-  return [y - 3, y];
+  return getQuadrienio();
 }
 
 const ProgramDashboard = ({ data }: Props) => {
