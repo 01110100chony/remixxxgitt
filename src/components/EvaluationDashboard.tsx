@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import type { ProgramData } from "@/hooks/useProgram";
 import { evaluateProgram, DEFAULT_WEIGHTS } from "@/lib/ppg-indicators";
 import { evaluateCAPES, DEFAULT_CAPES_WEIGHTS, type CAPESWeights } from "@/lib/capes-indicators";
+import { getQuadrienio } from "@/lib/orientation-utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -13,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Settings2, Award, TrendingUp, BookOpen, GraduationCap, Globe, Users, Share2, ChevronDown, ChevronUp, Save } from "lucide-react";
+import { Settings2, Award, TrendingUp, BookOpen, GraduationCap, Globe, Users, Share2, ChevronDown, ChevronUp, Save, CalendarDays } from "lucide-react";
 import EvaluationReport from "@/components/EvaluationReport";
 
 const COLORS = [
@@ -31,6 +32,8 @@ const tooltipStyle = {
   fontSize: "13px",
 };
 
+type PeriodMode = "quadrienio" | "custom" | "all";
+
 interface Props { data: ProgramData; }
 
 const EvaluationDashboard = ({ data }: Props) => {
@@ -41,6 +44,22 @@ const EvaluationDashboard = ({ data }: Props) => {
   const [showWeights, setShowWeights] = useState(false);
   const [expandedQuesito, setExpandedQuesito] = useState<string | null>(null);
   const [savingWeights, setSavingWeights] = useState(false);
+  const [periodMode, setPeriodMode] = useState<PeriodMode>("quadrienio");
+  const [qStart, qEnd] = getQuadrienio();
+  const [customStart, setCustomStart] = useState<number>(qStart);
+  const [customEnd, setCustomEnd] = useState<number>(qEnd);
+
+  const effectivePeriod = useMemo<[number, number]>(() => {
+    if (periodMode === "quadrienio") return [qStart, qEnd];
+    if (periodMode === "custom") return [customStart, customEnd];
+    return [1900, 9999];
+  }, [periodMode, qStart, qEnd, customStart, customEnd]);
+
+  const periodLabel = periodMode === "quadrienio"
+    ? `Quadriênio ${qStart}–${qEnd}`
+    : periodMode === "custom"
+      ? `${customStart}–${customEnd}`
+      : "Todos os anos";
 
   // Load saved weights from DB
   useEffect(() => {
@@ -77,8 +96,8 @@ const EvaluationDashboard = ({ data }: Props) => {
     }
   };
 
-  const result = useMemo(() => evaluateProgram(data, weights), [data, weights]);
-  const capesResult = useMemo(() => evaluateCAPES(data, capesWeights), [data, capesWeights]);
+  const result = useMemo(() => evaluateProgram(data, weights, effectivePeriod), [data, weights, effectivePeriod]);
+  const capesResult = useMemo(() => evaluateCAPES(data, capesWeights, effectivePeriod), [data, capesWeights, effectivePeriod]);
 
   const radarData = result.dimensions.map((d) => ({
     dimension: d.name, score: d.score, fullMark: 10,
@@ -136,6 +155,64 @@ const EvaluationDashboard = ({ data }: Props) => {
         <span className="text-xs text-muted-foreground">
           {mode === "simplified" ? "6 dimensões, score 0–10" : "3 quesitos com subitens, conceito 1–7"}
         </span>
+      </div>
+
+      {/* Period selector */}
+      <div className="rounded-lg border bg-card p-4 space-y-3">
+        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <CalendarDays className="h-4 w-4 text-accent" />
+          Período de avaliação: {periodLabel}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant={periodMode === "quadrienio" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setPeriodMode("quadrienio")}
+          >
+            Quadriênio ({qStart}–{qEnd})
+          </Button>
+          <Button
+            variant={periodMode === "custom" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setPeriodMode("custom")}
+          >
+            Personalizado
+          </Button>
+          <Button
+            variant={periodMode === "all" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setPeriodMode("all")}
+          >
+            Todos
+          </Button>
+
+          {periodMode === "custom" && (
+            <>
+              <div className="flex items-center gap-1 ml-2">
+                <span className="text-xs text-muted-foreground">De:</span>
+                <Input
+                  type="number"
+                  value={customStart}
+                  onChange={(e) => setCustomStart(Number(e.target.value))}
+                  className="w-20 h-8 text-sm"
+                  min={1900}
+                  max={2100}
+                />
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-muted-foreground">Até:</span>
+                <Input
+                  type="number"
+                  value={customEnd}
+                  onChange={(e) => setCustomEnd(Number(e.target.value))}
+                  className="w-20 h-8 text-sm"
+                  min={1900}
+                  max={2100}
+                />
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {mode === "simplified" ? (
