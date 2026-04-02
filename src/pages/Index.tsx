@@ -206,6 +206,7 @@ const Index = () => {
                     researchers={data.researchers}
                     metrics={data.metrics}
                     onFetchCitations={fetchCitations}
+                    onFetchAllCitations={fetchAllCitations}
                     onUpdateMetrics={updateMetrics}
                   />
                 </TabsContent>
