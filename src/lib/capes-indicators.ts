@@ -68,8 +68,7 @@ function clamp(v: number, min = 0, max = 5): number {
 }
 
 function getQuadrienio(): [number, number] {
-  const y = new Date().getFullYear();
-  return [y - 3, y];
+  return getQ();
 }
 
 function calcPrograma(data: ProgramData, subWeights: Record<string, number>): CAPESQuesito {
