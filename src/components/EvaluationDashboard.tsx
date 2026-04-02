@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import type { ProgramData } from "@/hooks/useProgram";
 import { evaluateProgram, DEFAULT_WEIGHTS } from "@/lib/ppg-indicators";
 import { evaluateCAPES, DEFAULT_CAPES_WEIGHTS, type CAPESWeights } from "@/lib/capes-indicators";
+import { getQuadrienio } from "@/lib/orientation-utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -13,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Settings2, Award, TrendingUp, BookOpen, GraduationCap, Globe, Users, Share2, ChevronDown, ChevronUp, Save } from "lucide-react";
+import { Settings2, Award, TrendingUp, BookOpen, GraduationCap, Globe, Users, Share2, ChevronDown, ChevronUp, Save, CalendarDays } from "lucide-react";
 import EvaluationReport from "@/components/EvaluationReport";
 
 const COLORS = [
