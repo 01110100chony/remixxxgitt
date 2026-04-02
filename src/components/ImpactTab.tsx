@@ -28,8 +28,10 @@ const tooltipStyle = {
   fontSize: "13px",
 };
 
-const ImpactTab = ({ articles, researchers, metrics, onFetchCitations, onUpdateMetrics }: Props) => {
+const ImpactTab = ({ articles, researchers, metrics, onFetchCitations, onFetchAllCitations, onUpdateMetrics }: Props) => {
   const [fetchingId, setFetchingId] = useState<string | null>(null);
+  const [fetchingAll, setFetchingAll] = useState(false);
+  const [fetchProgress, setFetchProgress] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState({ total_citations: 0, h_index: 0, i10_index: 0 });
   const [periodMode, setPeriodMode] = useState<PeriodMode>("quadrienio");
