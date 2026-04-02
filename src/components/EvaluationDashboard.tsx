@@ -373,7 +373,7 @@ const EvaluationDashboard = ({ data }: Props) => {
                   <div className="flex items-center gap-2">
                     <Icon className="h-5 w-5" style={{ color: COLORS[i % COLORS.length] }} />
                     <span className="font-semibold text-foreground">{d.name}</span>
-                    <span className="ml-auto text-lg font-bold" style={{ color: COLORS[i % COLORS.length] }}>{d.score.toFixed(1)}/10</span>
+                    <span className="ml-auto text-lg font-bold" style={{ color: COLORS[i % COLORS.length] }}>{d.score < 0 ? "Sem dados" : `${d.score.toFixed(1)}/10`}</span>
                   </div>
                   <div className="grid gap-2 grid-cols-2 sm:grid-cols-4">
                     {d.indicators.map((ind) => (
