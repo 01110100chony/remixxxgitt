@@ -58,6 +58,30 @@ const ProgramDashboard = ({ data }: Props) => {
     }));
   }, [articles, qStart, qEnd]);
 
+  // By year and Qualis
+  const QUALIS_ORDER = ["A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4", "C", "NP"];
+  const QUALIS_COLORS: Record<string, string> = {
+    A1: "#10b981", A2: "#34d399", A3: "#6ee7b7", A4: "#a7f3d0",
+    B1: "#3b82f6", B2: "#60a5fa", B3: "#93c5fd", B4: "#bfdbfe",
+    C: "#f59e0b", NP: "#94a3b8",
+  };
+  const byYearQualis = useMemo(() => {
+    const map: Record<string, Record<string, number>> = {};
+    articles.forEach((a) => {
+      if (!a.year) return;
+      const y = String(a.year);
+      const q = a.qualis || "NP";
+      if (!map[y]) map[y] = {};
+      map[y][q] = (map[y][q] || 0) + 1;
+    });
+    return Object.entries(map).sort(([a], [b]) => a.localeCompare(b)).map(([year, qualis]) => ({ year, ...qualis }));
+  }, [articles]);
+  const activeQualis = useMemo(() => {
+    const s = new Set<string>();
+    articles.forEach((a) => s.add(a.qualis || "NP"));
+    return QUALIS_ORDER.filter((q) => s.has(q));
+  }, [articles]);
+
   // By gender
   const byGender = useMemo(() => {
     const map: Record<string, number> = {};
