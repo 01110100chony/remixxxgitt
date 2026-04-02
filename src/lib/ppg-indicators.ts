@@ -1,4 +1,5 @@
 import type { ProgramData } from "@/hooks/useProgram";
+import { isPGOrientation, isMestrado, isDoutorado, getQuadrienio as getQ } from "@/lib/orientation-utils";
 
 export interface DimensionScore {
   name: string;
