@@ -67,7 +67,7 @@ const ImpactTab = ({ articles, researchers, metrics, onFetchCitations, onUpdateM
       map[q] = (map[q] || 0) + 1;
     });
     return Object.entries(map).sort(([a], [b]) => a.localeCompare(b)).map(([name, count]) => ({ name, count }));
-  }, [articles]);
+  }, [filteredArticles]);
 
   const handleFetch = async (researcherId: string) => {
     setFetchingId(researcherId);
