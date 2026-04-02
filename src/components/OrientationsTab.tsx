@@ -158,7 +158,23 @@ const OrientationsTab = ({ orientations, researchers }: OrientationsTabProps) =>
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Chart */}
+      {chartData.length > 0 && (
+        <div className="rounded-lg border bg-card p-4 space-y-3">
+          <h3 className="text-sm font-semibold text-foreground">Evolução de orientações PG por ano</h3>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <XAxis dataKey="year" className="text-xs" />
+              <YAxis allowDecimals={false} className="text-xs" />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="mestrado" name="Mestrado" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="doutorado" name="Doutorado" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-2">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
