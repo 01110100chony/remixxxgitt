@@ -100,7 +100,7 @@ const EvaluationDashboard = ({ data }: Props) => {
   const capesResult = useMemo(() => evaluateCAPES(data, capesWeights, effectivePeriod), [data, capesWeights, effectivePeriod]);
 
   const radarData = result.dimensions.map((d) => ({
-    dimension: d.name, score: d.score, fullMark: 10,
+    dimension: d.name, score: d.score < 0 ? 0 : d.score, fullMark: 10,
   }));
 
   const capesRadarData = capesResult.quesitos.map((q) => ({
