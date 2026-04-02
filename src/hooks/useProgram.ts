@@ -380,17 +380,14 @@ export function useProgramData(programId: string | null) {
     await fetchAll();
   };
 
-  const fetchCitations = async (researcherId: string) => {
-    const articles = data?.articles.filter((a) => a.researcher_id === researcherId && a.doi) || [];
-    if (articles.length === 0) {
-      toast({ title: "Sem DOIs", description: "Nenhum artigo com DOI para buscar citações.", variant: "destructive" });
-      return;
-    }
+  const fetchCitationsForResearcher = async (researcherId: string): Promise<{ total: number; hIndex: number; i10: number }> => {
+    const arts = data?.articles.filter((a) => a.researcher_id === researcherId && a.doi) || [];
+    if (arts.length === 0) return { total: 0, hIndex: 0, i10: 0 };
 
     let totalCitations = 0;
     const citationCounts: number[] = [];
 
-    for (const article of articles) {
+    for (const article of arts) {
       try {
         const res = await fetch(`https://api.openalex.org/works/doi:${article.doi}`);
         if (res.ok) {
@@ -403,14 +400,12 @@ export function useProgramData(programId: string | null) {
       } catch { /* skip */ }
     }
 
-    // Calculate h-index
     citationCounts.sort((a, b) => b - a);
     let hIndex = 0;
     for (let i = 0; i < citationCounts.length; i++) {
       if (citationCounts[i] >= i + 1) hIndex = i + 1;
       else break;
     }
-
     const i10Index = citationCounts.filter((c) => c >= 10).length;
 
     await updateMetrics(researcherId, {
@@ -420,7 +415,42 @@ export function useProgramData(programId: string | null) {
       source: "openalex",
     });
 
-    toast({ title: "Citações atualizadas", description: `${totalCitations} citações encontradas.` });
+    return { total: totalCitations, hIndex, i10: i10Index };
+  };
+
+  const fetchCitations = async (researcherId: string) => {
+    const arts = data?.articles.filter((a) => a.researcher_id === researcherId && a.doi) || [];
+    if (arts.length === 0) {
+      toast({ title: "Sem DOIs", description: "Nenhum artigo com DOI para buscar citações.", variant: "destructive" });
+      return;
+    }
+    const result = await fetchCitationsForResearcher(researcherId);
+    toast({ title: "Citações atualizadas", description: `${result.total} citações encontradas.` });
+  };
+
+  const fetchAllCitations = async (onProgress?: (current: number, total: number, name: string) => void) => {
+    if (!data) return;
+    const researchersWithDoi = data.researchers.filter((r) =>
+      data.articles.some((a) => a.researcher_id === r.id && a.doi)
+    );
+    if (researchersWithDoi.length === 0) {
+      toast({ title: "Sem DOIs", description: "Nenhum pesquisador possui artigos com DOI.", variant: "destructive" });
+      return;
+    }
+
+    let grandTotal = 0;
+    for (let i = 0; i < researchersWithDoi.length; i++) {
+      const r = researchersWithDoi[i];
+      onProgress?.(i + 1, researchersWithDoi.length, r.name);
+      const result = await fetchCitationsForResearcher(r.id);
+      grandTotal += result.total;
+    }
+
+    await fetchAll();
+    toast({
+      title: "Busca concluída",
+      description: `${grandTotal} citações encontradas para ${researchersWithDoi.length} pesquisador(es).`,
+    });
   };
 
   const exportCSV = (tableName: string) => {
