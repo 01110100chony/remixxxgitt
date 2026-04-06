@@ -241,6 +241,44 @@ export type Database = {
           },
         ]
       }
+      planning_data: {
+        Row: {
+          config: Json
+          created_at: string
+          id: string
+          program_id: string
+          type: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          id?: string
+          program_id: string
+          type: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          id?: string
+          program_id?: string
+          type?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planning_data_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string

@@ -24,6 +24,7 @@ import WebsiteTab from "@/components/WebsiteTab";
 import ProgramSettings from "@/components/ProgramSettings";
 import SocialMediaTab from "@/components/SocialMediaTab";
 import AdminPanel from "@/components/AdminPanel";
+import PlanningManagement from "@/components/PlanningManagement";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -187,6 +188,7 @@ const Index = () => {
                   <TabsTrigger value="identifiers">Identificadores</TabsTrigger>
                   <TabsTrigger value="website">Site</TabsTrigger>
                   <TabsTrigger value="social">Presença Digital</TabsTrigger>
+                  <TabsTrigger value="planning">Planejamento</TabsTrigger>
                   <TabsTrigger value="settings">Configurações</TabsTrigger>
                   {roles.includes("admin") && <TabsTrigger value="admin">Administração</TabsTrigger>}
                 </TabsList>
@@ -240,6 +242,9 @@ const Index = () => {
                 </TabsContent>
                 <TabsContent value="settings">
                   <ProgramSettings program={data.program} onRefresh={fetchAll} />
+                </TabsContent>
+                <TabsContent value="planning">
+                  <PlanningManagement data={data} canEdit={isCoordinatorOrAdmin} />
                 </TabsContent>
                 {roles.includes("admin") && (
                   <TabsContent value="admin">
