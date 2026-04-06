@@ -24,6 +24,7 @@ import WebsiteTab from "@/components/WebsiteTab";
 import ProgramSettings from "@/components/ProgramSettings";
 import SocialMediaTab from "@/components/SocialMediaTab";
 import AdminPanel from "@/components/AdminPanel";
+import PlanningManagement from "@/components/PlanningManagement";
 
 const Index = () => {
   const navigate = useNavigate();
