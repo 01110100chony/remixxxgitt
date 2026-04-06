@@ -243,6 +243,9 @@ const Index = () => {
                 <TabsContent value="settings">
                   <ProgramSettings program={data.program} onRefresh={fetchAll} />
                 </TabsContent>
+                <TabsContent value="planning">
+                  <PlanningManagement data={data} canEdit={isCoordinatorOrAdmin} />
+                </TabsContent>
                 {roles.includes("admin") && (
                   <TabsContent value="admin">
                     <AdminPanel />
