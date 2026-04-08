@@ -30,7 +30,7 @@ interface BatchItemResult {
   profileUrl?: string;
 }
 
-const FileUpload = ({ onFilesLoad, loadedFiles }: FileUploadProps) => {
+const FileUpload = ({ onFilesLoad, loadedFiles, programId, researchers: existingResearchers }: FileUploadProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [lattesInput, setLattesInput] = useState("");
@@ -39,6 +39,7 @@ const FileUpload = ({ onFilesLoad, loadedFiles }: FileUploadProps) => {
   const [batchInput, setBatchInput] = useState("");
   const [batchResults, setBatchResults] = useState<BatchItemResult[]>([]);
   const [batchRunning, setBatchRunning] = useState(false);
+  const [existingMatch, setExistingMatch] = useState<{ name: string; updatedAt: string } | null>(null);
   const { toast } = useToast();
 
   const processFiles = useCallback(
