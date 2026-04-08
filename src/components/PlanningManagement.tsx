@@ -8,6 +8,9 @@ import { getQuadrienio } from "@/lib/orientation-utils";
 import DiagnosticSection from "@/components/planning/DiagnosticSection";
 import SwotSection from "@/components/planning/SwotSection";
 import StrategicPlanSection from "@/components/planning/StrategicPlanSection";
+import AcademicManagementSection from "@/components/planning/AcademicManagementSection";
+import ScholarshipsSection from "@/components/planning/ScholarshipsSection";
+import MobilitySection from "@/components/planning/MobilitySection";
 
 interface Props {
   data: ProgramData;
