@@ -76,12 +76,32 @@ const FileUpload = ({ onFilesLoad, loadedFiles, programId, researchers: existing
     return data;
   };
 
+  const checkExistingResearcher = (lattesId: string) => {
+    if (!existingResearchers) return null;
+    return existingResearchers.find((r) => r.lattes_id === lattesId);
+  };
+
   const handleFetchLattes = async () => {
     const lattesId = extractLattesId(lattesInput);
     if (!lattesId) {
       setFetchResult({ status: "error", message: "Informe um ID Lattes válido (16 dígitos) ou URL do perfil Lattes." });
+      setExistingMatch(null);
       return;
     }
+
+    // Check if researcher already exists in DB
+    const existing = checkExistingResearcher(lattesId);
+    if (existing) {
+      const updatedDate = new Date(existing.updatedAt).toLocaleDateString("pt-BR");
+      setExistingMatch({ name: existing.name, updatedAt: updatedDate });
+      setFetchResult({ 
+        status: "success", 
+        message: `"${existing.name}" já está cadastrado(a) (atualizado em ${updatedDate}). Para atualizar, faça upload de um novo XML.` 
+      });
+      return;
+    }
+
+    setExistingMatch(null);
     setFetchResult({ status: "loading" });
     try {
       const data = await fetchSingleLattes(lattesId);
