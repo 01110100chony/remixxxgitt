@@ -71,6 +71,9 @@ export default function PlanningManagement({ data, canEdit }: Props) {
           <TabsTrigger value="diagnostic">Diagnóstico</TabsTrigger>
           <TabsTrigger value="swot">Matriz SWOT</TabsTrigger>
           <TabsTrigger value="strategic">Planejamento Estratégico</TabsTrigger>
+          <TabsTrigger value="academic">Gestão Acadêmica</TabsTrigger>
+          <TabsTrigger value="scholarships">Bolsas e Financiamento</TabsTrigger>
+          <TabsTrigger value="mobility">Mobilidade</TabsTrigger>
         </TabsList>
 
         <TabsContent value="diagnostic" className="mt-4">
@@ -81,6 +84,15 @@ export default function PlanningManagement({ data, canEdit }: Props) {
         </TabsContent>
         <TabsContent value="strategic" className="mt-4">
           <StrategicPlanSection data={data} startYear={startYear} endYear={endYear} canEdit={canEdit} />
+        </TabsContent>
+        <TabsContent value="academic" className="mt-4">
+          <AcademicManagementSection data={data} startYear={startYear} endYear={endYear} />
+        </TabsContent>
+        <TabsContent value="scholarships" className="mt-4">
+          <ScholarshipsSection data={data} startYear={startYear} endYear={endYear} canEdit={canEdit} />
+        </TabsContent>
+        <TabsContent value="mobility" className="mt-4">
+          <MobilitySection data={data} startYear={startYear} endYear={endYear} canEdit={canEdit} />
         </TabsContent>
       </Tabs>
     </div>
