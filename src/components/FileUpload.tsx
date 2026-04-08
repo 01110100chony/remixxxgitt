@@ -92,7 +92,7 @@ const FileUpload = ({ onFilesLoad, loadedFiles, programId, researchers: existing
     // Check if researcher already exists in DB
     const existing = checkExistingResearcher(lattesId);
     if (existing) {
-      const updatedDate = new Date(existing.updatedAt).toLocaleDateString("pt-BR");
+      const updatedDate = new Date(existing.updated_at).toLocaleDateString("pt-BR");
       setExistingMatch({ name: existing.name, updatedAt: updatedDate });
       setFetchResult({ 
         status: "success", 
