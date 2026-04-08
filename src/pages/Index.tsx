@@ -141,7 +141,12 @@ const Index = () => {
           <>
             {/* Upload & Actions */}
             <div className="space-y-3">
-              <FileUpload onFilesLoad={handleFilesLoad} loadedFiles={data?.researchers.map((r) => r.lattes_xml_filename || r.name) || []} />
+              <FileUpload 
+                onFilesLoad={handleFilesLoad} 
+                loadedFiles={data?.researchers.map((r) => r.lattes_xml_filename || r.name) || []} 
+                programId={selectedProgramId}
+                researchers={data?.researchers.map((r) => ({ id: r.id, name: r.name, lattes_id: r.lattes_id, lattes_xml_filename: r.lattes_xml_filename, updated_at: r.updated_at }))}
+              />
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" size="sm" onClick={() => qualisInputRef.current?.click()}>
                   <Upload className="h-4 w-4 mr-1" /> Importar Qualis (CSV)

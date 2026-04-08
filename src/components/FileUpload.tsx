@@ -10,6 +10,8 @@ import { Progress } from "@/components/ui/progress";
 interface FileUploadProps {
   onFilesLoad: (files: { name: string; content: string }[]) => void;
   loadedFiles: string[];
+  programId?: string | null;
+  researchers?: { id: string; name: string; lattes_id: string | null; lattes_xml_filename: string | null; updated_at: string }[];
 }
 
 type FetchStatus = "idle" | "loading" | "success" | "error" | "needs_upload";
@@ -28,7 +30,7 @@ interface BatchItemResult {
   profileUrl?: string;
 }
 
-const FileUpload = ({ onFilesLoad, loadedFiles }: FileUploadProps) => {
+const FileUpload = ({ onFilesLoad, loadedFiles, programId, researchers: existingResearchers }: FileUploadProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [lattesInput, setLattesInput] = useState("");
@@ -37,6 +39,7 @@ const FileUpload = ({ onFilesLoad, loadedFiles }: FileUploadProps) => {
   const [batchInput, setBatchInput] = useState("");
   const [batchResults, setBatchResults] = useState<BatchItemResult[]>([]);
   const [batchRunning, setBatchRunning] = useState(false);
+  const [existingMatch, setExistingMatch] = useState<{ name: string; updatedAt: string } | null>(null);
   const { toast } = useToast();
 
   const processFiles = useCallback(
@@ -73,12 +76,32 @@ const FileUpload = ({ onFilesLoad, loadedFiles }: FileUploadProps) => {
     return data;
   };
 
+  const checkExistingResearcher = (lattesId: string) => {
+    if (!existingResearchers) return null;
+    return existingResearchers.find((r) => r.lattes_id === lattesId);
+  };
+
   const handleFetchLattes = async () => {
     const lattesId = extractLattesId(lattesInput);
     if (!lattesId) {
       setFetchResult({ status: "error", message: "Informe um ID Lattes válido (16 dígitos) ou URL do perfil Lattes." });
+      setExistingMatch(null);
       return;
     }
+
+    // Check if researcher already exists in DB
+    const existing = checkExistingResearcher(lattesId);
+    if (existing) {
+      const updatedDate = new Date(existing.updated_at).toLocaleDateString("pt-BR");
+      setExistingMatch({ name: existing.name, updatedAt: updatedDate });
+      setFetchResult({ 
+        status: "success", 
+        message: `"${existing.name}" já está cadastrado(a) (atualizado em ${updatedDate}). Para atualizar, faça upload de um novo XML.` 
+      });
+      return;
+    }
+
+    setExistingMatch(null);
     setFetchResult({ status: "loading" });
     try {
       const data = await fetchSingleLattes(lattesId);
@@ -174,7 +197,7 @@ const FileUpload = ({ onFilesLoad, loadedFiles }: FileUploadProps) => {
                   value={lattesInput}
                   onChange={(e) => {
                     setLattesInput(e.target.value);
-                    if (fetchResult.status !== "idle") setFetchResult({ status: "idle" });
+                    if (fetchResult.status !== "idle") { setFetchResult({ status: "idle" }); setExistingMatch(null); }
                   }}
                   onKeyDown={(e) => e.key === "Enter" && handleFetchLattes()}
                 />
@@ -191,8 +214,16 @@ const FileUpload = ({ onFilesLoad, loadedFiles }: FileUploadProps) => {
               </div>
             )}
             {fetchResult.status === "success" && (
-              <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
-                <CheckCircle2 className="h-4 w-4" /> {fetchResult.message}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                  <CheckCircle2 className="h-4 w-4" /> {fetchResult.message}
+                </div>
+                {existingMatch && (
+                  <div className="rounded-md bg-accent/10 border border-accent/20 p-3 text-sm space-y-1">
+                    <p className="font-medium text-foreground">Pesquisador já cadastrado</p>
+                    <p className="text-muted-foreground">Para atualizar os dados, exporte o XML do Lattes e faça upload abaixo.</p>
+                  </div>
+                )}
               </div>
             )}
             {fetchResult.status === "error" && (
