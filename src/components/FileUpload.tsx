@@ -10,6 +10,8 @@ import { Progress } from "@/components/ui/progress";
 interface FileUploadProps {
   onFilesLoad: (files: { name: string; content: string }[]) => void;
   loadedFiles: string[];
+  programId?: string | null;
+  researchers?: { id: string; name: string; lattes_id: string | null; lattes_xml_filename: string | null; updated_at: string }[];
 }
 
 type FetchStatus = "idle" | "loading" | "success" | "error" | "needs_upload";
