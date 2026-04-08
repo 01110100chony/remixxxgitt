@@ -214,8 +214,16 @@ const FileUpload = ({ onFilesLoad, loadedFiles, programId, researchers: existing
               </div>
             )}
             {fetchResult.status === "success" && (
-              <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
-                <CheckCircle2 className="h-4 w-4" /> {fetchResult.message}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                  <CheckCircle2 className="h-4 w-4" /> {fetchResult.message}
+                </div>
+                {existingMatch && (
+                  <div className="rounded-md bg-accent/10 border border-accent/20 p-3 text-sm space-y-1">
+                    <p className="font-medium text-foreground">Pesquisador já cadastrado</p>
+                    <p className="text-muted-foreground">Para atualizar os dados, exporte o XML do Lattes e faça upload abaixo.</p>
+                  </div>
+                )}
               </div>
             )}
             {fetchResult.status === "error" && (
