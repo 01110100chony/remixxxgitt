@@ -197,7 +197,7 @@ const FileUpload = ({ onFilesLoad, loadedFiles, programId, researchers: existing
                   value={lattesInput}
                   onChange={(e) => {
                     setLattesInput(e.target.value);
-                    if (fetchResult.status !== "idle") setFetchResult({ status: "idle" });
+                    if (fetchResult.status !== "idle") { setFetchResult({ status: "idle" }); setExistingMatch(null); }
                   }}
                   onKeyDown={(e) => e.key === "Enter" && handleFetchLattes()}
                 />
