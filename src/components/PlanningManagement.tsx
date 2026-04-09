@@ -11,6 +11,7 @@ import StrategicPlanSection from "@/components/planning/StrategicPlanSection";
 import AcademicManagementSection from "@/components/planning/AcademicManagementSection";
 import ScholarshipsSection from "@/components/planning/ScholarshipsSection";
 import MobilitySection from "@/components/planning/MobilitySection";
+import MonitoringSection from "@/components/planning/MonitoringSection";
 
 interface Props {
   data: ProgramData;
@@ -74,6 +75,7 @@ export default function PlanningManagement({ data, canEdit }: Props) {
           <TabsTrigger value="academic">Gestão Acadêmica</TabsTrigger>
           <TabsTrigger value="scholarships">Bolsas e Financiamento</TabsTrigger>
           <TabsTrigger value="mobility">Mobilidade</TabsTrigger>
+          <TabsTrigger value="monitoring">Monitoramento</TabsTrigger>
         </TabsList>
 
         <TabsContent value="diagnostic" className="mt-4">
@@ -93,6 +95,9 @@ export default function PlanningManagement({ data, canEdit }: Props) {
         </TabsContent>
         <TabsContent value="mobility" className="mt-4">
           <MobilitySection data={data} startYear={startYear} endYear={endYear} canEdit={canEdit} />
+        </TabsContent>
+        <TabsContent value="monitoring" className="mt-4">
+          <MonitoringSection data={data} startYear={startYear} endYear={endYear} canEdit={canEdit} />
         </TabsContent>
       </Tabs>
     </div>
