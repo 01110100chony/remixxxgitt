@@ -48,6 +48,27 @@ const Index = () => {
     [uploadLattes]
   );
 
+  const handleManualAdd = useCallback(
+    async (researcher: { name: string; lattesId?: string; orcid?: string; formations?: string[]; areas?: string[] }) => {
+      if (!selectedProgramId || !user) return;
+      const { error } = await supabase.from("researchers").insert({
+        name: researcher.name,
+        lattes_id: researcher.lattesId || null,
+        orcid: researcher.orcid || null,
+        program_id: selectedProgramId,
+        user_id: user.id,
+        research_line: researcher.areas?.join(", ") || null,
+      });
+      if (error) {
+        toast({ title: "Erro ao cadastrar", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Pesquisador cadastrado", description: `${researcher.name} adicionado(a) ao programa.` });
+        fetchAll();
+      }
+    },
+    [selectedProgramId, user, fetchAll]
+  );
+
   const handleCreateProgram = async () => {
     if (!newProgramName.trim() || !newProgramInst.trim()) return;
     const p = await createProgram(newProgramName.trim(), newProgramInst.trim(), {
