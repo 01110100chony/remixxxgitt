@@ -40,6 +40,7 @@ const Index = () => {
   const [newProgramModality, setNewProgramModality] = useState("");
   const [newProgramCode, setNewProgramCode] = useState("");
   const qualisInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   const { data, loading, fetchAll, uploadLattes, importQualis, fetchCitations, fetchAllCitations, updateMetrics, exportCSV, clearMyData } = useProgramData(selectedProgramId);
 
