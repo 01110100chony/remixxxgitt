@@ -1,4 +1,6 @@
 import { useCallback, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePrograms, useProgramData } from "@/hooks/useProgram";
@@ -38,6 +40,7 @@ const Index = () => {
   const [newProgramModality, setNewProgramModality] = useState("");
   const [newProgramCode, setNewProgramCode] = useState("");
   const qualisInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   const { data, loading, fetchAll, uploadLattes, importQualis, fetchCitations, fetchAllCitations, updateMetrics, exportCSV, clearMyData } = useProgramData(selectedProgramId);
 
@@ -46,6 +49,27 @@ const Index = () => {
       await uploadLattes(files);
     },
     [uploadLattes]
+  );
+
+  const handleManualAdd = useCallback(
+    async (researcher: { name: string; lattesId?: string; orcid?: string; formations?: string[]; areas?: string[] }) => {
+      if (!selectedProgramId || !user) return;
+      const { error } = await supabase.from("researchers").insert({
+        name: researcher.name,
+        lattes_id: researcher.lattesId || null,
+        orcid: researcher.orcid || null,
+        program_id: selectedProgramId,
+        user_id: user.id,
+        research_line: researcher.areas?.join(", ") || null,
+      });
+      if (error) {
+        toast({ title: "Erro ao cadastrar", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Pesquisador cadastrado", description: `${researcher.name} adicionado(a) ao programa.` });
+        fetchAll();
+      }
+    },
+    [selectedProgramId, user, fetchAll]
   );
 
   const handleCreateProgram = async () => {
@@ -143,6 +167,7 @@ const Index = () => {
             <div className="space-y-3">
               <FileUpload 
                 onFilesLoad={handleFilesLoad} 
+                onManualAdd={handleManualAdd}
                 loadedFiles={data?.researchers.map((r) => r.lattes_xml_filename || r.name) || []} 
                 programId={selectedProgramId}
                 researchers={data?.researchers.map((r) => ({ id: r.id, name: r.name, lattes_id: r.lattes_id, lattes_xml_filename: r.lattes_xml_filename, updated_at: r.updated_at }))}
