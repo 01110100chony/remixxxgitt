@@ -28,7 +28,16 @@ export default function PlanningManagement({ data, canEdit }: Props) {
   const [periodMode, setPeriodMode] = useState<PeriodMode>("quadrienio");
   const [customStart, setCustomStart] = useState(q[0]);
   const [customEnd, setCustomEnd] = useState(q[1]);
+  const [exporting, setExporting] = useState(false);
 
+  const handleExportPDF = async () => {
+    setExporting(true);
+    try {
+      await exportPlanningPDF({ data, startYear, endYear });
+    } finally {
+      setExporting(false);
+    }
+  };
   const years = useMemo(() => {
     const allYears = [
       ...data.articles.map((a) => a.year),
