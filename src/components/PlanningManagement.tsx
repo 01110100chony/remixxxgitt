@@ -3,8 +3,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { FileDown } from "lucide-react";
 import type { ProgramData } from "@/hooks/useProgram";
 import { getQuadrienio } from "@/lib/orientation-utils";
+import { exportPlanningPDF } from "@/lib/planning-pdf-export";
 import DiagnosticSection from "@/components/planning/DiagnosticSection";
 import SwotSection from "@/components/planning/SwotSection";
 import StrategicPlanSection from "@/components/planning/StrategicPlanSection";
@@ -25,7 +28,16 @@ export default function PlanningManagement({ data, canEdit }: Props) {
   const [periodMode, setPeriodMode] = useState<PeriodMode>("quadrienio");
   const [customStart, setCustomStart] = useState(q[0]);
   const [customEnd, setCustomEnd] = useState(q[1]);
+  const [exporting, setExporting] = useState(false);
 
+  const handleExportPDF = async () => {
+    setExporting(true);
+    try {
+      await exportPlanningPDF({ data, startYear, endYear });
+    } finally {
+      setExporting(false);
+    }
+  };
   const years = useMemo(() => {
     const allYears = [
       ...data.articles.map((a) => a.year),
@@ -65,6 +77,10 @@ export default function PlanningManagement({ data, canEdit }: Props) {
             </div>
           </>
         )}
+        <Button variant="outline" size="sm" onClick={handleExportPDF} disabled={exporting}>
+          <FileDown className="h-4 w-4 mr-1" />
+          {exporting ? "Gerando..." : "Exportar PDF"}
+        </Button>
       </div>
 
       <Tabs defaultValue="diagnostic">
