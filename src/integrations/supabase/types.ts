@@ -323,6 +323,7 @@ export type Database = {
           id: string
           institution: string
           internationalization_score: number | null
+          logo_url: string | null
           modality: string | null
           name: string
           program_code: string | null
@@ -346,6 +347,7 @@ export type Database = {
           id?: string
           institution: string
           internationalization_score?: number | null
+          logo_url?: string | null
           modality?: string | null
           name: string
           program_code?: string | null
@@ -369,6 +371,7 @@ export type Database = {
           id?: string
           institution?: string
           internationalization_score?: number | null
+          logo_url?: string | null
           modality?: string | null
           name?: string
           program_code?: string | null
