@@ -332,6 +332,156 @@ export async function exportPlanningPDF({ data, startYear, endYear }: ExportOpti
   });
   y = (doc as any).lastAutoTable.finalY + 8;
 
+  // ======== 6. BOLSAS E FINANCIAMENTO ========
+  {
+    const { data: schRow } = await supabase
+      .from("planning_data")
+      .select("config")
+      .eq("program_id", data.program.id)
+      .eq("type", "scholarships")
+      .maybeSingle();
+
+    const schData = (schRow?.config && typeof schRow.config === "object" && !Array.isArray(schRow.config))
+      ? schRow.config as any
+      : { scholarships: [], funding: [], notes: "" };
+
+    const projectFunding = data.projects.filter(
+      (p) => p.funding && p.funding !== "Não" &&
+        ((p.year_start && p.year_start >= startYear) || (p.year_end && p.year_end >= startYear))
+    );
+
+    checkPage(30);
+    sectionTitle("6. Bolsas e Financiamento");
+
+    const totalBolsas = (schData.scholarships || []).reduce((s: number, b: any) => s + (b.quantity || 0), 0);
+    bodyText(`Total de bolsas registradas: ${totalBolsas} | Projetos financiados: ${projectFunding.length} | Fontes de financiamento: ${(schData.funding || []).length}`);
+    y += 3;
+
+    if ((schData.scholarships || []).length > 0) {
+      subTitle("Bolsas");
+      const bolsasData = schData.scholarships.map((s: any) => [s.source || "-", s.type || "-", s.level || "-", String(s.quantity || 0), s.notes || ""]);
+      autoTable(doc, {
+        startY: y,
+        margin: { left: margin, right: margin },
+        head: [["Fonte", "Tipo", "Nível", "Qtd", "Observações"]],
+        body: bolsasData,
+        styles: { fontSize: 8, cellPadding: 1.5 },
+        headStyles: { fillColor: colors.primary, textColor: [255, 255, 255] },
+        columnStyles: { 3: { halign: "center", cellWidth: 15 } },
+      });
+      y = (doc as any).lastAutoTable.finalY + 6;
+    }
+
+    const allFunding = [
+      ...projectFunding.map((p) => [p.funder || "N/I", p.title, p.funding || "-", `${p.year_start || "?"} – ${p.year_end || "atual"}`]),
+      ...(schData.funding || []).map((f: any) => [f.funder || "-", f.project || "-", f.amount || "-", `${f.yearStart || "?"} – ${f.yearEnd || "atual"}`]),
+    ];
+
+    if (allFunding.length > 0) {
+      subTitle("Financiamentos e Fomento");
+      autoTable(doc, {
+        startY: y,
+        margin: { left: margin, right: margin },
+        head: [["Financiador", "Projeto", "Valor", "Período"]],
+        body: allFunding,
+        styles: { fontSize: 8, cellPadding: 1.5 },
+        headStyles: { fillColor: colors.primary, textColor: [255, 255, 255] },
+      });
+      y = (doc as any).lastAutoTable.finalY + 6;
+    }
+
+    if (schData.notes) {
+      subTitle("Observações");
+      bodyText(schData.notes);
+      y += 4;
+    }
+  }
+
+  // ======== 7. MOBILIDADE E INTERNACIONALIZAÇÃO ========
+  {
+    const { data: mobRow } = await supabase
+      .from("planning_data")
+      .select("config")
+      .eq("program_id", data.program.id)
+      .eq("type", "mobility")
+      .maybeSingle();
+
+    const mobData = (mobRow?.config && typeof mobRow.config === "object" && !Array.isArray(mobRow.config))
+      ? mobRow.config as any
+      : { mobility: [], agreements: [], notes: "" };
+
+    const partnerships = [...new Set(data.projects.filter((p) => p.partner_institution).map((p) => p.partner_institution!))];
+    const incoming = (mobData.mobility || []).filter((m: any) => m.type === "incoming");
+    const outgoing = (mobData.mobility || []).filter((m: any) => m.type === "outgoing");
+    const activeAgreements = (mobData.agreements || []).filter((a: any) => a.active);
+
+    checkPage(30);
+    sectionTitle("7. Mobilidade e Internacionalizacao");
+
+    const intScore = data.program.internationalization_score ?? 0;
+    const hasEnglish = data.program.has_english_version ?? false;
+    bodyText(`Score de internacionalização: ${intScore} | Site em inglês: ${hasEnglish ? "Sim" : "Não"} | Parcerias: ${partnerships.length}`);
+    bodyText(`Mobilidades: ${outgoing.length} (saída) / ${incoming.length} (entrada) | Convênios ativos: ${activeAgreements.length}`);
+    y += 3;
+
+    if ((mobData.mobility || []).length > 0) {
+      subTitle("Registros de Mobilidade");
+      const roleLabel = (r: string) => r === "student" ? "Discente" : r === "professor" ? "Docente" : "Pesquisador";
+      const mobTableData = mobData.mobility.map((m: any) => [
+        m.name || "-",
+        m.type === "incoming" ? "Entrada" : "Saída",
+        roleLabel(m.role),
+        m.institution || "-",
+        m.country || "-",
+        String(m.year || "-"),
+      ]);
+      autoTable(doc, {
+        startY: y,
+        margin: { left: margin, right: margin },
+        head: [["Nome", "Tipo", "Papel", "Instituição", "País", "Ano"]],
+        body: mobTableData,
+        styles: { fontSize: 8, cellPadding: 1.5 },
+        headStyles: { fillColor: colors.primary, textColor: [255, 255, 255] },
+      });
+      y = (doc as any).lastAutoTable.finalY + 6;
+    }
+
+    if ((mobData.agreements || []).length > 0) {
+      subTitle("Convênios e Acordos");
+      const agrData = mobData.agreements.map((a: any) => [
+        a.institution || "-", a.country || "-", a.type || "-", String(a.year || "-"), a.active ? "Ativo" : "Inativo",
+      ]);
+      autoTable(doc, {
+        startY: y,
+        margin: { left: margin, right: margin },
+        head: [["Instituição", "País", "Tipo", "Ano", "Status"]],
+        body: agrData,
+        styles: { fontSize: 8, cellPadding: 1.5 },
+        headStyles: { fillColor: colors.primary, textColor: [255, 255, 255] },
+        didParseCell(data) {
+          if (data.section === "body" && data.column.index === 4) {
+            const val = data.cell.raw as string;
+            if (val === "Ativo") data.cell.styles.textColor = colors.green;
+            else data.cell.styles.textColor = colors.red;
+          }
+        },
+      });
+      y = (doc as any).lastAutoTable.finalY + 6;
+    }
+
+    if (partnerships.length > 0) {
+      subTitle("Instituições Parceiras (via Projetos)");
+      partnerships.forEach((p) => bodyText(`- ${p}`, 2));
+      y += 4;
+    }
+
+    if (mobData.notes) {
+      subTitle("Observações");
+      bodyText(mobData.notes);
+      y += 4;
+    }
+  }
+
   // ======== FOOTER on all pages ========
   const totalPages = doc.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
