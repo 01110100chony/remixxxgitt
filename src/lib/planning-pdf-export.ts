@@ -7,6 +7,7 @@ import autoTable from "jspdf-autotable";
 import type { ProgramData } from "@/hooks/useProgram";
 import { generateDiagnostic, generateSwot, generateStrategicPlan } from "@/lib/planning-diagnostic";
 import { isPGOrientation, isMestrado, isDoutorado } from "@/lib/orientation-utils";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ExportOptions {
   data: ProgramData;
