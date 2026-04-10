@@ -70,19 +70,41 @@ export async function exportPlanningPDF({ data, startYear, endYear }: ExportOpti
   }
 
   // ======== COVER ========
+  // Try to load logo
+  const logoUrl = (data.program as any).logo_url;
+  let logoLoaded = false;
+  if (logoUrl) {
+    try {
+      const response = await fetch(logoUrl);
+      const blob = await response.blob();
+      const reader = new FileReader();
+      const logoDataUrl: string = await new Promise((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+      const logoSize = 25;
+      doc.addImage(logoDataUrl, "PNG", pageW / 2 - logoSize / 2, 8, logoSize, logoSize);
+      logoLoaded = true;
+    } catch {
+      // Logo failed to load, skip it
+    }
+  }
+
+  const headerTop = logoLoaded ? 36 : 0;
   doc.setFillColor(...colors.primary);
-  doc.rect(0, 0, pageW, 60, "F");
+  doc.rect(0, headerTop, pageW, 60, "F");
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(20);
   doc.setFont("helvetica", "bold");
-  doc.text("PLANEJAMENTO ESTRATEGICO", pageW / 2, 25, { align: "center" });
+  doc.text("PLANEJAMENTO ESTRATEGICO", pageW / 2, headerTop + 25, { align: "center" });
   doc.setFontSize(14);
-  doc.text("Programa de Pos-Graduacao", pageW / 2, 35, { align: "center" });
+  doc.text("Programa de Pos-Graduacao", pageW / 2, headerTop + 35, { align: "center" });
   doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
-  doc.text(`Periodo: ${startYear} - ${endYear}`, pageW / 2, 48, { align: "center" });
+  doc.text(`Periodo: ${startYear} - ${endYear}`, pageW / 2, headerTop + 48, { align: "center" });
 
-  y = 70;
+  y = headerTop + 70;
   doc.setTextColor(0, 0, 0);
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
