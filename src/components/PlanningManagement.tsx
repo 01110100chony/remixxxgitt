@@ -77,6 +77,10 @@ export default function PlanningManagement({ data, canEdit }: Props) {
             </div>
           </>
         )}
+        <Button variant="outline" size="sm" onClick={handleExportPDF} disabled={exporting}>
+          <FileDown className="h-4 w-4 mr-1" />
+          {exporting ? "Gerando..." : "Exportar PDF"}
+        </Button>
       </div>
 
       <Tabs defaultValue="diagnostic">
