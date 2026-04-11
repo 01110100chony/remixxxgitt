@@ -115,6 +115,9 @@ const Index = () => {
           </h1>
           <div className="ml-auto flex items-center gap-2">
             <span className="text-sm text-muted-foreground hidden sm:inline">{user?.email}</span>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/onboarding")}>
+              <Plus className="h-4 w-4 mr-1" /> Solicitar acesso
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
               <User className="h-4 w-4 mr-1" /> Perfil
             </Button>
