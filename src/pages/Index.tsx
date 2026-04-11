@@ -27,6 +27,7 @@ import ProgramSettings from "@/components/ProgramSettings";
 import SocialMediaTab from "@/components/SocialMediaTab";
 import AdminPanel from "@/components/AdminPanel";
 import PlanningManagement from "@/components/PlanningManagement";
+import AccessRequestsPanel from "@/components/AccessRequestsPanel";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -114,6 +115,9 @@ const Index = () => {
           </h1>
           <div className="ml-auto flex items-center gap-2">
             <span className="text-sm text-muted-foreground hidden sm:inline">{user?.email}</span>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/onboarding")}>
+              <Plus className="h-4 w-4 mr-1" /> Solicitar acesso
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
               <User className="h-4 w-4 mr-1" /> Perfil
             </Button>
@@ -219,7 +223,9 @@ const Index = () => {
                   <TabsTrigger value="website">Site</TabsTrigger>
                   <TabsTrigger value="social">Presença Digital</TabsTrigger>
                   <TabsTrigger value="planning">Planejamento</TabsTrigger>
+                  {isCoordinatorOrAdmin && <TabsTrigger value="requests">Solicitações</TabsTrigger>}
                   <TabsTrigger value="settings">Configurações</TabsTrigger>
+                  {roles.includes("admin") && <TabsTrigger value="admin">Administração</TabsTrigger>}
                   {roles.includes("admin") && <TabsTrigger value="admin">Administração</TabsTrigger>}
                 </TabsList>
 
@@ -276,6 +282,11 @@ const Index = () => {
                 <TabsContent value="planning">
                   <PlanningManagement data={data} canEdit={isCoordinatorOrAdmin} />
                 </TabsContent>
+                {isCoordinatorOrAdmin && selectedProgramId && (
+                  <TabsContent value="requests">
+                    <AccessRequestsPanel programId={selectedProgramId} />
+                  </TabsContent>
+                )}
                 {roles.includes("admin") && (
                   <TabsContent value="admin">
                     <AdminPanel />

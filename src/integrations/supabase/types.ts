@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_requests: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          institutional_email: string | null
+          lattes_url: string | null
+          message: string | null
+          program_id: string
+          requested_role: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          id?: string
+          institutional_email?: string | null
+          lattes_url?: string | null
+          message?: string | null
+          program_id: string
+          requested_role?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          institutional_email?: string | null
+          lattes_url?: string | null
+          message?: string | null
+          program_id?: string
+          requested_role?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_requests_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       articles: {
         Row: {
           authors: string | null
@@ -284,6 +340,8 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          institutional_email: string | null
+          lattes_url: string | null
           program_id: string | null
           updated_at: string
           user_id: string
@@ -292,6 +350,8 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          institutional_email?: string | null
+          lattes_url?: string | null
           program_id?: string | null
           updated_at?: string
           user_id: string
@@ -300,6 +360,8 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          institutional_email?: string | null
+          lattes_url?: string | null
           program_id?: string | null
           updated_at?: string
           user_id?: string
