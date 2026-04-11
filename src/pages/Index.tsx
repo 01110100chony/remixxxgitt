@@ -279,6 +279,11 @@ const Index = () => {
                 <TabsContent value="planning">
                   <PlanningManagement data={data} canEdit={isCoordinatorOrAdmin} />
                 </TabsContent>
+                {isCoordinatorOrAdmin && selectedProgramId && (
+                  <TabsContent value="requests">
+                    <AccessRequestsPanel programId={selectedProgramId} />
+                  </TabsContent>
+                )}
                 {roles.includes("admin") && (
                   <TabsContent value="admin">
                     <AdminPanel />
