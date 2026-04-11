@@ -27,6 +27,7 @@ import ProgramSettings from "@/components/ProgramSettings";
 import SocialMediaTab from "@/components/SocialMediaTab";
 import AdminPanel from "@/components/AdminPanel";
 import PlanningManagement from "@/components/PlanningManagement";
+import AccessRequestsPanel from "@/components/AccessRequestsPanel";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -219,7 +220,9 @@ const Index = () => {
                   <TabsTrigger value="website">Site</TabsTrigger>
                   <TabsTrigger value="social">Presença Digital</TabsTrigger>
                   <TabsTrigger value="planning">Planejamento</TabsTrigger>
+                  {isCoordinatorOrAdmin && <TabsTrigger value="requests">Solicitações</TabsTrigger>}
                   <TabsTrigger value="settings">Configurações</TabsTrigger>
+                  {roles.includes("admin") && <TabsTrigger value="admin">Administração</TabsTrigger>}
                   {roles.includes("admin") && <TabsTrigger value="admin">Administração</TabsTrigger>}
                 </TabsList>
 
