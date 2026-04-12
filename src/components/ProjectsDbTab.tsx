@@ -4,48 +4,98 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, FolderKanban, Landmark } from "lucide-react";
+import { getQuadrienio, isProjectInPeriod } from "@/lib/orientation-utils";
 
 interface Props {
   projects: ProjectRow[];
   researchers: Researcher[];
 }
 
+type PeriodMode = "quadrienio" | "custom" | "all";
+
 const ProjectsDbTab = ({ projects, researchers }: Props) => {
+  const [q] = useState(getQuadrienio);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [fundingFilter, setFundingFilter] = useState("all");
   const [researcherFilter, setResearcherFilter] = useState("all");
+  const [periodMode, setPeriodMode] = useState<PeriodMode>("quadrienio");
+  const [customStart, setCustomStart] = useState(q[0]);
+  const [customEnd, setCustomEnd] = useState(q[1]);
 
-  const funded = projects.filter((p) => p.funding === "Sim").length;
+  const years = useMemo(() => {
+    const allYears = projects.map((p) => p.year_start).filter(Boolean) as number[];
+    const min = allYears.length > 0 ? Math.min(...allYears) : q[0];
+    const max = allYears.length > 0 ? Math.max(...allYears) : q[1];
+    return { min, max };
+  }, [projects, q]);
+
+  const startYear = periodMode === "quadrienio" ? q[0] : periodMode === "custom" ? customStart : years.min;
+  const endYear = periodMode === "quadrienio" ? q[1] : periodMode === "custom" ? customEnd : years.max;
+
+  const periodProjects = useMemo(() => {
+    if (periodMode === "all") return projects;
+    return projects.filter((p) => isProjectInPeriod(p, startYear, endYear));
+  }, [projects, periodMode, startYear, endYear]);
+
+  const funded = periodProjects.filter((p) => p.funding === "Sim").length;
   const funders = useMemo(() => {
     const s = new Set<string>();
-    projects.forEach((p) => { if (p.funder) p.funder.split("; ").forEach((f) => { if (f) s.add(f); }); });
+    periodProjects.forEach((p) => { if (p.funder) p.funder.split("; ").forEach((f) => { if (f) s.add(f); }); });
     return Array.from(s).sort();
-  }, [projects]);
+  }, [periodProjects]);
 
   const filtered = useMemo(() => {
-    const q = search.toLowerCase();
-    return projects.filter((p) => {
+    const lq = search.toLowerCase();
+    return periodProjects.filter((p) => {
       if (typeFilter !== "all" && p.type !== typeFilter) return false;
       if (fundingFilter === "funded" && p.funding !== "Sim") return false;
       if (fundingFilter === "unfunded" && p.funding !== "Não") return false;
       if (researcherFilter !== "all" && p.researcher_id !== researcherFilter) return false;
-      if (q && !p.title.toLowerCase().includes(q) && !(p.partner_institution || "").toLowerCase().includes(q)) return false;
+      if (lq && !p.title.toLowerCase().includes(lq) && !(p.partner_institution || "").toLowerCase().includes(lq)) return false;
       return true;
     });
-  }, [projects, search, typeFilter, fundingFilter, researcherFilter]);
+  }, [periodProjects, search, typeFilter, fundingFilter, researcherFilter]);
 
   const getResearcherName = (id: string) => researchers.find((r) => r.id === id)?.name || "—";
 
   return (
     <div className="space-y-6">
+      {/* Period filter */}
+      <div className="flex flex-wrap items-end gap-4">
+        <div>
+          <Label className="text-xs">Período</Label>
+          <Select value={periodMode} onValueChange={(v) => setPeriodMode(v as PeriodMode)}>
+            <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="quadrienio">Quadriênio ({q[0]}–{q[1]})</SelectItem>
+              <SelectItem value="custom">Personalizado</SelectItem>
+              <SelectItem value="all">Todos</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {periodMode === "custom" && (
+          <>
+            <div>
+              <Label className="text-xs">Início</Label>
+              <Input type="number" className="w-24" value={customStart} onChange={(e) => setCustomStart(Number(e.target.value))} />
+            </div>
+            <div>
+              <Label className="text-xs">Fim</Label>
+              <Input type="number" className="w-24" value={customEnd} onChange={(e) => setCustomEnd(Number(e.target.value))} />
+            </div>
+          </>
+        )}
+      </div>
+
       <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
         <div className="rounded-lg border bg-card p-4 text-center">
           <FolderKanban className="h-4 w-4 text-accent mx-auto mb-1" />
-          <div className="text-2xl font-bold text-foreground">{projects.length}</div>
-          <div className="text-xs text-muted-foreground">Total</div>
+          <div className="text-2xl font-bold text-foreground">{periodProjects.length}</div>
+          <div className="text-xs text-muted-foreground">Total no período</div>
         </div>
         <div className="rounded-lg border bg-card p-4 text-center">
           <div className="text-2xl font-bold text-foreground">{funded}</div>
@@ -58,7 +108,7 @@ const ProjectsDbTab = ({ projects, researchers }: Props) => {
         </div>
         <div className="rounded-lg border bg-card p-4 text-center">
           <div className="text-2xl font-bold text-foreground">
-            {researchers.length > 0 ? (projects.length / researchers.length).toFixed(1) : 0}
+            {researchers.length > 0 ? (periodProjects.length / researchers.length).toFixed(1) : 0}
           </div>
           <div className="text-xs text-muted-foreground">Média / docente</div>
         </div>
