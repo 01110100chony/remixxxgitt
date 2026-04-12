@@ -1,5 +1,5 @@
 import type { ProgramData } from "@/hooks/useProgram";
-import { isPGOrientation, isMestrado, isDoutorado, getQuadrienio as getQ } from "@/lib/orientation-utils";
+import { isPGOrientation, isMestrado, isDoutorado, isProjectInPeriod, getQuadrienio as getQ } from "@/lib/orientation-utils";
 
 export interface DimensionScore {
   name: string;
@@ -127,11 +127,13 @@ function calcImpacto(data: ProgramData): DimensionScore {
   };
 }
 
-function calcInternacionalizacao(data: ProgramData): DimensionScore {
+function calcInternacionalizacao(data: ProgramData, period: [number, number]): DimensionScore {
+  const [qS, qE] = period;
   const { program, projects } = data;
   const hasEnglish = program.has_english_version || false;
   const intScore = program.internationalization_score || 0;
-  const intProjects = projects.filter((p) => {
+  const periodProjects = projects.filter((p) => isProjectInPeriod(p, qS, qE));
+  const intProjects = periodProjects.filter((p) => {
     const inst = p.partner_institution || "";
     return inst.toLowerCase().includes("university") || inst.toLowerCase().includes("univ") || inst.toLowerCase().includes("international");
   });
@@ -143,7 +145,7 @@ function calcInternacionalizacao(data: ProgramData): DimensionScore {
   score = clamp(score);
 
   const autoText = `O programa ${hasEnglish ? "possui" : "não possui"} versão em inglês do site. ` +
-    `${intProjects.length} projetos envolvem instituições internacionais. ` +
+    `${intProjects.length} projetos envolvem instituições internacionais no período ${qS}–${qE}. ` +
     `Idiomas do site: ${langs.length > 0 ? langs.join(", ") : "não informado"}. ` +
     (score >= 7 ? "A internacionalização é forte." : score >= 4 ? "A internacionalização está em desenvolvimento." : "A internacionalização necessita de atenção.");
 
@@ -151,7 +153,7 @@ function calcInternacionalizacao(data: ProgramData): DimensionScore {
     name: "Internacionalização", key: "internacionalizacao", score,
     indicators: [
       { label: "Versão em inglês", value: hasEnglish ? "Sim" : "Não" },
-      { label: "Projetos internacionais", value: intProjects.length },
+      { label: "Projetos internacionais (período)", value: intProjects.length },
       { label: "Idiomas do site", value: langs.length > 0 ? langs.join(", ") : "—" },
       { label: "Score internacionalização", value: intScore },
     ],
@@ -159,16 +161,17 @@ function calcInternacionalizacao(data: ProgramData): DimensionScore {
   };
 }
 
-function calcInsercaoSocial(data: ProgramData): DimensionScore {
+function calcInsercaoSocial(data: ProgramData, period: [number, number]): DimensionScore {
+  const [qS, qE] = period;
   const { technicalProductions, projects, reviewerActivities } = data;
   const socialTypes = ["interview", "mediaParticipation", "eventOrganization"];
-  const socialProds = technicalProductions.filter((p) => socialTypes.includes(p.type));
-  const extensionProjects = projects.filter((p) => p.type === "extension");
-  const pareceres = reviewerActivities.length;
+  const socialProds = technicalProductions.filter((p) => socialTypes.includes(p.type) && p.year && p.year >= qS && p.year <= qE);
+  const extensionProjects = projects.filter((p) => p.type === "extension" && isProjectInPeriod(p, qS, qE));
+  const pareceres = reviewerActivities.filter((r) => r.year && r.year >= qS && r.year <= qE).length;
 
   let score = clamp((socialProds.length + extensionProjects.length) * 0.5 + pareceres * 0.1);
 
-  const autoText = `O programa possui ${socialProds.length} produções de inserção social (entrevistas, participações em mídia, organização de eventos), ` +
+  const autoText = `No período ${qS}–${qE}, o programa possui ${socialProds.length} produções de inserção social, ` +
     `${extensionProjects.length} projetos de extensão e ${pareceres} atividades de parecerista. ` +
     (score >= 7 ? "A inserção social é significativa." : "A inserção social pode ser ampliada.");
 
@@ -213,8 +216,8 @@ export function evaluateProgram(data: ProgramData, weights = DEFAULT_WEIGHTS, pe
     calcProducao(data, effectivePeriod),
     calcFormacao(data, effectivePeriod),
     calcImpacto(data),
-    calcInternacionalizacao(data),
-    calcInsercaoSocial(data),
+    calcInternacionalizacao(data, effectivePeriod),
+    calcInsercaoSocial(data, effectivePeriod),
     calcPresencaDigital(data),
   ];
 
