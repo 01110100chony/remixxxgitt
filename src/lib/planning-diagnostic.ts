@@ -3,7 +3,7 @@
  * strengths, weaknesses, and SWOT items.
  */
 import type { ProgramData } from "@/hooks/useProgram";
-import { isPGOrientation, isMestrado, isDoutorado } from "@/lib/orientation-utils";
+import { isPGOrientation, isMestrado, isDoutorado, isProjectInPeriod } from "@/lib/orientation-utils";
 
 export interface DiagnosticItem {
   category: string;
@@ -142,7 +142,7 @@ export function generateDiagnostic(data: ProgramData, startYear: number, endYear
   });
 
   // --- Projects ---
-  const periodProjects = projects.filter((p) => (p.year_start && p.year_start >= startYear) || (p.year_end && p.year_end >= startYear));
+  const periodProjects = projects.filter((p) => isProjectInPeriod(p, startYear, endYear));
   const funded = periodProjects.filter((p) => p.funding && p.funding !== "Não");
   items.push({
     category: "Inserção Social",
