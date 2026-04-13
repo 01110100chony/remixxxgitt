@@ -214,7 +214,20 @@ const IdentifiersTab = ({ researchers, programId, onRefresh }: Props) => {
           <tbody>
             {researchers.map((r) => (
               <tr key={r.id} className="border-b hover:bg-muted/10">
-                <td className="p-3 font-medium text-foreground whitespace-nowrap">{r.name}</td>
+                <td className="p-3 font-medium text-foreground whitespace-nowrap">
+                  <div>{r.name}</div>
+                  {fetchingOrcid[r.id] && (
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                      <Loader2 className="h-3 w-3 animate-spin" /> Buscando OpenAlex...
+                    </div>
+                  )}
+                  {!fetchingOrcid[r.id] && fetchStatus[r.id] && (
+                    <div className={`text-xs mt-1 ${fetchStatus[r.id].found ? "text-primary" : "text-amber-500"}`}>
+                      {fetchStatus[r.id].found ? <Check className="h-3 w-3 inline mr-1" /> : <X className="h-3 w-3 inline mr-1" />}
+                      {fetchStatus[r.id].message}
+                    </div>
+                  )}
+                </td>
                 {ID_FIELDS.map((f) => {
                   const val = (r as any)[f.key] as string | null;
                   if (editingRow === r.id) {
