@@ -122,7 +122,6 @@ const IdentifiersTab = ({ researchers, programId, onRefresh }: Props) => {
   const cancelEdit = () => { setEditingRow(null); setEditValues({}); };
 
   const saveEdit = async (researcherId: string) => {
-    // Validate non-empty fields
     for (const f of ID_FIELDS) {
       const v = editValues[f.key]?.trim();
       if (v && !f.validate(v)) {
@@ -133,6 +132,12 @@ const IdentifiersTab = ({ researchers, programId, onRefresh }: Props) => {
     setSaving(true);
     const update: Record<string, string | null> = {};
     ID_FIELDS.forEach((f) => { update[f.key] = editValues[f.key]?.trim() || null; });
+    
+    // Check if ORCID was added/changed
+    const researcher = researchers.find((r) => r.id === researcherId);
+    const oldOrcid = researcher?.orcid || "";
+    const newOrcid = editValues.orcid?.trim() || "";
+    
     const { error } = await supabase.from("researchers").update(update).eq("id", researcherId);
     setSaving(false);
     if (error) {
@@ -141,6 +146,11 @@ const IdentifiersTab = ({ researchers, programId, onRefresh }: Props) => {
       toast({ title: "Identificadores salvos" });
       setEditingRow(null);
       onRefresh();
+      
+      // Auto-fetch from OpenAlex if ORCID was added or changed
+      if (newOrcid && newOrcid !== oldOrcid) {
+        fetchOpenAlex(researcherId, newOrcid);
+      }
     }
   };
 
