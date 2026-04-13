@@ -226,7 +226,7 @@ export function evaluateProgram(data: ProgramData, weights = DEFAULT_WEIGHTS, pe
   const dimensions = [
     calcProducao(data, effectivePeriod),
     calcFormacao(data, effectivePeriod),
-    calcImpacto(data),
+    calcImpacto(data, effectivePeriod),
     calcInternacionalizacao(data, effectivePeriod),
     calcInsercaoSocial(data, effectivePeriod),
     calcPresencaDigital(data),
