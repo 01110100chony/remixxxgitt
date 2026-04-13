@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import type { Researcher } from "@/hooks/useProgram";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -6,11 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
-  Fingerprint, Check, X, Pencil, Save, ExternalLink,
+  Fingerprint, Check, X, Pencil, Save, ExternalLink, RefreshCw, Loader2,
 } from "lucide-react";
 
 interface Props {
   researchers: Researcher[];
+  programId: string;
   onRefresh: () => void;
 }
 
@@ -58,11 +59,44 @@ const ID_FIELDS: IdField[] = [
   },
 ];
 
-const IdentifiersTab = ({ researchers, onRefresh }: Props) => {
+const IdentifiersTab = ({ researchers, programId, onRefresh }: Props) => {
   const { toast } = useToast();
   const [editingRow, setEditingRow] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [fetchingOrcid, setFetchingOrcid] = useState<Record<string, boolean>>({});
+  const [fetchStatus, setFetchStatus] = useState<Record<string, { found: boolean; message: string }>>({});
+
+  const fetchOpenAlex = useCallback(async (researcherId: string, orcid: string) => {
+    setFetchingOrcid((prev) => ({ ...prev, [researcherId]: true }));
+    try {
+      const { data, error } = await supabase.functions.invoke("fetch-openalex", {
+        body: { researcher_id: researcherId, orcid, program_id: programId },
+      });
+      if (error) throw error;
+      if (data?.found) {
+        setFetchStatus((prev) => ({
+          ...prev,
+          [researcherId]: { found: true, message: `${data.cited_by_count} citações, h-index: ${data.h_index ?? "—"}` },
+        }));
+        toast({ title: "Dados OpenAlex atualizados", description: `${data.display_name}: ${data.cited_by_count} citações` });
+      } else {
+        setFetchStatus((prev) => ({
+          ...prev,
+          [researcherId]: { found: false, message: "Não encontrado no OpenAlex" },
+        }));
+      }
+      onRefresh();
+    } catch (err: any) {
+      toast({ title: "Erro OpenAlex", description: err.message, variant: "destructive" });
+      setFetchStatus((prev) => ({
+        ...prev,
+        [researcherId]: { found: false, message: "Erro na busca" },
+      }));
+    } finally {
+      setFetchingOrcid((prev) => ({ ...prev, [researcherId]: false }));
+    }
+  }, [programId, onRefresh, toast]);
 
   // Completeness
   const completeness = useMemo(() => {
@@ -88,7 +122,6 @@ const IdentifiersTab = ({ researchers, onRefresh }: Props) => {
   const cancelEdit = () => { setEditingRow(null); setEditValues({}); };
 
   const saveEdit = async (researcherId: string) => {
-    // Validate non-empty fields
     for (const f of ID_FIELDS) {
       const v = editValues[f.key]?.trim();
       if (v && !f.validate(v)) {
@@ -99,6 +132,12 @@ const IdentifiersTab = ({ researchers, onRefresh }: Props) => {
     setSaving(true);
     const update: Record<string, string | null> = {};
     ID_FIELDS.forEach((f) => { update[f.key] = editValues[f.key]?.trim() || null; });
+    
+    // Check if ORCID was added/changed
+    const researcher = researchers.find((r) => r.id === researcherId);
+    const oldOrcid = researcher?.orcid || "";
+    const newOrcid = editValues.orcid?.trim() || "";
+    
     const { error } = await supabase.from("researchers").update(update).eq("id", researcherId);
     setSaving(false);
     if (error) {
@@ -107,6 +146,11 @@ const IdentifiersTab = ({ researchers, onRefresh }: Props) => {
       toast({ title: "Identificadores salvos" });
       setEditingRow(null);
       onRefresh();
+      
+      // Auto-fetch from OpenAlex if ORCID was added or changed
+      if (newOrcid && newOrcid !== oldOrcid) {
+        fetchOpenAlex(researcherId, newOrcid);
+      }
     }
   };
 
@@ -135,6 +179,26 @@ const IdentifiersTab = ({ researchers, onRefresh }: Props) => {
         </div>
       </div>
 
+      {/* Bulk OpenAlex fetch */}
+      {researchers.some((r) => r.orcid) && (
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            variant="default"
+            size="sm"
+            disabled={Object.values(fetchingOrcid).some(Boolean)}
+            onClick={async () => {
+              const withOrcid = researchers.filter((r) => r.orcid);
+              for (const r of withOrcid) {
+                await fetchOpenAlex(r.id, r.orcid!);
+              }
+            }}
+          >
+            <RefreshCw className={`h-4 w-4 mr-1 ${Object.values(fetchingOrcid).some(Boolean) ? "animate-spin" : ""}`} />
+            Atualizar métricas automaticamente ({researchers.filter((r) => r.orcid).length} ORCIDs)
+          </Button>
+        </div>
+      )}
+
       {/* Researchers table */}
       <div className="rounded-lg border bg-card overflow-x-auto">
         <table className="w-full text-sm">
@@ -150,7 +214,20 @@ const IdentifiersTab = ({ researchers, onRefresh }: Props) => {
           <tbody>
             {researchers.map((r) => (
               <tr key={r.id} className="border-b hover:bg-muted/10">
-                <td className="p-3 font-medium text-foreground whitespace-nowrap">{r.name}</td>
+                <td className="p-3 font-medium text-foreground whitespace-nowrap">
+                  <div>{r.name}</div>
+                  {fetchingOrcid[r.id] && (
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                      <Loader2 className="h-3 w-3 animate-spin" /> Buscando OpenAlex...
+                    </div>
+                  )}
+                  {!fetchingOrcid[r.id] && fetchStatus[r.id] && (
+                    <div className={`text-xs mt-1 ${fetchStatus[r.id].found ? "text-primary" : "text-amber-500"}`}>
+                      {fetchStatus[r.id].found ? <Check className="h-3 w-3 inline mr-1" /> : <X className="h-3 w-3 inline mr-1" />}
+                      {fetchStatus[r.id].message}
+                    </div>
+                  )}
+                </td>
                 {ID_FIELDS.map((f) => {
                   const val = (r as any)[f.key] as string | null;
                   if (editingRow === r.id) {
