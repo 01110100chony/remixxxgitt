@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import type { Researcher } from "@/hooks/useProgram";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -11,6 +11,7 @@ import {
 
 interface Props {
   researchers: Researcher[];
+  programId: string;
   onRefresh: () => void;
 }
 
@@ -58,11 +59,44 @@ const ID_FIELDS: IdField[] = [
   },
 ];
 
-const IdentifiersTab = ({ researchers, onRefresh }: Props) => {
+const IdentifiersTab = ({ researchers, programId, onRefresh }: Props) => {
   const { toast } = useToast();
   const [editingRow, setEditingRow] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [fetchingOrcid, setFetchingOrcid] = useState<Record<string, boolean>>({});
+  const [fetchStatus, setFetchStatus] = useState<Record<string, { found: boolean; message: string }>>({});
+
+  const fetchOpenAlex = useCallback(async (researcherId: string, orcid: string) => {
+    setFetchingOrcid((prev) => ({ ...prev, [researcherId]: true }));
+    try {
+      const { data, error } = await supabase.functions.invoke("fetch-openalex", {
+        body: { researcher_id: researcherId, orcid, program_id: programId },
+      });
+      if (error) throw error;
+      if (data?.found) {
+        setFetchStatus((prev) => ({
+          ...prev,
+          [researcherId]: { found: true, message: `${data.cited_by_count} citações, h-index: ${data.h_index ?? "—"}` },
+        }));
+        toast({ title: "Dados OpenAlex atualizados", description: `${data.display_name}: ${data.cited_by_count} citações` });
+      } else {
+        setFetchStatus((prev) => ({
+          ...prev,
+          [researcherId]: { found: false, message: "Não encontrado no OpenAlex" },
+        }));
+      }
+      onRefresh();
+    } catch (err: any) {
+      toast({ title: "Erro OpenAlex", description: err.message, variant: "destructive" });
+      setFetchStatus((prev) => ({
+        ...prev,
+        [researcherId]: { found: false, message: "Erro na busca" },
+      }));
+    } finally {
+      setFetchingOrcid((prev) => ({ ...prev, [researcherId]: false }));
+    }
+  }, [programId, onRefresh, toast]);
 
   // Completeness
   const completeness = useMemo(() => {
