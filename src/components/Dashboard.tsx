@@ -61,10 +61,10 @@ const Dashboard = ({ data }: DashboardProps) => {
     return Object.entries(map).sort(([a], [b]) => a.localeCompare(b)).map(([year, count]) => ({ year, count }));
   }, [allProductions]);
 
-  // By gender
+  // By gender (count researchers, not productions)
   const byGender = useMemo(() => {
     const map: Record<string, number> = {};
-    researchers.forEach((r) => { map[r.gender] = (map[r.gender] || 0) + r.productions.length; });
+    researchers.forEach((r) => { const g = r.gender || "Não informado"; map[g] = (map[g] || 0) + 1; });
     return Object.entries(map).map(([name, value]) => ({ name, value }));
   }, [researchers]);
 
