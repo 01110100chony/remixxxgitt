@@ -155,7 +155,7 @@ const Dashboard = ({ data }: DashboardProps) => {
         <div className="rounded-lg border bg-card p-5 space-y-3">
           <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <Users className="h-4 w-4 text-accent" />
-            Produção por gênero
+            Pesquisadores por gênero
           </div>
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
