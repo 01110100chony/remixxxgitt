@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
-  Fingerprint, Check, X, Pencil, Save, ExternalLink,
+  Fingerprint, Check, X, Pencil, Save, ExternalLink, RefreshCw, Loader2,
 } from "lucide-react";
 
 interface Props {
@@ -178,6 +178,26 @@ const IdentifiersTab = ({ researchers, programId, onRefresh }: Props) => {
           ))}
         </div>
       </div>
+
+      {/* Bulk OpenAlex fetch */}
+      {researchers.some((r) => r.orcid) && (
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            variant="default"
+            size="sm"
+            disabled={Object.values(fetchingOrcid).some(Boolean)}
+            onClick={async () => {
+              const withOrcid = researchers.filter((r) => r.orcid);
+              for (const r of withOrcid) {
+                await fetchOpenAlex(r.id, r.orcid!);
+              }
+            }}
+          >
+            <RefreshCw className={`h-4 w-4 mr-1 ${Object.values(fetchingOrcid).some(Boolean) ? "animate-spin" : ""}`} />
+            Atualizar métricas automaticamente ({researchers.filter((r) => r.orcid).length} ORCIDs)
+          </Button>
+        </div>
+      )}
 
       {/* Researchers table */}
       <div className="rounded-lg border bg-card overflow-x-auto">
