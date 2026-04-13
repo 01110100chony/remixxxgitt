@@ -1,5 +1,6 @@
 import type { ProgramData } from "@/hooks/useProgram";
 import { isPGOrientation, isMestrado, isDoutorado, isProjectInPeriod, getQuadrienio as getQ } from "@/lib/orientation-utils";
+import { scoreProgram } from "@/lib/impact-scoring";
 
 export interface DimensionScore {
   name: string;
@@ -95,30 +96,40 @@ function calcFormacao(data: ProgramData, period: [number, number]): DimensionSco
   };
 }
 
-function calcImpacto(data: ProgramData): DimensionScore {
+function calcImpacto(data: ProgramData, period: [number, number]): DimensionScore {
+  const [qS, qE] = period;
   const { metrics, researchers, articles } = data;
   const nDocentes = researchers.length || 1;
+  const qArticles = articles.filter((a) => a.year && a.year >= qS && a.year <= qE);
+  
   const hasData = metrics.length > 0 && metrics.some((m) => (m.total_citations || 0) > 0 || (m.h_index || 0) > 0);
   const totalCit = metrics.reduce((s, m) => s + (m.total_citations || 0), 0);
   const avgH = metrics.length > 0 ? metrics.reduce((s, m) => s + (m.h_index || 0), 0) / nDocentes : 0;
-  const artWithDoi = articles.filter((a) => a.doi).length;
-  const pctDoi = articles.length > 0 ? (artWithDoi / articles.length) * 100 : 0;
+  const artWithDoi = qArticles.filter((a) => a.doi).length;
+  const pctDoi = qArticles.length > 0 ? (artWithDoi / qArticles.length) * 100 : 0;
 
-  let score = -1; // -1 means no data
-  if (hasData) {
-    score = clamp(avgH * 0.8);
-    if (pctDoi >= 70) score = clamp(score + 1);
+  // Use the new impact scoring model
+  const impactScore = scoreProgram(researchers, qArticles, metrics);
+
+  let score = -1;
+  if (hasData || qArticles.length > 0) {
+    // Map program avg score (0-100) to dimension score (0-10)
+    score = clamp(impactScore.avgScore / 10);
   }
 
-  const autoText = !hasData
-    ? `Sem dados de citações disponíveis. Insira manualmente ou busque via DOI na aba de Impacto para calcular este indicador.`
-    : `O programa acumula ${totalCit} citações, com h-index médio de ${avgH.toFixed(1)} por docente. ` +
-      `${pctDoi.toFixed(0)}% dos artigos possuem DOI registrado. ` +
-      (avgH >= 10 ? "O impacto científico é expressivo." : avgH >= 5 ? "O impacto é moderado." : "O impacto pode ser fortalecido.");
+  const autoText = !hasData && qArticles.length === 0
+    ? `Sem dados de citações ou artigos no período. Insira manualmente ou busque via DOI/ORCID na aba de Impacto.`
+    : `No período ${qS}–${qE}, o programa tem score de impacto ${impactScore.avgScore.toFixed(0)}/100. ` +
+      `${impactScore.qualifiedPct.toFixed(0)}% dos artigos são de alto impacto (tiers A+B). ` +
+      (totalCit > 0 ? `${totalCit} citações totais, h-index médio ${avgH.toFixed(1)}. ` : "") +
+      `${pctDoi.toFixed(0)}% dos artigos possuem DOI. ` +
+      (impactScore.avgScore >= 55 ? "O impacto científico é expressivo." : impactScore.avgScore >= 35 ? "O impacto é moderado." : "O impacto pode ser fortalecido.");
 
   return {
-    name: "Impacto Científico", key: "impacto", score: hasData ? score : -1,
+    name: "Impacto Científico", key: "impacto", score: score >= 0 ? score : -1,
     indicators: [
+      { label: "Score de impacto", value: `${impactScore.avgScore.toFixed(0)}/100` },
+      { label: "Artigos alto impacto (A+B)", value: `${impactScore.qualifiedPct.toFixed(0)}%` },
       { label: "Total de citações", value: hasData ? totalCit : "Sem dados" },
       { label: "h-index médio", value: hasData ? avgH.toFixed(1) : "Sem dados" },
       { label: "Artigos com DOI", value: `${artWithDoi} (${pctDoi.toFixed(0)}%)` },
