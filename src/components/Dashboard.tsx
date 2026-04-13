@@ -61,10 +61,10 @@ const Dashboard = ({ data }: DashboardProps) => {
     return Object.entries(map).sort(([a], [b]) => a.localeCompare(b)).map(([year, count]) => ({ year, count }));
   }, [allProductions]);
 
-  // By gender
+  // By gender (count researchers, not productions)
   const byGender = useMemo(() => {
     const map: Record<string, number> = {};
-    researchers.forEach((r) => { map[r.gender] = (map[r.gender] || 0) + r.productions.length; });
+    researchers.forEach((r) => { const g = r.gender || "Não informado"; map[g] = (map[g] || 0) + 1; });
     return Object.entries(map).map(([name, value]) => ({ name, value }));
   }, [researchers]);
 
@@ -155,7 +155,7 @@ const Dashboard = ({ data }: DashboardProps) => {
         <div className="rounded-lg border bg-card p-5 space-y-3">
           <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <Users className="h-4 w-4 text-accent" />
-            Produção por gênero
+            Pesquisadores por gênero
           </div>
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">

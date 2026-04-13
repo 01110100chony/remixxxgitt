@@ -82,16 +82,15 @@ const ProgramDashboard = ({ data }: Props) => {
     return QUALIS_ORDER.filter((q) => s.has(q));
   }, [articles]);
 
-  // By gender
+  // By gender (count researchers, not articles)
   const byGender = useMemo(() => {
     const map: Record<string, number> = {};
     researchers.forEach((r) => {
       const g = r.gender || "Não informado";
-      const count = articles.filter((a) => a.researcher_id === r.id).length;
-      map[g] = (map[g] || 0) + count;
+      map[g] = (map[g] || 0) + 1;
     });
     return Object.entries(map).map(([name, value]) => ({ name, value }));
-  }, [researchers, articles]);
+  }, [researchers]);
 
   // By research line
   const byResearchLine = useMemo(() => {
@@ -181,7 +180,7 @@ const ProgramDashboard = ({ data }: Props) => {
         {/* By gender */}
         <div className="rounded-lg border bg-card p-5 space-y-3">
           <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <Users className="h-4 w-4 text-accent" /> Produção por gênero
+            <Users className="h-4 w-4 text-accent" /> Pesquisadores por gênero
           </div>
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">

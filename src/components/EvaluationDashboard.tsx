@@ -132,10 +132,10 @@ const EvaluationDashboard = ({ data }: Props) => {
     const map: Record<string, number> = {};
     data.researchers.forEach((r) => {
       const g = r.gender || "Não informado";
-      map[g] = (map[g] || 0) + data.articles.filter((a) => a.researcher_id === r.id).length;
+      map[g] = (map[g] || 0) + 1;
     });
     return Object.entries(map).map(([name, value]) => ({ name, value }));
-  }, [data]);
+  }, [data.researchers]);
 
   const scoreColor = result.overallScore >= 7 ? "text-green-500" : result.overallScore >= 4 ? "text-yellow-500" : "text-red-500";
   const capesScoreColor = capesResult.finalScore >= 6 ? "text-green-500" : capesResult.finalScore >= 4 ? "text-yellow-500" : "text-red-500";
