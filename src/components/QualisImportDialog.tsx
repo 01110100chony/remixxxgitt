@@ -32,7 +32,7 @@ interface QualisImportDialogProps {
 }
 
 const normalizeIssn = (issn: string): string =>
-  issn.replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\u2212\-–—]/g, "").replace(/[^0-9Xx]/g, "").toUpperCase();
+  issn.replace(/[^0-9X]/gi, "").toUpperCase();
 
 const KNOWN_COLUMNS: Record<string, string[]> = {
   issn: ["issn", "issn do periódico", "issn do periodico", "issn_periodico"],
