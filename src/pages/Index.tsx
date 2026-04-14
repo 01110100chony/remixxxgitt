@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -26,6 +26,7 @@ import WebsiteTab from "@/components/WebsiteTab";
 import ProgramSettings from "@/components/ProgramSettings";
 import SocialMediaTab from "@/components/SocialMediaTab";
 import AdminPanel from "@/components/AdminPanel";
+import QualisImportDialog from "@/components/QualisImportDialog";
 import PlanningManagement from "@/components/PlanningManagement";
 import AccessRequestsPanel from "@/components/AccessRequestsPanel";
 
@@ -40,7 +41,7 @@ const Index = () => {
   const [newProgramArea, setNewProgramArea] = useState("");
   const [newProgramModality, setNewProgramModality] = useState("");
   const [newProgramCode, setNewProgramCode] = useState("");
-  const qualisInputRef = useRef<HTMLInputElement>(null);
+  const [qualisDialogOpen, setQualisDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const { data, loading, fetchAll, uploadLattes, importQualis, fetchCitations, fetchAllCitations, updateMetrics, exportCSV, clearMyData } = useProgramData(selectedProgramId);
@@ -91,12 +92,8 @@ const Index = () => {
     }
   };
 
-  const handleQualisImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const text = await file.text();
-    await importQualis(text);
-    e.target.value = "";
+  const handleQualisImportEntries = async (entries: { issn: string; classification: string; area: string | null }[]) => {
+    await importQualis(entries);
   };
 
   // Auto-select first program
@@ -177,10 +174,15 @@ const Index = () => {
                 researchers={data?.researchers.map((r) => ({ id: r.id, name: r.name, lattes_id: r.lattes_id, lattes_xml_filename: r.lattes_xml_filename, updated_at: r.updated_at }))}
               />
               <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" onClick={() => qualisInputRef.current?.click()}>
+                <Button variant="outline" size="sm" onClick={() => setQualisDialogOpen(true)}>
                   <Upload className="h-4 w-4 mr-1" /> Importar Qualis (CSV)
                 </Button>
-                <input ref={qualisInputRef} type="file" accept=".csv,.txt" className="hidden" onChange={handleQualisImport} />
+                <QualisImportDialog
+                  open={qualisDialogOpen}
+                  onOpenChange={setQualisDialogOpen}
+                  articles={data?.articles || []}
+                  onImport={handleQualisImportEntries}
+                />
                 {data && data.articles.length > 0 && (
                   <>
                     <CAPESReport data={data} />
