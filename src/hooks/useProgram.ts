@@ -340,7 +340,7 @@ export function useProgramData(programId: string | null) {
     if (!qualisData || qualisData.length === 0) return;
     const qualisMap = new Map<string, string>();
     qualisData.forEach((q) => {
-      const normalizedIssn = q.issn.replace(/-/g, "");
+      const normalizedIssn = q.issn.replace(/[^0-9X]/gi, "").toUpperCase();
       qualisMap.set(normalizedIssn, q.classification);
     });
 
@@ -350,7 +350,7 @@ export function useProgramData(programId: string | null) {
 
     for (const article of articles) {
       if (!article.issn) continue;
-      const normalized = article.issn.replace(/-/g, "");
+      const normalized = article.issn.replace(/[^0-9X]/gi, "").toUpperCase();
       const classification = qualisMap.get(normalized);
       if (classification) {
         await supabase.from("articles").update({ qualis: classification }).eq("id", article.id);
