@@ -320,30 +320,18 @@ export function useProgramData(programId: string | null) {
     await fetchAll();
   };
 
-  const importQualis = async (csvContent: string) => {
-    const lines = csvContent.split("\n").filter((l) => l.trim());
-    const entries: TablesInsert<"qualis_reference">[] = [];
-    for (let i = 1; i < lines.length; i++) {
-      const parts = lines[i].split(/[;,\t]/);
-      if (parts.length >= 2) {
-        const issn = parts[0].trim().replace(/[^0-9Xx-]/g, "");
-        const classification = parts[1].trim().toUpperCase();
-        const area = parts[2]?.trim() || null;
-        if (issn && classification) entries.push({ issn, classification, area });
-      }
+  const importQualis = async (entries: { issn: string; classification: string; area: string | null }[]) => {
+    if (entries.length === 0) return;
+    // Delete existing and insert new
+    await supabase.from("qualis_reference").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+    const batchSize = 500;
+    for (let i = 0; i < entries.length; i += batchSize) {
+      await supabase.from("qualis_reference").insert(entries.slice(i, i + batchSize));
     }
-    if (entries.length > 0) {
-      // Delete existing and insert new
-      await supabase.from("qualis_reference").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-      const batchSize = 500;
-      for (let i = 0; i < entries.length; i += batchSize) {
-        await supabase.from("qualis_reference").insert(entries.slice(i, i + batchSize));
-      }
-      toast({ title: "Qualis importado", description: `${entries.length} registros importados.` });
-      // Auto-classify articles
-      await classifyArticles();
-      await fetchAll();
-    }
+    toast({ title: "Qualis importado", description: `${entries.length} registros importados.` });
+    // Auto-classify articles
+    await classifyArticles();
+    await fetchAll();
   };
 
   const classifyArticles = async () => {
