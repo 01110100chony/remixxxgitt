@@ -270,10 +270,10 @@ export default function CAPESReport({ data, startYear, endYear }: CAPESReportPro
         margin: { left: margin, right: margin },
         head: [["Pesquisador", "Artigos", "Qualificados (A1–B1)", "Orientações", "Projetos"]],
         body: researchers.map((r) => {
-          const rArticles = articles.filter((a) => a.researcher_id === r.id);
+          const rArticles = filteredArticles.filter((a) => a.researcher_id === r.id);
           const rQualified = rArticles.filter((a) => a.qualis && ["A1", "A2", "A3", "A4", "B1"].includes(a.qualis));
-          const rOrient = orientations.filter((o) => o.researcher_id === r.id).length;
-          const rProj = projects.filter((p) => p.researcher_id === r.id).length;
+          const rOrient = filteredOrientations.filter((o) => o.researcher_id === r.id).length;
+          const rProj = filteredProjects.filter((p) => p.researcher_id === r.id).length;
           return [r.name, String(rArticles.length), String(rQualified.length), String(rOrient), String(rProj)];
         }),
         styles: { fontSize: 8, cellPadding: 2 },
@@ -283,13 +283,13 @@ export default function CAPESReport({ data, startYear, endYear }: CAPESReportPro
       y = (doc as any).lastAutoTable.finalY + 10;
 
       // Technical productions
-      if (technicalProductions.length > 0) {
+      if (filteredTechProds.length > 0) {
         checkPage(20);
         subtitle("Produção técnica");
         const techByType: Record<string, number> = {};
-        technicalProductions.forEach((t) => { techByType[t.type] = (techByType[t.type] || 0) + 1; });
+        filteredTechProds.forEach((t) => { techByType[t.type] = (techByType[t.type] || 0) + 1; });
         body(
-          `O programa registrou ${technicalProductions.length} produções técnicas, distribuídas em: ` +
+          `No período ${quadStart}–${quadEnd}, o programa registrou ${filteredTechProds.length} produções técnicas, distribuídas em: ` +
           Object.entries(techByType).map(([t, c]) => `${t} (${c})`).join(", ") + "."
         );
       }
@@ -298,15 +298,15 @@ export default function CAPESReport({ data, startYear, endYear }: CAPESReportPro
       checkPage(20);
       title("4. PROJETOS DE PESQUISA E EXTENSÃO");
       body(
-        `O programa possui ${projects.length} projetos registrados, sendo ${fundedProjects.length} com financiamento. ` +
+        `No período ${quadStart}–${quadEnd}, o programa possui ${filteredProjects.length} projetos ativos, sendo ${fundedProjects.length} com financiamento. ` +
         (fundedProjects.length > 0
           ? `Os financiadores incluem: ${[...new Set(fundedProjects.map((p) => p.funder).filter(Boolean))].join(", ") || "não especificados"}.`
           : "")
       );
 
-      if (projects.length > 0) {
+      if (filteredProjects.length > 0) {
         const projByType: Record<string, number> = {};
-        projects.forEach((p) => { projByType[p.type || "outro"] = (projByType[p.type || "outro"] || 0) + 1; });
+        filteredProjects.forEach((p) => { projByType[p.type || "outro"] = (projByType[p.type || "outro"] || 0) + 1; });
         autoTable(doc, {
           startY: y,
           margin: { left: margin, right: margin },
