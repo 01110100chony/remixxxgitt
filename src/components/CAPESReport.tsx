@@ -10,15 +10,18 @@ import autoTable from "jspdf-autotable";
 
 interface CAPESReportProps {
   data: ProgramData;
+  startYear?: number;
+  endYear?: number;
 }
 
 const QUALIS_ORDER = ["A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4", "C", "NP"];
 
-export default function CAPESReport({ data }: CAPESReportProps) {
+export default function CAPESReport({ data, startYear, endYear }: CAPESReportProps) {
   const [generating, setGenerating] = useState(false);
   const { toast } = useToast();
   const currentYear = new Date().getFullYear();
-  const quadStart = currentYear - 3;
+  const quadStart = startYear ?? (currentYear - 3);
+  const quadEnd = endYear ?? currentYear;
 
   const generate = async () => {
     setGenerating(true);
@@ -80,16 +83,27 @@ export default function CAPESReport({ data }: CAPESReportProps) {
       // ── Data ──
       const { program, researchers, articles, orientations, projects, technicalProductions, metrics, citationEntries } = data;
 
-      const quadArticles = articles.filter((a) => a.year && a.year >= quadStart);
+      const quadArticles = articles.filter((a) => a.year && a.year >= quadStart && a.year <= quadEnd);
+      const filteredArticles = quadArticles; // use period-filtered articles throughout
       const qualisDist: Record<string, number> = {};
-      articles.forEach((a) => { if (a.qualis) qualisDist[a.qualis] = (qualisDist[a.qualis] || 0) + 1; });
+      filteredArticles.forEach((a) => { if (a.qualis) qualisDist[a.qualis] = (qualisDist[a.qualis] || 0) + 1; });
 
-      const qualifiedCount = articles.filter((a) => a.qualis && ["A1", "A2", "A3", "A4", "B1"].includes(a.qualis)).length;
-      const qualifiedPct = articles.length > 0 ? ((qualifiedCount / articles.length) * 100).toFixed(1) : "0";
+      const qualifiedCount = filteredArticles.filter((a) => a.qualis && ["A1", "A2", "A3", "A4", "B1"].includes(a.qualis)).length;
+      const qualifiedPct = filteredArticles.length > 0 ? ((qualifiedCount / filteredArticles.length) * 100).toFixed(1) : "0";
 
-      const conclusionOrientations = orientations.filter((o) => o.status === "concluded");
-      const inProgressOrientations = orientations.filter((o) => o.status !== "concluded");
-      const fundedProjects = projects.filter((p) => p.funding && p.funding !== "Não");
+      const filteredOrientations = orientations.filter((o) => o.year && o.year >= quadStart && o.year <= quadEnd);
+      const conclusionOrientations = filteredOrientations.filter((o) => o.status === "concluded");
+      const inProgressOrientations = filteredOrientations.filter((o) => o.status !== "concluded");
+      const filteredProjects = projects.filter((p) => {
+        const ys = p.year_start;
+        if (ys == null) return false;
+        if (ys > quadEnd) return false;
+        const ye = p.year_end;
+        if (ye == null) return true;
+        return ye >= quadStart;
+      });
+      const fundedProjects = filteredProjects.filter((p) => p.funding && p.funding !== "Não");
+      const filteredTechProds = technicalProductions.filter((t) => t.year && t.year >= quadStart && t.year <= quadEnd);
 
       const totalCitations = metrics.reduce((s, m) => s + (m.total_citations || 0), 0);
       const avgHIndex = metrics.length > 0
@@ -121,7 +135,7 @@ export default function CAPESReport({ data }: CAPESReportProps) {
       doc.setFontSize(10);
       doc.text(`Gerado em ${new Date().toLocaleDateString("pt-BR")}`, W / 2, y, { align: "center" });
       y += 6;
-      doc.text(`Quadriênio ${quadStart}–${currentYear}`, W / 2, y, { align: "center" });
+      doc.text(`Quadriênio ${quadStart}–${quadEnd}`, W / 2, y, { align: "center" });
 
       // Horizontal line
       y += 15;
@@ -163,15 +177,14 @@ export default function CAPESReport({ data }: CAPESReportProps) {
       checkPage(20);
       title("2. FORMAÇÃO DE RECURSOS HUMANOS");
 
-      const quadOrient = conclusionOrientations.filter((o) => o.year && o.year >= quadStart);
       body(
-        `O programa formou ${conclusionOrientations.length} orientandos no total, dos quais ${quadOrient.length} no quadriênio ${quadStart}–${currentYear}. ` +
-        `Atualmente, ${inProgressOrientations.length} orientações estão em andamento.`
+        `No período ${quadStart}–${quadEnd}, o programa formou ${conclusionOrientations.length} orientandos. ` +
+        `${inProgressOrientations.length} orientações estão em andamento no período.`
       );
 
       // Orientations by type
       const orientByType: Record<string, number> = {};
-      orientations.forEach((o) => { orientByType[o.type] = (orientByType[o.type] || 0) + 1; });
+      filteredOrientations.forEach((o) => { orientByType[o.type] = (orientByType[o.type] || 0) + 1; });
       if (Object.keys(orientByType).length > 0) {
         autoTable(doc, {
           startY: y,
@@ -179,8 +192,8 @@ export default function CAPESReport({ data }: CAPESReportProps) {
           head: [["Tipo de orientação", "Concluídas", "Em andamento"]],
           body: Object.keys(orientByType).map((type) => [
             type,
-            String(orientations.filter((o) => o.type === type && o.status === "concluded").length),
-            String(orientations.filter((o) => o.type === type && o.status !== "concluded").length),
+            String(filteredOrientations.filter((o) => o.type === type && o.status === "concluded").length),
+            String(filteredOrientations.filter((o) => o.type === type && o.status !== "concluded").length),
           ]),
           styles: { fontSize: 8, cellPadding: 2 },
           headStyles: { fillColor: [0, 51, 102], textColor: 255, fontStyle: "bold" },
@@ -195,7 +208,7 @@ export default function CAPESReport({ data }: CAPESReportProps) {
 
       // Auto-generated text
       const yearCounts: Record<number, number> = {};
-      articles.forEach((a) => { if (a.year) yearCounts[a.year] = (yearCounts[a.year] || 0) + 1; });
+      filteredArticles.forEach((a) => { if (a.year) yearCounts[a.year] = (yearCounts[a.year] || 0) + 1; });
       const years = Object.keys(yearCounts).map(Number).sort();
       let trendText = "";
       if (years.length >= 2) {
@@ -209,7 +222,7 @@ export default function CAPESReport({ data }: CAPESReportProps) {
       }
 
       body(
-        `O programa conta com ${articles.length} produções bibliográficas registradas, sendo ${quadArticles.length} no quadriênio ${quadStart}–${currentYear}. ` +
+        `No período ${quadStart}–${quadEnd}, o programa conta com ${filteredArticles.length} produções bibliográficas. ` +
         `A produção qualificada (A1–B1) representa ${qualifiedPct}% do total. ` +
         (trendText || "")
       );
@@ -257,10 +270,10 @@ export default function CAPESReport({ data }: CAPESReportProps) {
         margin: { left: margin, right: margin },
         head: [["Pesquisador", "Artigos", "Qualificados (A1–B1)", "Orientações", "Projetos"]],
         body: researchers.map((r) => {
-          const rArticles = articles.filter((a) => a.researcher_id === r.id);
+          const rArticles = filteredArticles.filter((a) => a.researcher_id === r.id);
           const rQualified = rArticles.filter((a) => a.qualis && ["A1", "A2", "A3", "A4", "B1"].includes(a.qualis));
-          const rOrient = orientations.filter((o) => o.researcher_id === r.id).length;
-          const rProj = projects.filter((p) => p.researcher_id === r.id).length;
+          const rOrient = filteredOrientations.filter((o) => o.researcher_id === r.id).length;
+          const rProj = filteredProjects.filter((p) => p.researcher_id === r.id).length;
           return [r.name, String(rArticles.length), String(rQualified.length), String(rOrient), String(rProj)];
         }),
         styles: { fontSize: 8, cellPadding: 2 },
@@ -270,13 +283,13 @@ export default function CAPESReport({ data }: CAPESReportProps) {
       y = (doc as any).lastAutoTable.finalY + 10;
 
       // Technical productions
-      if (technicalProductions.length > 0) {
+      if (filteredTechProds.length > 0) {
         checkPage(20);
         subtitle("Produção técnica");
         const techByType: Record<string, number> = {};
-        technicalProductions.forEach((t) => { techByType[t.type] = (techByType[t.type] || 0) + 1; });
+        filteredTechProds.forEach((t) => { techByType[t.type] = (techByType[t.type] || 0) + 1; });
         body(
-          `O programa registrou ${technicalProductions.length} produções técnicas, distribuídas em: ` +
+          `No período ${quadStart}–${quadEnd}, o programa registrou ${filteredTechProds.length} produções técnicas, distribuídas em: ` +
           Object.entries(techByType).map(([t, c]) => `${t} (${c})`).join(", ") + "."
         );
       }
@@ -285,15 +298,15 @@ export default function CAPESReport({ data }: CAPESReportProps) {
       checkPage(20);
       title("4. PROJETOS DE PESQUISA E EXTENSÃO");
       body(
-        `O programa possui ${projects.length} projetos registrados, sendo ${fundedProjects.length} com financiamento. ` +
+        `No período ${quadStart}–${quadEnd}, o programa possui ${filteredProjects.length} projetos ativos, sendo ${fundedProjects.length} com financiamento. ` +
         (fundedProjects.length > 0
           ? `Os financiadores incluem: ${[...new Set(fundedProjects.map((p) => p.funder).filter(Boolean))].join(", ") || "não especificados"}.`
           : "")
       );
 
-      if (projects.length > 0) {
+      if (filteredProjects.length > 0) {
         const projByType: Record<string, number> = {};
-        projects.forEach((p) => { projByType[p.type || "outro"] = (projByType[p.type || "outro"] || 0) + 1; });
+        filteredProjects.forEach((p) => { projByType[p.type || "outro"] = (projByType[p.type || "outro"] || 0) + 1; });
         autoTable(doc, {
           startY: y,
           margin: { left: margin, right: margin },
@@ -301,7 +314,7 @@ export default function CAPESReport({ data }: CAPESReportProps) {
           body: Object.entries(projByType).map(([t, c]) => [
             t,
             String(c),
-            String(projects.filter((p) => (p.type || "outro") === t && p.funding && p.funding !== "Não").length),
+            String(filteredProjects.filter((p) => (p.type || "outro") === t && p.funding && p.funding !== "Não").length),
           ]),
           styles: { fontSize: 8, cellPadding: 2 },
           headStyles: { fillColor: [0, 51, 102], textColor: 255, fontStyle: "bold" },
@@ -406,7 +419,7 @@ export default function CAPESReport({ data }: CAPESReportProps) {
       }
 
       // Social insertion
-      const socialProds = technicalProductions.filter((t) =>
+      const socialProds = filteredTechProds.filter((t) =>
         ["interview", "mediaParticipation", "eventOrganization"].includes(t.type)
       );
       if (socialProds.length > 0) {

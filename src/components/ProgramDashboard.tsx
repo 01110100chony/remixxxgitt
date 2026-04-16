@@ -1,18 +1,25 @@
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import type { ProgramData } from "@/hooks/useProgram";
-import { isPGOrientation, isMestrado, isDoutorado, getQuadrienio } from "@/lib/orientation-utils";
+import { isPGOrientation, getQuadrienio } from "@/lib/orientation-utils";
+import { isProjectInPeriod } from "@/lib/orientation-utils";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   PieChart, Pie, Cell,
 } from "recharts";
 import {
   CalendarDays, Users, BookOpen, Star, TrendingUp, Handshake, Landmark,
-  GraduationCap, FolderKanban, Wrench, ClipboardCheck, Award,
+  GraduationCap, FolderKanban, Wrench, ClipboardCheck, Award, AlertTriangle,
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface Props {
   data: ProgramData;
 }
+
+type PeriodMode = "quadrienio" | "custom" | "all";
 
 const COLORS = [
   "hsl(var(--accent))", "hsl(var(--primary))", "#f59e0b", "#10b981",
@@ -30,44 +37,54 @@ const tooltipStyle = {
   fontSize: "13px",
 };
 
-function getQuadrienioRange(): [number, number] {
-  return getQuadrienio();
-}
+const QUALIS_ORDER = ["A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4", "C", "NP"];
+const QUALIS_COLORS: Record<string, string> = {
+  A1: "#10b981", A2: "#34d399", A3: "#6ee7b7", A4: "#a7f3d0",
+  B1: "#3b82f6", B2: "#60a5fa", B3: "#93c5fd", B4: "#bfdbfe",
+  C: "#f59e0b", NP: "#94a3b8",
+};
 
 const ProgramDashboard = ({ data }: Props) => {
-  const { researchers, articles, orientations, projects, technicalProductions, reviewerActivities, metrics } = data;
-  const pgOrientations = useMemo(() => orientations.filter((o) => isPGOrientation(o.type)), [orientations]);
-  const [qStart, qEnd] = getQuadrienioRange();
-  const qArticles = articles.filter((a) => a.year && a.year >= qStart && a.year <= qEnd);
+  const [qStart, qEnd] = getQuadrienio();
+  const [periodMode, setPeriodMode] = useState<PeriodMode>("quadrienio");
+  const [customStart, setCustomStart] = useState(qStart);
+  const [customEnd, setCustomEnd] = useState(qEnd);
 
-  const fundedProjects = projects.filter((p) => p.funding === "Sim");
+  const startYear = periodMode === "quadrienio" ? qStart : periodMode === "custom" ? customStart : 1900;
+  const endYear = periodMode === "quadrienio" ? qEnd : periodMode === "custom" ? customEnd : 9999;
+  const periodLabel = periodMode === "quadrienio"
+    ? `Quadriênio ${qStart}–${qEnd}`
+    : periodMode === "custom" ? `${customStart}–${customEnd}` : "Todos os anos";
+
+  const { researchers, articles, orientations, projects, technicalProductions, reviewerActivities, metrics } = data;
+
+  // Filtered data by period
+  const fArticles = useMemo(() => articles.filter((a) => a.year && a.year >= startYear && a.year <= endYear), [articles, startYear, endYear]);
+  const fOrientations = useMemo(() => orientations.filter((o) => o.year && o.year >= startYear && o.year <= endYear), [orientations, startYear, endYear]);
+  const fProjects = useMemo(() => projects.filter((p) => isProjectInPeriod(p, startYear, endYear)), [projects, startYear, endYear]);
+  const fTechProds = useMemo(() => technicalProductions.filter((t) => t.year && t.year >= startYear && t.year <= endYear), [technicalProductions, startYear, endYear]);
+  const fReviewer = useMemo(() => reviewerActivities.filter((r) => r.year && r.year >= startYear && r.year <= endYear), [reviewerActivities, startYear, endYear]);
+
+  const pgOrientations = useMemo(() => fOrientations.filter((o) => isPGOrientation(o.type)), [fOrientations]);
+  const fundedProjects = fProjects.filter((p) => p.funding === "Sim");
+
   const institutions = useMemo(() => {
     const s = new Set<string>();
-    projects.forEach((p) => { if (p.partner_institution) p.partner_institution.split("; ").forEach((i) => { if (i) s.add(i); }); });
+    fProjects.forEach((p) => { if (p.partner_institution) p.partner_institution.split("; ").forEach((i) => { if (i) s.add(i); }); });
     return s.size;
-  }, [projects]);
+  }, [fProjects]);
 
   // By year
   const byYear = useMemo(() => {
     const map: Record<number, number> = {};
-    articles.forEach((a) => { if (a.year) map[a.year] = (map[a.year] || 0) + 1; });
-    return Object.entries(map).sort(([a], [b]) => +a - +b).map(([year, count]) => ({
-      year,
-      count,
-      isQ: +year >= qStart && +year <= qEnd,
-    }));
-  }, [articles, qStart, qEnd]);
+    fArticles.forEach((a) => { if (a.year) map[a.year] = (map[a.year] || 0) + 1; });
+    return Object.entries(map).sort(([a], [b]) => +a - +b).map(([year, count]) => ({ year, count }));
+  }, [fArticles]);
 
   // By year and Qualis
-  const QUALIS_ORDER = ["A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4", "C", "NP"];
-  const QUALIS_COLORS: Record<string, string> = {
-    A1: "#10b981", A2: "#34d399", A3: "#6ee7b7", A4: "#a7f3d0",
-    B1: "#3b82f6", B2: "#60a5fa", B3: "#93c5fd", B4: "#bfdbfe",
-    C: "#f59e0b", NP: "#94a3b8",
-  };
   const byYearQualis = useMemo(() => {
     const map: Record<string, Record<string, number>> = {};
-    articles.forEach((a) => {
+    fArticles.forEach((a) => {
       if (!a.year) return;
       const y = String(a.year);
       const q = a.qualis || "NP";
@@ -75,14 +92,14 @@ const ProgramDashboard = ({ data }: Props) => {
       map[y][q] = (map[y][q] || 0) + 1;
     });
     return Object.entries(map).sort(([a], [b]) => a.localeCompare(b)).map(([year, qualis]) => ({ year, ...qualis }));
-  }, [articles]);
+  }, [fArticles]);
   const activeQualis = useMemo(() => {
     const s = new Set<string>();
-    articles.forEach((a) => s.add(a.qualis || "NP"));
+    fArticles.forEach((a) => s.add(a.qualis || "NP"));
     return QUALIS_ORDER.filter((q) => s.has(q));
-  }, [articles]);
+  }, [fArticles]);
 
-  // By gender (count researchers, not articles)
+  // By gender (researchers only, not filtered by period)
   const byGender = useMemo(() => {
     const map: Record<string, number> = {};
     researchers.forEach((r) => {
@@ -97,11 +114,11 @@ const ProgramDashboard = ({ data }: Props) => {
     const map: Record<string, number> = {};
     researchers.forEach((r) => {
       const line = r.research_line || "Não informada";
-      const count = articles.filter((a) => a.researcher_id === r.id).length;
+      const count = fArticles.filter((a) => a.researcher_id === r.id).length;
       map[line] = (map[line] || 0) + count;
     });
     return Object.entries(map).sort(([, a], [, b]) => b - a).map(([name, count]) => ({ name, count }));
-  }, [researchers, articles]);
+  }, [researchers, fArticles]);
 
   const maxLine = Math.max(...byResearchLine.map((d) => d.count), 1);
   const hasMetricsData = metrics.length > 0 && metrics.some((m) => (m.total_citations || 0) > 0 || (m.h_index || 0) > 0);
@@ -109,15 +126,50 @@ const ProgramDashboard = ({ data }: Props) => {
 
   return (
     <div className="space-y-6">
+      {/* Period selector */}
+      <div className="flex flex-wrap items-end gap-4">
+        <div>
+          <Label className="text-xs">Período</Label>
+          <Select value={periodMode} onValueChange={(v) => setPeriodMode(v as PeriodMode)}>
+            <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="quadrienio">Visão CAPES ({qStart}–{qEnd})</SelectItem>
+              <SelectItem value="custom">Personalizado</SelectItem>
+              <SelectItem value="all">Visão histórica (todos)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {periodMode === "custom" && (
+          <>
+            <div>
+              <Label className="text-xs">Início</Label>
+              <Input type="number" className="w-24" value={customStart} onChange={(e) => setCustomStart(Number(e.target.value))} />
+            </div>
+            <div>
+              <Label className="text-xs">Fim</Label>
+              <Input type="number" className="w-24" value={customEnd} onChange={(e) => setCustomEnd(Number(e.target.value))} />
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Period notice */}
+      <Alert>
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription className="text-sm">
+          Dados referentes ao {periodLabel}. {periodMode === "quadrienio" && "Para visualizar todos os dados, selecione \"Visão histórica\"."}
+        </AlertDescription>
+      </Alert>
+
       {/* KPIs */}
       <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-7">
         {[
-          { label: "Artigos", value: articles.length, icon: BookOpen },
+          { label: "Artigos", value: fArticles.length, icon: BookOpen },
           { label: "Pesquisadores", value: researchers.length, icon: Users },
           { label: "Orientações PG", value: pgOrientations.length, icon: GraduationCap },
-          { label: "Projetos", value: projects.length, icon: FolderKanban },
-          { label: "Prod. técnica", value: technicalProductions.length, icon: Wrench },
-          { label: "Pareceres", value: reviewerActivities.length, icon: ClipboardCheck },
+          { label: "Projetos", value: fProjects.length, icon: FolderKanban },
+          { label: "Prod. técnica", value: fTechProds.length, icon: Wrench },
+          { label: "Pareceres", value: fReviewer.length, icon: ClipboardCheck },
           { label: "Citações", value: hasMetricsData ? totalCitations : "—", icon: Award },
         ].map(({ label, value, icon: Icon }) => (
           <div key={label} className="rounded-lg border bg-card p-4 text-center">
@@ -128,20 +180,20 @@ const ProgramDashboard = ({ data }: Props) => {
         ))}
       </div>
 
-      {/* Quadriênio */}
+      {/* Quadriênio summary */}
       <div className="rounded-lg border border-accent/30 bg-accent/5 p-5">
         <div className="flex items-center gap-2 mb-3">
           <Star className="h-4 w-4 text-accent" />
-          <span className="text-sm font-semibold text-foreground">Quadriênio {qStart}–{qEnd}</span>
+          <span className="text-sm font-semibold text-foreground">{periodLabel}</span>
         </div>
         <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
           <div className="text-center">
-            <div className="text-2xl font-bold text-accent">{qArticles.length}</div>
+            <div className="text-2xl font-bold text-accent">{fArticles.length}</div>
             <div className="text-xs text-muted-foreground">Artigos</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-accent">
-              {articles.length > 0 ? ((qArticles.length / articles.length) * 100).toFixed(0) : 0}%
+              {articles.length > 0 ? ((fArticles.length / articles.length) * 100).toFixed(0) : 0}%
             </div>
             <div className="text-xs text-muted-foreground">do total</div>
           </div>
@@ -151,7 +203,7 @@ const ProgramDashboard = ({ data }: Props) => {
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-accent">
-              {researchers.length > 0 ? (qArticles.length / researchers.length).toFixed(1) : 0}
+              {researchers.length > 0 ? (fArticles.length / researchers.length).toFixed(1) : 0}
             </div>
             <div className="text-xs text-muted-foreground">Média / docente</div>
           </div>
