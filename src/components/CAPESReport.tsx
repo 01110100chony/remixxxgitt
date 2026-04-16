@@ -314,7 +314,7 @@ export default function CAPESReport({ data, startYear, endYear }: CAPESReportPro
           body: Object.entries(projByType).map(([t, c]) => [
             t,
             String(c),
-            String(projects.filter((p) => (p.type || "outro") === t && p.funding && p.funding !== "Não").length),
+            String(filteredProjects.filter((p) => (p.type || "outro") === t && p.funding && p.funding !== "Não").length),
           ]),
           styles: { fontSize: 8, cellPadding: 2 },
           headStyles: { fillColor: [0, 51, 102], textColor: 255, fontStyle: "bold" },
