@@ -177,15 +177,14 @@ export default function CAPESReport({ data, startYear, endYear }: CAPESReportPro
       checkPage(20);
       title("2. FORMAÇÃO DE RECURSOS HUMANOS");
 
-      const quadOrient = conclusionOrientations.filter((o) => o.year && o.year >= quadStart);
       body(
-        `O programa formou ${conclusionOrientations.length} orientandos no total, dos quais ${quadOrient.length} no quadriênio ${quadStart}–${currentYear}. ` +
-        `Atualmente, ${inProgressOrientations.length} orientações estão em andamento.`
+        `No período ${quadStart}–${quadEnd}, o programa formou ${conclusionOrientations.length} orientandos. ` +
+        `${inProgressOrientations.length} orientações estão em andamento no período.`
       );
 
       // Orientations by type
       const orientByType: Record<string, number> = {};
-      orientations.forEach((o) => { orientByType[o.type] = (orientByType[o.type] || 0) + 1; });
+      filteredOrientations.forEach((o) => { orientByType[o.type] = (orientByType[o.type] || 0) + 1; });
       if (Object.keys(orientByType).length > 0) {
         autoTable(doc, {
           startY: y,
@@ -193,8 +192,8 @@ export default function CAPESReport({ data, startYear, endYear }: CAPESReportPro
           head: [["Tipo de orientação", "Concluídas", "Em andamento"]],
           body: Object.keys(orientByType).map((type) => [
             type,
-            String(orientations.filter((o) => o.type === type && o.status === "concluded").length),
-            String(orientations.filter((o) => o.type === type && o.status !== "concluded").length),
+            String(filteredOrientations.filter((o) => o.type === type && o.status === "concluded").length),
+            String(filteredOrientations.filter((o) => o.type === type && o.status !== "concluded").length),
           ]),
           styles: { fontSize: 8, cellPadding: 2 },
           headStyles: { fillColor: [0, 51, 102], textColor: 255, fontStyle: "bold" },
@@ -209,7 +208,7 @@ export default function CAPESReport({ data, startYear, endYear }: CAPESReportPro
 
       // Auto-generated text
       const yearCounts: Record<number, number> = {};
-      articles.forEach((a) => { if (a.year) yearCounts[a.year] = (yearCounts[a.year] || 0) + 1; });
+      filteredArticles.forEach((a) => { if (a.year) yearCounts[a.year] = (yearCounts[a.year] || 0) + 1; });
       const years = Object.keys(yearCounts).map(Number).sort();
       let trendText = "";
       if (years.length >= 2) {
@@ -223,7 +222,7 @@ export default function CAPESReport({ data, startYear, endYear }: CAPESReportPro
       }
 
       body(
-        `O programa conta com ${articles.length} produções bibliográficas registradas, sendo ${quadArticles.length} no quadriênio ${quadStart}–${currentYear}. ` +
+        `No período ${quadStart}–${quadEnd}, o programa conta com ${filteredArticles.length} produções bibliográficas. ` +
         `A produção qualificada (A1–B1) representa ${qualifiedPct}% do total. ` +
         (trendText || "")
       );
