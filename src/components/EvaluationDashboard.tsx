@@ -107,26 +107,30 @@ const EvaluationDashboard = ({ data }: Props) => {
     dimension: q.name.replace(/^\d+\.\s*/, ""), score: q.score, fullMark: 5,
   }));
 
+  // Filtered data by period
+  const fArticles = useMemo(() => data.articles.filter((a) => a.year && a.year >= effectivePeriod[0] && a.year <= effectivePeriod[1]), [data.articles, effectivePeriod]);
+  const fOrientations = useMemo(() => data.orientations.filter((o) => o.year && o.year >= effectivePeriod[0] && o.year <= effectivePeriod[1]), [data.orientations, effectivePeriod]);
+
   // Production by year for line chart
   const byYear = useMemo(() => {
     const map: Record<number, number> = {};
-    data.articles.forEach((a) => { if (a.year) map[a.year] = (map[a.year] || 0) + 1; });
+    fArticles.forEach((a) => { if (a.year) map[a.year] = (map[a.year] || 0) + 1; });
     return Object.entries(map).sort(([a], [b]) => +a - +b).map(([year, count]) => ({ year, count }));
-  }, [data.articles]);
+  }, [fArticles]);
 
   const byResearcher = useMemo(() => {
     return data.researchers.map((r) => ({
       name: r.name.split(" ").slice(0, 2).join(" "),
-      artigos: data.articles.filter((a) => a.researcher_id === r.id).length,
-      orientacoes: data.orientations.filter((o) => o.researcher_id === r.id).length,
+      artigos: fArticles.filter((a) => a.researcher_id === r.id).length,
+      orientacoes: fOrientations.filter((o) => o.researcher_id === r.id).length,
     })).sort((a, b) => b.artigos - a.artigos);
-  }, [data]);
+  }, [data.researchers, fArticles, fOrientations]);
 
   const byQualis = useMemo(() => {
     const map: Record<string, number> = {};
-    data.articles.forEach((a) => { const q = a.qualis || "Sem Qualis"; map[q] = (map[q] || 0) + 1; });
+    fArticles.forEach((a) => { const q = a.qualis || "Sem Qualis"; map[q] = (map[q] || 0) + 1; });
     return Object.entries(map).sort(([a], [b]) => a.localeCompare(b)).map(([name, value]) => ({ name, value }));
-  }, [data.articles]);
+  }, [fArticles]);
 
   const byGender = useMemo(() => {
     const map: Record<string, number> = {};
