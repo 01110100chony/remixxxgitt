@@ -10,15 +10,18 @@ import autoTable from "jspdf-autotable";
 
 interface CAPESReportProps {
   data: ProgramData;
+  startYear?: number;
+  endYear?: number;
 }
 
 const QUALIS_ORDER = ["A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4", "C", "NP"];
 
-export default function CAPESReport({ data }: CAPESReportProps) {
+export default function CAPESReport({ data, startYear, endYear }: CAPESReportProps) {
   const [generating, setGenerating] = useState(false);
   const { toast } = useToast();
   const currentYear = new Date().getFullYear();
-  const quadStart = currentYear - 3;
+  const quadStart = startYear ?? (currentYear - 3);
+  const quadEnd = endYear ?? currentYear;
 
   const generate = async () => {
     setGenerating(true);
