@@ -320,13 +320,20 @@ export function useProgramData(programId: string | null) {
     await fetchAll();
   };
 
-  const importQualis = async (entries: { issn: string; classification: string; area: string | null }[]) => {
+  const importQualis = async (entries: { issn: string; classification: string; area: string | null; journal?: string | null }[]) => {
     if (entries.length === 0) return;
     // Delete existing and insert new
     await supabase.from("qualis_reference").delete().neq("id", "00000000-0000-0000-0000-000000000000");
     const batchSize = 500;
     for (let i = 0; i < entries.length; i += batchSize) {
-      await supabase.from("qualis_reference").insert(entries.slice(i, i + batchSize));
+      await supabase.from("qualis_reference").insert(
+        entries.slice(i, i + batchSize).map(e => ({
+          issn: e.issn,
+          classification: e.classification,
+          area: e.area,
+          journal: e.journal || null,
+        }))
+      );
     }
     toast({ title: "Qualis importado", description: `${entries.length} registros importados.` });
     // Auto-classify articles

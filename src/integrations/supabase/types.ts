@@ -517,18 +517,21 @@ export type Database = {
           classification: string
           id: string
           issn: string
+          journal: string | null
         }
         Insert: {
           area?: string | null
           classification: string
           id?: string
           issn: string
+          journal?: string | null
         }
         Update: {
           area?: string | null
           classification?: string
           id?: string
           issn?: string
+          journal?: string | null
         }
         Relationships: []
       }
