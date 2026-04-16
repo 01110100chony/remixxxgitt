@@ -83,16 +83,27 @@ export default function CAPESReport({ data, startYear, endYear }: CAPESReportPro
       // ── Data ──
       const { program, researchers, articles, orientations, projects, technicalProductions, metrics, citationEntries } = data;
 
-      const quadArticles = articles.filter((a) => a.year && a.year >= quadStart);
+      const quadArticles = articles.filter((a) => a.year && a.year >= quadStart && a.year <= quadEnd);
+      const filteredArticles = quadArticles; // use period-filtered articles throughout
       const qualisDist: Record<string, number> = {};
-      articles.forEach((a) => { if (a.qualis) qualisDist[a.qualis] = (qualisDist[a.qualis] || 0) + 1; });
+      filteredArticles.forEach((a) => { if (a.qualis) qualisDist[a.qualis] = (qualisDist[a.qualis] || 0) + 1; });
 
-      const qualifiedCount = articles.filter((a) => a.qualis && ["A1", "A2", "A3", "A4", "B1"].includes(a.qualis)).length;
-      const qualifiedPct = articles.length > 0 ? ((qualifiedCount / articles.length) * 100).toFixed(1) : "0";
+      const qualifiedCount = filteredArticles.filter((a) => a.qualis && ["A1", "A2", "A3", "A4", "B1"].includes(a.qualis)).length;
+      const qualifiedPct = filteredArticles.length > 0 ? ((qualifiedCount / filteredArticles.length) * 100).toFixed(1) : "0";
 
-      const conclusionOrientations = orientations.filter((o) => o.status === "concluded");
-      const inProgressOrientations = orientations.filter((o) => o.status !== "concluded");
-      const fundedProjects = projects.filter((p) => p.funding && p.funding !== "Não");
+      const filteredOrientations = orientations.filter((o) => o.year && o.year >= quadStart && o.year <= quadEnd);
+      const conclusionOrientations = filteredOrientations.filter((o) => o.status === "concluded");
+      const inProgressOrientations = filteredOrientations.filter((o) => o.status !== "concluded");
+      const filteredProjects = projects.filter((p) => {
+        const ys = p.year_start;
+        if (ys == null) return false;
+        if (ys > quadEnd) return false;
+        const ye = p.year_end;
+        if (ye == null) return true;
+        return ye >= quadStart;
+      });
+      const fundedProjects = filteredProjects.filter((p) => p.funding && p.funding !== "Não");
+      const filteredTechProds = technicalProductions.filter((t) => t.year && t.year >= quadStart && t.year <= quadEnd);
 
       const totalCitations = metrics.reduce((s, m) => s + (m.total_citations || 0), 0);
       const avgHIndex = metrics.length > 0
@@ -124,7 +135,7 @@ export default function CAPESReport({ data, startYear, endYear }: CAPESReportPro
       doc.setFontSize(10);
       doc.text(`Gerado em ${new Date().toLocaleDateString("pt-BR")}`, W / 2, y, { align: "center" });
       y += 6;
-      doc.text(`Quadriênio ${quadStart}–${currentYear}`, W / 2, y, { align: "center" });
+      doc.text(`Quadriênio ${quadStart}–${quadEnd}`, W / 2, y, { align: "center" });
 
       // Horizontal line
       y += 15;
