@@ -92,7 +92,7 @@ const Index = () => {
     }
   };
 
-  const handleQualisImportEntries = async (entries: { issn: string; classification: string; area: string | null }[]) => {
+  const handleQualisImportEntries = async (entries: { issn: string; classification: string; area: string | null; journal?: string | null }[]) => {
     await importQualis(entries);
   };
 

@@ -28,7 +28,7 @@ interface QualisImportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   articles: Article[];
-  onImport: (entries: { issn: string; classification: string; area: string | null }[]) => Promise<void>;
+  onImport: (entries: { issn: string; classification: string; area: string | null; journal?: string | null }[]) => Promise<void>;
 }
 
 const normalizeIssn = (issn: string): string =>
@@ -135,6 +135,7 @@ const QualisImportDialog = ({ open, onOpenChange, articles, onImport }: QualisIm
       issn: normalizeIssn(e.issn),
       classification: e.qualis,
       area: null,
+      journal: e.journal || null,
     }));
     // Deduplicate by issn
     const unique = Array.from(new Map(entries.map((e) => [e.issn, e])).values());
