@@ -419,7 +419,7 @@ export default function CAPESReport({ data, startYear, endYear }: CAPESReportPro
       }
 
       // Social insertion
-      const socialProds = technicalProductions.filter((t) =>
+      const socialProds = filteredTechProds.filter((t) =>
         ["interview", "mediaParticipation", "eventOrganization"].includes(t.type)
       );
       if (socialProds.length > 0) {
