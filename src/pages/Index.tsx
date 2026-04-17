@@ -265,6 +265,9 @@ const Index = () => {
                 <TabsContent value="technical">
                   <TechnicalProductionsTab productions={data.technicalProductions} researchers={data.researchers} />
                 </TabsContent>
+                <TabsContent value="other">
+                  <OtherProductionsTab productions={data.otherProductions} researchers={data.researchers} programId={selectedProgramId!} onRefresh={fetchAll} />
+                </TabsContent>
                 <TabsContent value="reviewer">
                   <ReviewerTab activities={data.reviewerActivities} researchers={data.researchers} />
                 </TabsContent>
