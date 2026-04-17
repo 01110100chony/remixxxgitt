@@ -17,6 +17,7 @@ import ArticlesTab from "@/components/ArticlesTab";
 import OrientationsDbTab from "@/components/OrientationsDbTab";
 import ProjectsDbTab from "@/components/ProjectsDbTab";
 import TechnicalProductionsTab from "@/components/TechnicalProductionsTab";
+import OtherProductionsTab from "@/components/OtherProductionsTab";
 import ReviewerTab from "@/components/ReviewerTab";
 import ImpactTab from "@/components/ImpactTab";
 import CitationsTab from "@/components/CitationsTab";
@@ -221,6 +222,7 @@ const Index = () => {
                   <TabsTrigger value="orientations">Orientações</TabsTrigger>
                   <TabsTrigger value="projects">Projetos</TabsTrigger>
                   <TabsTrigger value="technical">Prod. Técnica</TabsTrigger>
+                  <TabsTrigger value="other">Outras Produções</TabsTrigger>
                   <TabsTrigger value="reviewer">Parecerista</TabsTrigger>
                   <TabsTrigger value="citations">Citações</TabsTrigger>
                   <TabsTrigger value="identifiers">Identificadores</TabsTrigger>
@@ -229,7 +231,6 @@ const Index = () => {
                   <TabsTrigger value="planning">Planejamento</TabsTrigger>
                   {isCoordinatorOrAdmin && <TabsTrigger value="requests">Solicitações</TabsTrigger>}
                   <TabsTrigger value="settings">Configurações</TabsTrigger>
-                  {roles.includes("admin") && <TabsTrigger value="admin">Administração</TabsTrigger>}
                   {roles.includes("admin") && <TabsTrigger value="admin">Administração</TabsTrigger>}
                 </TabsList>
 
@@ -263,6 +264,9 @@ const Index = () => {
                 </TabsContent>
                 <TabsContent value="technical">
                   <TechnicalProductionsTab productions={data.technicalProductions} researchers={data.researchers} />
+                </TabsContent>
+                <TabsContent value="other">
+                  <OtherProductionsTab productions={data.otherProductions} researchers={data.researchers} programId={selectedProgramId!} onRefresh={fetchAll} />
                 </TabsContent>
                 <TabsContent value="reviewer">
                   <ReviewerTab activities={data.reviewerActivities} researchers={data.researchers} />

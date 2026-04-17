@@ -14,6 +14,7 @@ export type TechnicalProduction = Tables<"technical_productions">;
 export type ReviewerActivity = Tables<"reviewer_activities">;
 export type ResearcherMetric = Tables<"researcher_metrics">;
 export type QualisRef = Tables<"qualis_reference">;
+export type OtherProduction = Tables<"other_productions">;
 
 export interface CitationEntry {
   id: string;
@@ -43,6 +44,7 @@ export interface ProgramData {
   metrics: ResearcherMetric[];
   qualisRef: QualisRef[];
   citationEntries: CitationEntry[];
+  otherProductions: OtherProduction[];
 }
 
 export function usePrograms() {
@@ -102,7 +104,7 @@ export function useProgramData(programId: string | null) {
       setData({
         program, researchers, articles: [], orientations: [], projects: [],
         technicalProductions: [], reviewerActivities: [], metrics: [], qualisRef: qualisRef || [],
-        citationEntries: [],
+        citationEntries: [], otherProductions: [],
       });
       setLoading(false);
       return;
@@ -126,6 +128,11 @@ export function useProgramData(programId: string | null) {
       supabase.from("citation_entries").select("*").in("researcher_id", researcherIds),
     ]);
 
+    const { data: otherProductions } = await supabase
+      .from("other_productions")
+      .select("*")
+      .in("researcher_id", researcherIds);
+
     setData({
       program,
       researchers,
@@ -137,6 +144,7 @@ export function useProgramData(programId: string | null) {
       metrics: metrics || [],
       qualisRef: qualisRef || [],
       citationEntries: (citationEntries as CitationEntry[]) || [],
+      otherProductions: otherProductions || [],
     });
     setLoading(false);
   }, [programId]);
@@ -498,6 +506,7 @@ export function useProgramData(programId: string | null) {
       supabase.from("reviewer_activities").delete().eq("user_id", uid),
       supabase.from("researcher_metrics").delete().eq("user_id", uid),
       supabase.from("citation_entries").delete().eq("user_id", uid),
+      supabase.from("other_productions").delete().eq("user_id", uid),
     ]);
     await supabase.from("researchers").delete().eq("user_id", uid);
     toast({ title: "Dados limpos", description: "Todos os seus dados foram removidos." });
