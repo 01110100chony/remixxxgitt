@@ -222,6 +222,7 @@ const Index = () => {
                   <TabsTrigger value="orientations">Orientações</TabsTrigger>
                   <TabsTrigger value="projects">Projetos</TabsTrigger>
                   <TabsTrigger value="technical">Prod. Técnica</TabsTrigger>
+                  <TabsTrigger value="other">Outras Produções</TabsTrigger>
                   <TabsTrigger value="reviewer">Parecerista</TabsTrigger>
                   <TabsTrigger value="citations">Citações</TabsTrigger>
                   <TabsTrigger value="identifiers">Identificadores</TabsTrigger>
@@ -230,7 +231,6 @@ const Index = () => {
                   <TabsTrigger value="planning">Planejamento</TabsTrigger>
                   {isCoordinatorOrAdmin && <TabsTrigger value="requests">Solicitações</TabsTrigger>}
                   <TabsTrigger value="settings">Configurações</TabsTrigger>
-                  {roles.includes("admin") && <TabsTrigger value="admin">Administração</TabsTrigger>}
                   {roles.includes("admin") && <TabsTrigger value="admin">Administração</TabsTrigger>}
                 </TabsList>
 
