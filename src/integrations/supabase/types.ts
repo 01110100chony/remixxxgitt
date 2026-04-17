@@ -243,6 +243,45 @@ export type Database = {
           },
         ]
       }
+      journal_metrics: {
+        Row: {
+          citescore: number | null
+          created_at: string
+          id: string
+          issn: string
+          journal: string | null
+          sjr: number | null
+          snip: number | null
+          source: string
+          updated_at: string
+          year: number | null
+        }
+        Insert: {
+          citescore?: number | null
+          created_at?: string
+          id?: string
+          issn: string
+          journal?: string | null
+          sjr?: number | null
+          snip?: number | null
+          source?: string
+          updated_at?: string
+          year?: number | null
+        }
+        Update: {
+          citescore?: number | null
+          created_at?: string
+          id?: string
+          issn?: string
+          journal?: string | null
+          sjr?: number | null
+          snip?: number | null
+          source?: string
+          updated_at?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
       orientations: {
         Row: {
           created_at: string
@@ -296,6 +335,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      other_productions: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          program_id: string | null
+          researcher_id: string
+          title: string | null
+          type: string | null
+          user_id: string | null
+          year: number | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          program_id?: string | null
+          researcher_id: string
+          title?: string | null
+          type?: string | null
+          user_id?: string | null
+          year?: number | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          program_id?: string | null
+          researcher_id?: string
+          title?: string | null
+          type?: string | null
+          user_id?: string | null
+          year?: number | null
+        }
+        Relationships: []
       }
       planning_data: {
         Row: {
