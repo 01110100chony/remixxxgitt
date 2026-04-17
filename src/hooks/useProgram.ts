@@ -128,6 +128,11 @@ export function useProgramData(programId: string | null) {
       supabase.from("citation_entries").select("*").in("researcher_id", researcherIds),
     ]);
 
+    const { data: otherProductions } = await supabase
+      .from("other_productions")
+      .select("*")
+      .in("researcher_id", researcherIds);
+
     setData({
       program,
       researchers,
@@ -139,6 +144,7 @@ export function useProgramData(programId: string | null) {
       metrics: metrics || [],
       qualisRef: qualisRef || [],
       citationEntries: (citationEntries as CitationEntry[]) || [],
+      otherProductions: otherProductions || [],
     });
     setLoading(false);
   }, [programId]);
