@@ -506,6 +506,7 @@ export function useProgramData(programId: string | null) {
       supabase.from("reviewer_activities").delete().eq("user_id", uid),
       supabase.from("researcher_metrics").delete().eq("user_id", uid),
       supabase.from("citation_entries").delete().eq("user_id", uid),
+      supabase.from("other_productions").delete().eq("user_id", uid),
     ]);
     await supabase.from("researchers").delete().eq("user_id", uid);
     toast({ title: "Dados limpos", description: "Todos os seus dados foram removidos." });
