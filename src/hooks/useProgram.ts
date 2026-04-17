@@ -14,6 +14,7 @@ export type TechnicalProduction = Tables<"technical_productions">;
 export type ReviewerActivity = Tables<"reviewer_activities">;
 export type ResearcherMetric = Tables<"researcher_metrics">;
 export type QualisRef = Tables<"qualis_reference">;
+export type OtherProduction = Tables<"other_productions">;
 
 export interface CitationEntry {
   id: string;
