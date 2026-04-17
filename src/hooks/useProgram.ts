@@ -44,6 +44,7 @@ export interface ProgramData {
   metrics: ResearcherMetric[];
   qualisRef: QualisRef[];
   citationEntries: CitationEntry[];
+  otherProductions: OtherProduction[];
 }
 
 export function usePrograms() {
