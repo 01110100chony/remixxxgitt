@@ -178,12 +178,14 @@ export default function JournalMetricsTab() {
         return;
       }
 
-      const entries = rows.slice(1)
+      const rawEntries = rows.slice(1)
         .map((r) => {
           const rawIssn = (r[iIssn] || "").trim();
           if (!rawIssn) return null;
+          const issn = formatIssn(rawIssn);
+          if (!issn) return null;
           return {
-            issn: formatIssn(rawIssn),
+            issn,
             journal: iJournal >= 0 ? (r[iJournal] || "").trim() || null : null,
             snip: iSnip >= 0 ? num(r[iSnip]) : null,
             sjr: iSjr >= 0 ? num(r[iSjr]) : null,
@@ -192,12 +194,34 @@ export default function JournalMetricsTab() {
             source: "scopus_csv",
           };
         })
-        .filter((e): e is NonNullable<typeof e> => !!e && !!e.issn);
+        .filter((e): e is NonNullable<typeof e> => !!e);
 
-      if (entries.length === 0) {
+      if (rawEntries.length === 0) {
         toast({ title: "Nenhuma linha válida", variant: "destructive" });
         return;
       }
+
+      // Deduplicate by ISSN+year (last occurrence wins, but merge non-null metrics from earlier rows)
+      const dedupMap = new Map<string, typeof rawEntries[number]>();
+      for (const e of rawEntries) {
+        const key = `${e.issn}|${e.year ?? ""}`;
+        const prev = dedupMap.get(key);
+        if (!prev) {
+          dedupMap.set(key, e);
+        } else {
+          dedupMap.set(key, {
+            issn: e.issn,
+            year: e.year ?? prev.year,
+            journal: e.journal ?? prev.journal,
+            snip: e.snip ?? prev.snip,
+            sjr: e.sjr ?? prev.sjr,
+            citescore: e.citescore ?? prev.citescore,
+            source: e.source,
+          });
+        }
+      }
+      const entries = Array.from(dedupMap.values());
+      const duplicatesRemoved = rawEntries.length - entries.length;
 
       // Replace dataset for cleanliness
       await supabase.from("journal_metrics").delete().neq("id", "00000000-0000-0000-0000-000000000000");
@@ -210,7 +234,12 @@ export default function JournalMetricsTab() {
           return;
         }
       }
-      toast({ title: "Importação concluída", description: `${entries.length} registros importados.` });
+      toast({
+        title: "Importação concluída",
+        description: duplicatesRemoved > 0
+          ? `${entries.length} registros importados (${duplicatesRemoved} duplicatas mescladas por ISSN+ano).`
+          : `${entries.length} registros importados.`,
+      });
       await fetchMetrics();
     } catch (e) {
       toast({ title: "Erro", description: (e as Error).message, variant: "destructive" });
