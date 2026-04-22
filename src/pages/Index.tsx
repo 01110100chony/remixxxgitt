@@ -18,6 +18,7 @@ import OrientationsDbTab from "@/components/OrientationsDbTab";
 import ProjectsDbTab from "@/components/ProjectsDbTab";
 import TechnicalProductionsTab from "@/components/TechnicalProductionsTab";
 import OtherProductionsTab from "@/components/OtherProductionsTab";
+import JournalMetricsTab from "@/components/JournalMetricsTab";
 import ReviewerTab from "@/components/ReviewerTab";
 import ImpactTab from "@/components/ImpactTab";
 import CitationsTab from "@/components/CitationsTab";
