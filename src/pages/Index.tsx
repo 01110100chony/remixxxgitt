@@ -283,6 +283,9 @@ const Index = () => {
                 <TabsContent value="identifiers">
                   <IdentifiersTab researchers={data.researchers} programId={selectedProgramId!} onRefresh={fetchAll} />
                 </TabsContent>
+                <TabsContent value="journals">
+                  <JournalMetricsTab />
+                </TabsContent>
                 <TabsContent value="website">
                   <WebsiteTab program={data.program} onRefresh={fetchAll} />
                 </TabsContent>
