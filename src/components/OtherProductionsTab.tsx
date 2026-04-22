@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Plus, Trash2, Palette, Sparkles } from "lucide-react";
+import { Plus, Trash2, Palette, Sparkles, Pencil, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,6 +37,15 @@ const OtherProductionsTab = ({ productions, researchers, programId, onRefresh }:
   const [activeCategory, setActiveCategory] = useState<string>("artistic");
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({
+    category: "artistic",
+    type: "",
+    title: "",
+    description: "",
+    year: "",
+    researcher_id: "",
+  });
 
   const [form, setForm] = useState({
     researcher_id: "",
@@ -104,6 +113,45 @@ const OtherProductionsTab = ({ productions, researchers, programId, onRefresh }:
       return;
     }
     toast({ title: "Produção removida" });
+    onRefresh();
+  };
+
+  const startEdit = (p: OtherProduction) => {
+    setEditingId(p.id);
+    setEditForm({
+      category: p.category || "other",
+      type: p.type || "",
+      title: p.title || "",
+      description: p.description || "",
+      year: p.year ? String(p.year) : "",
+      researcher_id: p.researcher_id,
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+  };
+
+  const saveEdit = async (id: string) => {
+    if (!editForm.title.trim() || !editForm.researcher_id) {
+      toast({ title: "Campos obrigatórios", description: "Pesquisador e título são obrigatórios.", variant: "destructive" });
+      return;
+    }
+    const yearNum = parseInt(editForm.year);
+    const { error } = await supabase.from("other_productions").update({
+      category: editForm.category,
+      type: editForm.type.trim() || null,
+      title: editForm.title.trim(),
+      description: editForm.description.trim() || null,
+      year: isNaN(yearNum) ? null : yearNum,
+      researcher_id: editForm.researcher_id,
+    }).eq("id", id);
+    if (error) {
+      toast({ title: "Erro ao atualizar", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Produção atualizada" });
+    setEditingId(null);
     onRefresh();
   };
 
@@ -217,12 +265,53 @@ const OtherProductionsTab = ({ productions, researchers, programId, onRefresh }:
                   <TableHead>Tipo</TableHead>
                   <TableHead>Pesquisador</TableHead>
                   <TableHead className="w-20">Ano</TableHead>
-                  <TableHead className="w-12"></TableHead>
+                  <TableHead className="w-24"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filtered.map((p) => {
                   const r = researchers.find((x) => x.id === p.researcher_id);
+                  const isEditing = editingId === p.id;
+                  if (isEditing) {
+                    return (
+                      <TableRow key={p.id} className="bg-muted/30 align-top">
+                        <TableCell>
+                          <Input value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} placeholder="Título" className="mb-1" />
+                          <Textarea value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} placeholder="Descrição" rows={2} />
+                        </TableCell>
+                        <TableCell>
+                          <Select value={editForm.category} onValueChange={(v) => setEditForm({ ...editForm, category: v })}>
+                            <SelectTrigger className="mb-1 h-8"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {CATEGORIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                          <Input value={editForm.type} onChange={(e) => setEditForm({ ...editForm, type: e.target.value })} placeholder="Tipo" className="h-8" />
+                        </TableCell>
+                        <TableCell>
+                          <Select value={editForm.researcher_id} onValueChange={(v) => setEditForm({ ...editForm, researcher_id: v })}>
+                            <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {researchers.map((rr) => <SelectItem key={rr.id} value={rr.id}>{rr.name}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Input type="number" value={editForm.year} onChange={(e) => setEditForm({ ...editForm, year: e.target.value })} className="h-8" />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => saveEdit(p.id)} title="Salvar">
+                              <Check className="h-4 w-4 text-primary" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={cancelEdit} title="Cancelar">
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  }
                   return (
                     <TableRow key={p.id}>
                       <TableCell>
@@ -233,9 +322,14 @@ const OtherProductionsTab = ({ productions, researchers, programId, onRefresh }:
                       <TableCell className="text-sm">{r?.name || "—"}</TableCell>
                       <TableCell>{p.year || "—"}</TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(p.id)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => startEdit(p)} title="Editar">
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(p.id)} title="Excluir">
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
