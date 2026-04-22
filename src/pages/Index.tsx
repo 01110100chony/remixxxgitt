@@ -18,6 +18,7 @@ import OrientationsDbTab from "@/components/OrientationsDbTab";
 import ProjectsDbTab from "@/components/ProjectsDbTab";
 import TechnicalProductionsTab from "@/components/TechnicalProductionsTab";
 import OtherProductionsTab from "@/components/OtherProductionsTab";
+import JournalMetricsTab from "@/components/JournalMetricsTab";
 import ReviewerTab from "@/components/ReviewerTab";
 import ImpactTab from "@/components/ImpactTab";
 import CitationsTab from "@/components/CitationsTab";
@@ -226,6 +227,7 @@ const Index = () => {
                   <TabsTrigger value="reviewer">Parecerista</TabsTrigger>
                   <TabsTrigger value="citations">Citações</TabsTrigger>
                   <TabsTrigger value="identifiers">Identificadores</TabsTrigger>
+                  <TabsTrigger value="journals">Métricas Periódicos</TabsTrigger>
                   <TabsTrigger value="website">Site</TabsTrigger>
                   <TabsTrigger value="social">Presença Digital</TabsTrigger>
                   <TabsTrigger value="planning">Planejamento</TabsTrigger>
@@ -280,6 +282,9 @@ const Index = () => {
                 </TabsContent>
                 <TabsContent value="identifiers">
                   <IdentifiersTab researchers={data.researchers} programId={selectedProgramId!} onRefresh={fetchAll} />
+                </TabsContent>
+                <TabsContent value="journals">
+                  <JournalMetricsTab />
                 </TabsContent>
                 <TabsContent value="website">
                   <WebsiteTab program={data.program} onRefresh={fetchAll} />
