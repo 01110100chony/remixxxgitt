@@ -116,6 +116,45 @@ const OtherProductionsTab = ({ productions, researchers, programId, onRefresh }:
     onRefresh();
   };
 
+  const startEdit = (p: OtherProduction) => {
+    setEditingId(p.id);
+    setEditForm({
+      category: p.category || "other",
+      type: p.type || "",
+      title: p.title || "",
+      description: p.description || "",
+      year: p.year ? String(p.year) : "",
+      researcher_id: p.researcher_id,
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+  };
+
+  const saveEdit = async (id: string) => {
+    if (!editForm.title.trim() || !editForm.researcher_id) {
+      toast({ title: "Campos obrigatórios", description: "Pesquisador e título são obrigatórios.", variant: "destructive" });
+      return;
+    }
+    const yearNum = parseInt(editForm.year);
+    const { error } = await supabase.from("other_productions").update({
+      category: editForm.category,
+      type: editForm.type.trim() || null,
+      title: editForm.title.trim(),
+      description: editForm.description.trim() || null,
+      year: isNaN(yearNum) ? null : yearNum,
+      researcher_id: editForm.researcher_id,
+    }).eq("id", id);
+    if (error) {
+      toast({ title: "Erro ao atualizar", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Produção atualizada" });
+    setEditingId(null);
+    onRefresh();
+  };
+
   const counts = useMemo(() => {
     return {
       artistic: productions.filter((p) => p.category === "artistic").length,
