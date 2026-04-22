@@ -227,6 +227,7 @@ const Index = () => {
                   <TabsTrigger value="reviewer">Parecerista</TabsTrigger>
                   <TabsTrigger value="citations">Citações</TabsTrigger>
                   <TabsTrigger value="identifiers">Identificadores</TabsTrigger>
+                  <TabsTrigger value="journals">Métricas Periódicos</TabsTrigger>
                   <TabsTrigger value="website">Site</TabsTrigger>
                   <TabsTrigger value="social">Presença Digital</TabsTrigger>
                   <TabsTrigger value="planning">Planejamento</TabsTrigger>
