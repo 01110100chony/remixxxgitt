@@ -37,6 +37,15 @@ const OtherProductionsTab = ({ productions, researchers, programId, onRefresh }:
   const [activeCategory, setActiveCategory] = useState<string>("artistic");
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({
+    category: "artistic",
+    type: "",
+    title: "",
+    description: "",
+    year: "",
+    researcher_id: "",
+  });
 
   const [form, setForm] = useState({
     researcher_id: "",
