@@ -302,19 +302,44 @@ export default function JournalMetricsTab() {
     if (!preview) return;
     setImporting(true);
     try {
-      await supabase.from("journal_metrics").delete().neq("id", "00000000-0000-0000-0000-000000000000");
       const batch = 500;
-      for (let i = 0; i < preview.entries.length; i += batch) {
-        const { error } = await supabase.from("journal_metrics").insert(preview.entries.slice(i, i + batch));
-        if (error) {
-          toast({ title: "Erro no lote", description: error.message, variant: "destructive" });
-          return;
+      if (importMode === "replace") {
+        await supabase.from("journal_metrics").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+        for (let i = 0; i < preview.entries.length; i += batch) {
+          const { error } = await supabase.from("journal_metrics").insert(preview.entries.slice(i, i + batch));
+          if (error) {
+            toast({ title: "Erro no lote", description: error.message, variant: "destructive" });
+            return;
+          }
         }
+        toast({
+          title: "Importação concluída (substituição)",
+          description: `${preview.entries.length} registros importados${preview.duplicates > 0 ? ` (${preview.duplicates} duplicatas mescladas)` : ""}.`,
+        });
+      } else {
+        // Upsert por chave (issn, year)
+        let inserted = 0;
+        let updated = 0;
+        // Pré-lê os pares existentes para diferenciar inseridos vs atualizados
+        const keysSet = new Set(metrics.map((m) => `${m.issn}|${m.year ?? ""}`));
+        for (const e of preview.entries) {
+          if (keysSet.has(`${e.issn}|${e.year ?? ""}`)) updated++;
+          else inserted++;
+        }
+        for (let i = 0; i < preview.entries.length; i += batch) {
+          const { error } = await supabase
+            .from("journal_metrics")
+            .upsert(preview.entries.slice(i, i + batch), { onConflict: "issn,year" });
+          if (error) {
+            toast({ title: "Erro no lote (upsert)", description: error.message, variant: "destructive" });
+            return;
+          }
+        }
+        toast({
+          title: "Importação concluída (upsert)",
+          description: `${inserted} novos, ${updated} atualizados${preview.duplicates > 0 ? ` (${preview.duplicates} duplicatas no CSV mescladas)` : ""}.`,
+        });
       }
-      toast({
-        title: "Importação concluída",
-        description: `${preview.entries.length} registros importados${preview.duplicates > 0 ? ` (${preview.duplicates} duplicatas mescladas)` : ""}.`,
-      });
       setPreview(null);
       await fetchMetrics();
     } catch (e) {
