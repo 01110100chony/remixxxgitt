@@ -376,14 +376,14 @@ export default function JournalMetricsTab() {
                   className="hidden"
                   onChange={(e) => {
                     const f = e.target.files?.[0];
-                    if (f) handleCSV(f);
+                    if (f) analyzeCSV(f);
                     e.target.value = "";
                   }}
                 />
-                <Button variant="outline" size="sm" disabled={importing} asChild>
+                <Button variant="outline" size="sm" disabled={importing || analyzing} asChild>
                   <span className="cursor-pointer">
                     <Upload className="h-4 w-4 mr-1" />
-                    {importing ? "Importando..." : "Importar CSV (Scopus)"}
+                    {analyzing ? "Analisando..." : importing ? "Importando..." : "Importar CSV (Scopus)"}
                   </span>
                 </Button>
               </label>
