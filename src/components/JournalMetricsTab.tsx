@@ -113,7 +113,10 @@ export default function JournalMetricsTab() {
   const [search, setSearch] = useState("");
 
   const [form, setForm] = useState({ issn: "", journal: "", snip: "", sjr: "", citescore: "", year: "" });
-  const [preview, setPreview] = useState<CsvPreview | null>(null);
+  const [rawCsv, setRawCsv] = useState<RawCsv | null>(null);
+  const [colMap, setColMap] = useState<Record<FieldKey, number>>({
+    issn: -1, year: -1, snip: -1, sjr: -1, citescore: -1, journal: -1,
+  });
   const [analyzing, setAnalyzing] = useState(false);
   const [importMode, setImportMode] = useState<"replace" | "upsert">("upsert");
 
