@@ -102,6 +102,7 @@ export default function JournalMetricsTab() {
   const [form, setForm] = useState({ issn: "", journal: "", snip: "", sjr: "", citescore: "", year: "" });
   const [preview, setPreview] = useState<CsvPreview | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [importMode, setImportMode] = useState<"replace" | "upsert">("upsert");
 
   const fetchMetrics = async () => {
     setLoading(true);
@@ -301,19 +302,44 @@ export default function JournalMetricsTab() {
     if (!preview) return;
     setImporting(true);
     try {
-      await supabase.from("journal_metrics").delete().neq("id", "00000000-0000-0000-0000-000000000000");
       const batch = 500;
-      for (let i = 0; i < preview.entries.length; i += batch) {
-        const { error } = await supabase.from("journal_metrics").insert(preview.entries.slice(i, i + batch));
-        if (error) {
-          toast({ title: "Erro no lote", description: error.message, variant: "destructive" });
-          return;
+      if (importMode === "replace") {
+        await supabase.from("journal_metrics").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+        for (let i = 0; i < preview.entries.length; i += batch) {
+          const { error } = await supabase.from("journal_metrics").insert(preview.entries.slice(i, i + batch));
+          if (error) {
+            toast({ title: "Erro no lote", description: error.message, variant: "destructive" });
+            return;
+          }
         }
+        toast({
+          title: "Importação concluída (substituição)",
+          description: `${preview.entries.length} registros importados${preview.duplicates > 0 ? ` (${preview.duplicates} duplicatas mescladas)` : ""}.`,
+        });
+      } else {
+        // Upsert por chave (issn, year)
+        let inserted = 0;
+        let updated = 0;
+        // Pré-lê os pares existentes para diferenciar inseridos vs atualizados
+        const keysSet = new Set(metrics.map((m) => `${m.issn}|${m.year ?? ""}`));
+        for (const e of preview.entries) {
+          if (keysSet.has(`${e.issn}|${e.year ?? ""}`)) updated++;
+          else inserted++;
+        }
+        for (let i = 0; i < preview.entries.length; i += batch) {
+          const { error } = await supabase
+            .from("journal_metrics")
+            .upsert(preview.entries.slice(i, i + batch), { onConflict: "issn,year" });
+          if (error) {
+            toast({ title: "Erro no lote (upsert)", description: error.message, variant: "destructive" });
+            return;
+          }
+        }
+        toast({
+          title: "Importação concluída (upsert)",
+          description: `${inserted} novos, ${updated} atualizados${preview.duplicates > 0 ? ` (${preview.duplicates} duplicatas no CSV mescladas)` : ""}.`,
+        });
       }
-      toast({
-        title: "Importação concluída",
-        description: `${preview.entries.length} registros importados${preview.duplicates > 0 ? ` (${preview.duplicates} duplicatas mescladas)` : ""}.`,
-      });
       setPreview(null);
       await fetchMetrics();
     } catch (e) {
@@ -418,7 +444,7 @@ export default function JournalMetricsTab() {
             <p className="font-medium text-foreground">Formato esperado do CSV:</p>
             <p>Colunas reconhecidas (cabeçalho na 1ª linha): <code>ISSN</code>, <code>Journal</code>, <code>SNIP</code>, <code>SJR</code>, <code>CiteScore</code>, <code>Year</code>.</p>
             <p>Separador: <code>;</code> ou <code>,</code>. Aceita arquivos exportados do Scopus Source List.</p>
-            <p className="text-destructive">Atenção: a importação substitui todos os registros existentes.</p>
+            <p>Você poderá escolher entre <strong>upsert</strong> (atualiza apenas registros do CSV mantendo o restante) ou <strong>substituir tudo</strong> antes de confirmar.</p>
           </div>
         </CardContent>
       </Card>
@@ -658,12 +684,41 @@ export default function JournalMetricsTab() {
                 </div>
               )}
 
-              <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription className="text-xs">
-                  A importação substituirá todos os {metrics.length} registros existentes em journal_metrics.
-                </AlertDescription>
-              </Alert>
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Modo de importação</p>
+                <div className="grid sm:grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setImportMode("upsert")}
+                    className={`text-left rounded-lg border p-3 transition-colors ${
+                      importMode === "upsert" ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:bg-muted/40"
+                    }`}
+                  >
+                    <p className="text-sm font-semibold flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-primary" />
+                      Upsert por ISSN+ano
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Atualiza registros existentes e insere novos. Mantém registros que não estão no CSV.
+                    </p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setImportMode("replace")}
+                    className={`text-left rounded-lg border p-3 transition-colors ${
+                      importMode === "replace" ? "border-destructive bg-destructive/5 ring-1 ring-destructive" : "hover:bg-muted/40"
+                    }`}
+                  >
+                    <p className="text-sm font-semibold flex items-center gap-2">
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                      Substituir tudo
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Remove todos os {metrics.length} registros existentes e importa apenas os deste CSV.
+                    </p>
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 
@@ -673,9 +728,14 @@ export default function JournalMetricsTab() {
             </Button>
             <Button
               onClick={confirmImport}
+              variant={importMode === "replace" ? "destructive" : "default"}
               disabled={!preview || preview.uniqueAfterDedup === 0 || preview.missingRequired.length > 0 || importing}
             >
-              {importing ? "Importando..." : `Confirmar (${preview?.uniqueAfterDedup ?? 0} registros)`}
+              {importing
+                ? "Importando..."
+                : importMode === "replace"
+                  ? `Substituir tudo (${preview?.uniqueAfterDedup ?? 0})`
+                  : `Aplicar upsert (${preview?.uniqueAfterDedup ?? 0})`}
             </Button>
           </DialogFooter>
         </DialogContent>
