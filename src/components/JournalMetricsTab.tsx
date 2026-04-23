@@ -179,61 +179,83 @@ export default function JournalMetricsTab() {
     await fetchMetrics();
   };
 
-  const handleCSV = async (file: File) => {
-    setImporting(true);
+  const analyzeCSV = async (file: File) => {
+    setAnalyzing(true);
     try {
       const text = await file.text();
       const rows = parseCSV(text);
       if (rows.length < 2) {
-        toast({ title: "CSV vazio", variant: "destructive" });
+        toast({ title: "CSV vazio", description: "Arquivo não contém linhas de dados.", variant: "destructive" });
         return;
       }
       const headers = rows[0].map((h) => h.trim().toLowerCase());
-      const idx = (names: string[]) => {
+      const findCol = (names: string[]) => {
         for (const n of names) {
           const i = headers.findIndex((h) => h === n || h.includes(n));
-          if (i >= 0) return i;
+          if (i >= 0) return { idx: i, headerName: rows[0][i].trim() };
         }
-        return -1;
+        return { idx: -1, headerName: undefined };
       };
-      const iIssn = idx(["issn"]);
-      const iJournal = idx(["journal", "title", "periodico", "periódico", "revista"]);
-      const iSnip = idx(["snip"]);
-      const iSjr = idx(["sjr"]);
-      const iCs = idx(["citescore", "cite score", "cs"]);
-      const iYear = idx(["year", "ano"]);
+      const cIssn = findCol(["issn"]);
+      const cJournal = findCol(["journal", "title", "periodico", "periódico", "revista"]);
+      const cSnip = findCol(["snip"]);
+      const cSjr = findCol(["sjr"]);
+      const cCs = findCol(["citescore", "cite score", "cs"]);
+      const cYear = findCol(["year", "ano"]);
 
-      if (iIssn < 0) {
-        toast({ title: "Coluna ISSN não encontrada", description: "O CSV deve conter coluna 'ISSN'.", variant: "destructive" });
-        return;
+      const detectedColumns = [
+        { key: "ISSN", label: "ISSN", found: cIssn.idx >= 0, headerName: cIssn.headerName },
+        { key: "Year", label: "Year (Ano)", found: cYear.idx >= 0, headerName: cYear.headerName },
+        { key: "SNIP", label: "SNIP", found: cSnip.idx >= 0, headerName: cSnip.headerName },
+        { key: "SJR", label: "SJR", found: cSjr.idx >= 0, headerName: cSjr.headerName },
+        { key: "CiteScore", label: "CiteScore", found: cCs.idx >= 0, headerName: cCs.headerName },
+        { key: "Journal", label: "Journal (Periódico)", found: cJournal.idx >= 0, headerName: cJournal.headerName },
+      ];
+      const missingRequired = detectedColumns.filter((c) => c.key === "ISSN" && !c.found).map((c) => c.label);
+      const missingOptional = detectedColumns.filter((c) => c.key !== "ISSN" && !c.found).map((c) => c.label);
+
+      const dataRows = rows.slice(1);
+      const invalidCounters: Record<string, number> = {};
+      const validEntries: NonNullable<CsvPreview["entries"]> = [];
+
+      for (const r of dataRows) {
+        if (cIssn.idx < 0) {
+          invalidCounters["Coluna ISSN ausente"] = (invalidCounters["Coluna ISSN ausente"] || 0) + 1;
+          continue;
+        }
+        const rawIssn = (r[cIssn.idx] || "").trim();
+        if (!rawIssn) {
+          invalidCounters["ISSN vazio"] = (invalidCounters["ISSN vazio"] || 0) + 1;
+          continue;
+        }
+        const normalized = normalizeIssn(rawIssn);
+        if (normalized.length !== 8) {
+          invalidCounters["ISSN inválido (≠ 8 dígitos)"] = (invalidCounters["ISSN inválido (≠ 8 dígitos)"] || 0) + 1;
+          continue;
+        }
+        const issn = formatIssn(rawIssn);
+        const snip = cSnip.idx >= 0 ? num(r[cSnip.idx]) : null;
+        const sjr = cSjr.idx >= 0 ? num(r[cSjr.idx]) : null;
+        const citescore = cCs.idx >= 0 ? num(r[cCs.idx]) : null;
+        const year = cYear.idx >= 0 && r[cYear.idx] ? parseInt(r[cYear.idx]) || null : null;
+
+        if (snip == null && sjr == null && citescore == null) {
+          invalidCounters["Sem nenhuma métrica (SNIP/SJR/CiteScore)"] =
+            (invalidCounters["Sem nenhuma métrica (SNIP/SJR/CiteScore)"] || 0) + 1;
+          continue;
+        }
+
+        validEntries.push({
+          issn,
+          journal: cJournal.idx >= 0 ? (r[cJournal.idx] || "").trim() || null : null,
+          snip, sjr, citescore, year,
+          source: "scopus_csv",
+        });
       }
 
-      const rawEntries = rows.slice(1)
-        .map((r) => {
-          const rawIssn = (r[iIssn] || "").trim();
-          if (!rawIssn) return null;
-          const issn = formatIssn(rawIssn);
-          if (!issn) return null;
-          return {
-            issn,
-            journal: iJournal >= 0 ? (r[iJournal] || "").trim() || null : null,
-            snip: iSnip >= 0 ? num(r[iSnip]) : null,
-            sjr: iSjr >= 0 ? num(r[iSjr]) : null,
-            citescore: iCs >= 0 ? num(r[iCs]) : null,
-            year: iYear >= 0 && r[iYear] ? parseInt(r[iYear]) || null : null,
-            source: "scopus_csv",
-          };
-        })
-        .filter((e): e is NonNullable<typeof e> => !!e);
-
-      if (rawEntries.length === 0) {
-        toast({ title: "Nenhuma linha válida", variant: "destructive" });
-        return;
-      }
-
-      // Deduplicate by ISSN+year (last occurrence wins, but merge non-null metrics from earlier rows)
-      const dedupMap = new Map<string, typeof rawEntries[number]>();
-      for (const e of rawEntries) {
+      // Deduplicate by ISSN+year
+      const dedupMap = new Map<string, typeof validEntries[number]>();
+      for (const e of validEntries) {
         const key = `${e.issn}|${e.year ?? ""}`;
         const prev = dedupMap.get(key);
         if (!prev) {
@@ -250,15 +272,39 @@ export default function JournalMetricsTab() {
           });
         }
       }
-      const entries = Array.from(dedupMap.values());
-      const duplicatesRemoved = rawEntries.length - entries.length;
+      const uniqueEntries = Array.from(dedupMap.values());
 
-      // Replace dataset for cleanliness
+      setPreview({
+        file,
+        totalRows: dataRows.length,
+        validRows: validEntries.length,
+        invalidRows: dataRows.length - validEntries.length,
+        invalidReasons: Object.entries(invalidCounters)
+          .map(([reason, count]) => ({ reason, count }))
+          .sort((a, b) => b.count - a.count),
+        detectedColumns,
+        missingRequired,
+        missingOptional,
+        duplicates: validEntries.length - uniqueEntries.length,
+        uniqueAfterDedup: uniqueEntries.length,
+        sampleEntries: uniqueEntries.slice(0, 5),
+        entries: uniqueEntries,
+      });
+    } catch (e) {
+      toast({ title: "Erro ao analisar CSV", description: (e as Error).message, variant: "destructive" });
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  const confirmImport = async () => {
+    if (!preview) return;
+    setImporting(true);
+    try {
       await supabase.from("journal_metrics").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-
       const batch = 500;
-      for (let i = 0; i < entries.length; i += batch) {
-        const { error } = await supabase.from("journal_metrics").insert(entries.slice(i, i + batch));
+      for (let i = 0; i < preview.entries.length; i += batch) {
+        const { error } = await supabase.from("journal_metrics").insert(preview.entries.slice(i, i + batch));
         if (error) {
           toast({ title: "Erro no lote", description: error.message, variant: "destructive" });
           return;
@@ -266,10 +312,9 @@ export default function JournalMetricsTab() {
       }
       toast({
         title: "Importação concluída",
-        description: duplicatesRemoved > 0
-          ? `${entries.length} registros importados (${duplicatesRemoved} duplicatas mescladas por ISSN+ano).`
-          : `${entries.length} registros importados.`,
+        description: `${preview.entries.length} registros importados${preview.duplicates > 0 ? ` (${preview.duplicates} duplicatas mescladas)` : ""}.`,
       });
+      setPreview(null);
       await fetchMetrics();
     } catch (e) {
       toast({ title: "Erro", description: (e as Error).message, variant: "destructive" });
