@@ -13,6 +13,34 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
+
+interface CsvPreview {
+  file: File;
+  totalRows: number;
+  validRows: number;
+  invalidRows: number;
+  invalidReasons: { reason: string; count: number }[];
+  detectedColumns: { key: string; label: string; found: boolean; headerName?: string }[];
+  missingRequired: string[];
+  missingOptional: string[];
+  duplicates: number;
+  uniqueAfterDedup: number;
+  sampleEntries: { issn: string; journal: string | null; snip: number | null; sjr: number | null; citescore: number | null; year: number | null }[];
+  entries: {
+    issn: string;
+    journal: string | null;
+    snip: number | null;
+    sjr: number | null;
+    citescore: number | null;
+    year: number | null;
+    source: string;
+  }[];
+}
 
 interface JournalMetric {
   id: string;
@@ -72,6 +100,8 @@ export default function JournalMetricsTab() {
   const [search, setSearch] = useState("");
 
   const [form, setForm] = useState({ issn: "", journal: "", snip: "", sjr: "", citescore: "", year: "" });
+  const [preview, setPreview] = useState<CsvPreview | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
 
   const fetchMetrics = async () => {
     setLoading(true);
