@@ -444,7 +444,7 @@ export default function JournalMetricsTab() {
             <p className="font-medium text-foreground">Formato esperado do CSV:</p>
             <p>Colunas reconhecidas (cabeçalho na 1ª linha): <code>ISSN</code>, <code>Journal</code>, <code>SNIP</code>, <code>SJR</code>, <code>CiteScore</code>, <code>Year</code>.</p>
             <p>Separador: <code>;</code> ou <code>,</code>. Aceita arquivos exportados do Scopus Source List.</p>
-            <p className="text-destructive">Atenção: a importação substitui todos os registros existentes.</p>
+            <p>Você poderá escolher entre <strong>upsert</strong> (atualiza apenas registros do CSV mantendo o restante) ou <strong>substituir tudo</strong> antes de confirmar.</p>
           </div>
         </CardContent>
       </Card>
