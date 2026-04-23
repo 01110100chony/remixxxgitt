@@ -16,8 +16,19 @@ import {
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
+
+type FieldKey = "issn" | "year" | "snip" | "sjr" | "citescore" | "journal";
+const FIELD_DEFS: { key: FieldKey; label: string; required: boolean }[] = [
+  { key: "issn", label: "ISSN", required: true },
+  { key: "year", label: "Year (Ano)", required: false },
+  { key: "snip", label: "SNIP", required: false },
+  { key: "sjr", label: "SJR", required: false },
+  { key: "citescore", label: "CiteScore", required: false },
+  { key: "journal", label: "Journal (Periódico)", required: false },
+];
 
 interface CsvPreview {
   file: File;
