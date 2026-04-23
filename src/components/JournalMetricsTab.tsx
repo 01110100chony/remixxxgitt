@@ -529,6 +529,157 @@ export default function JournalMetricsTab() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Pré-validação do CSV</DialogTitle>
+            <DialogDescription>
+              {preview?.file.name} — revise antes de confirmar a importação.
+            </DialogDescription>
+          </DialogHeader>
+
+          {preview && (
+            <div className="space-y-4">
+              {preview.missingRequired.length > 0 && (
+                <Alert variant="destructive">
+                  <XCircle className="h-4 w-4" />
+                  <AlertTitle>Coluna obrigatória ausente</AlertTitle>
+                  <AlertDescription>
+                    {preview.missingRequired.join(", ")} — não é possível importar sem ISSN.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {preview.missingOptional.length > 0 && preview.missingRequired.length === 0 && (
+                <Alert>
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Colunas opcionais ausentes</AlertTitle>
+                  <AlertDescription>
+                    {preview.missingOptional.join(", ")} — registros importados terão esses campos vazios.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <div>
+                <p className="text-sm font-medium mb-2">Colunas detectadas</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {preview.detectedColumns.map((c) => (
+                    <div
+                      key={c.key}
+                      className={`flex items-center gap-2 rounded border px-2 py-1.5 text-xs ${
+                        c.found ? "bg-card" : "bg-muted/40 text-muted-foreground"
+                      }`}
+                    >
+                      {c.found ? (
+                        <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />
+                      ) : (
+                        <XCircle className="h-3.5 w-3.5 text-destructive shrink-0" />
+                      )}
+                      <span className="font-medium">{c.label}</span>
+                      {c.found && c.headerName && (
+                        <Badge variant="outline" className="ml-auto text-[10px] font-mono">
+                          {c.headerName}
+                        </Badge>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <div className="rounded-lg border p-2">
+                  <p className="text-[10px] uppercase text-muted-foreground">Total linhas</p>
+                  <p className="text-lg font-bold">{preview.totalRows}</p>
+                </div>
+                <div className="rounded-lg border p-2">
+                  <p className="text-[10px] uppercase text-muted-foreground">Válidas</p>
+                  <p className="text-lg font-bold text-primary">{preview.validRows}</p>
+                </div>
+                <div className="rounded-lg border p-2">
+                  <p className="text-[10px] uppercase text-muted-foreground">Inválidas</p>
+                  <p className="text-lg font-bold text-destructive">{preview.invalidRows}</p>
+                </div>
+                <div className="rounded-lg border p-2">
+                  <p className="text-[10px] uppercase text-muted-foreground">A importar</p>
+                  <p className="text-lg font-bold">{preview.uniqueAfterDedup}</p>
+                </div>
+              </div>
+
+              {preview.invalidReasons.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium mb-2">Motivos de invalidação</p>
+                  <ul className="space-y-1 text-xs">
+                    {preview.invalidReasons.map((r) => (
+                      <li key={r.reason} className="flex justify-between rounded border bg-muted/30 px-2 py-1">
+                        <span>{r.reason}</span>
+                        <span className="font-mono font-semibold">{r.count}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {preview.duplicates > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {preview.duplicates} duplicatas (mesmo ISSN+ano) serão mescladas automaticamente.
+                </p>
+              )}
+
+              {preview.sampleEntries.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium mb-2">Amostra (primeiros {preview.sampleEntries.length} registros)</p>
+                  <div className="rounded-md border overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-xs">ISSN</TableHead>
+                          <TableHead className="text-xs">Periódico</TableHead>
+                          <TableHead className="text-xs text-right">SNIP</TableHead>
+                          <TableHead className="text-xs text-right">SJR</TableHead>
+                          <TableHead className="text-xs text-right">CS</TableHead>
+                          <TableHead className="text-xs text-right">Ano</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {preview.sampleEntries.map((e, i) => (
+                          <TableRow key={i}>
+                            <TableCell className="font-mono text-xs">{e.issn}</TableCell>
+                            <TableCell className="text-xs max-w-[140px] truncate">{e.journal || "—"}</TableCell>
+                            <TableCell className="text-xs text-right tabular-nums">{e.snip?.toFixed(3) ?? "—"}</TableCell>
+                            <TableCell className="text-xs text-right tabular-nums">{e.sjr?.toFixed(3) ?? "—"}</TableCell>
+                            <TableCell className="text-xs text-right tabular-nums">{e.citescore?.toFixed(2) ?? "—"}</TableCell>
+                            <TableCell className="text-xs text-right">{e.year ?? "—"}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              )}
+
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription className="text-xs">
+                  A importação substituirá todos os {metrics.length} registros existentes em journal_metrics.
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPreview(null)} disabled={importing}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={confirmImport}
+              disabled={!preview || preview.uniqueAfterDedup === 0 || preview.missingRequired.length > 0 || importing}
+            >
+              {importing ? "Importando..." : `Confirmar (${preview?.uniqueAfterDedup ?? 0} registros)`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
