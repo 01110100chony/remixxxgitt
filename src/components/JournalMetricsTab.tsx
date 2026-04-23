@@ -30,15 +30,17 @@ const FIELD_DEFS: { key: FieldKey; label: string; required: boolean }[] = [
   { key: "journal", label: "Journal (Periódico)", required: false },
 ];
 
-interface CsvPreview {
+interface RawCsv {
   file: File;
+  headers: string[];
+  rows: string[][];
+}
+
+interface CsvAnalysis {
   totalRows: number;
   validRows: number;
   invalidRows: number;
   invalidReasons: { reason: string; count: number }[];
-  detectedColumns: { key: string; label: string; found: boolean; headerName?: string }[];
-  missingRequired: string[];
-  missingOptional: string[];
   duplicates: number;
   uniqueAfterDedup: number;
   sampleEntries: { issn: string; journal: string | null; snip: number | null; sjr: number | null; citescore: number | null; year: number | null }[];
