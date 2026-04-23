@@ -16,18 +16,31 @@ import {
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
 
-interface CsvPreview {
+type FieldKey = "issn" | "year" | "snip" | "sjr" | "citescore" | "journal";
+const FIELD_DEFS: { key: FieldKey; label: string; required: boolean }[] = [
+  { key: "issn", label: "ISSN", required: true },
+  { key: "year", label: "Year (Ano)", required: false },
+  { key: "snip", label: "SNIP", required: false },
+  { key: "sjr", label: "SJR", required: false },
+  { key: "citescore", label: "CiteScore", required: false },
+  { key: "journal", label: "Journal (Periódico)", required: false },
+];
+
+interface RawCsv {
   file: File;
+  headers: string[];
+  rows: string[][];
+}
+
+interface CsvAnalysis {
   totalRows: number;
   validRows: number;
   invalidRows: number;
   invalidReasons: { reason: string; count: number }[];
-  detectedColumns: { key: string; label: string; found: boolean; headerName?: string }[];
-  missingRequired: string[];
-  missingOptional: string[];
   duplicates: number;
   uniqueAfterDedup: number;
   sampleEntries: { issn: string; journal: string | null; snip: number | null; sjr: number | null; citescore: number | null; year: number | null }[];
@@ -100,7 +113,10 @@ export default function JournalMetricsTab() {
   const [search, setSearch] = useState("");
 
   const [form, setForm] = useState({ issn: "", journal: "", snip: "", sjr: "", citescore: "", year: "" });
-  const [preview, setPreview] = useState<CsvPreview | null>(null);
+  const [rawCsv, setRawCsv] = useState<RawCsv | null>(null);
+  const [colMap, setColMap] = useState<Record<FieldKey, number>>({
+    issn: -1, year: -1, snip: -1, sjr: -1, citescore: -1, journal: -1,
+  });
   const [analyzing, setAnalyzing] = useState(false);
   const [importMode, setImportMode] = useState<"replace" | "upsert">("upsert");
 
@@ -189,108 +205,24 @@ export default function JournalMetricsTab() {
         toast({ title: "CSV vazio", description: "Arquivo não contém linhas de dados.", variant: "destructive" });
         return;
       }
-      const headers = rows[0].map((h) => h.trim().toLowerCase());
-      const findCol = (names: string[]) => {
+      const rawHeaders = rows[0].map((h) => h.trim());
+      const lower = rawHeaders.map((h) => h.toLowerCase());
+      const findIdx = (names: string[]) => {
         for (const n of names) {
-          const i = headers.findIndex((h) => h === n || h.includes(n));
-          if (i >= 0) return { idx: i, headerName: rows[0][i].trim() };
+          const i = lower.findIndex((h) => h === n || h.includes(n));
+          if (i >= 0) return i;
         }
-        return { idx: -1, headerName: undefined };
+        return -1;
       };
-      const cIssn = findCol(["issn"]);
-      const cJournal = findCol(["journal", "title", "periodico", "periódico", "revista"]);
-      const cSnip = findCol(["snip"]);
-      const cSjr = findCol(["sjr"]);
-      const cCs = findCol(["citescore", "cite score", "cs"]);
-      const cYear = findCol(["year", "ano"]);
-
-      const detectedColumns = [
-        { key: "ISSN", label: "ISSN", found: cIssn.idx >= 0, headerName: cIssn.headerName },
-        { key: "Year", label: "Year (Ano)", found: cYear.idx >= 0, headerName: cYear.headerName },
-        { key: "SNIP", label: "SNIP", found: cSnip.idx >= 0, headerName: cSnip.headerName },
-        { key: "SJR", label: "SJR", found: cSjr.idx >= 0, headerName: cSjr.headerName },
-        { key: "CiteScore", label: "CiteScore", found: cCs.idx >= 0, headerName: cCs.headerName },
-        { key: "Journal", label: "Journal (Periódico)", found: cJournal.idx >= 0, headerName: cJournal.headerName },
-      ];
-      const missingRequired = detectedColumns.filter((c) => c.key === "ISSN" && !c.found).map((c) => c.label);
-      const missingOptional = detectedColumns.filter((c) => c.key !== "ISSN" && !c.found).map((c) => c.label);
-
-      const dataRows = rows.slice(1);
-      const invalidCounters: Record<string, number> = {};
-      const validEntries: NonNullable<CsvPreview["entries"]> = [];
-
-      for (const r of dataRows) {
-        if (cIssn.idx < 0) {
-          invalidCounters["Coluna ISSN ausente"] = (invalidCounters["Coluna ISSN ausente"] || 0) + 1;
-          continue;
-        }
-        const rawIssn = (r[cIssn.idx] || "").trim();
-        if (!rawIssn) {
-          invalidCounters["ISSN vazio"] = (invalidCounters["ISSN vazio"] || 0) + 1;
-          continue;
-        }
-        const normalized = normalizeIssn(rawIssn);
-        if (normalized.length !== 8) {
-          invalidCounters["ISSN inválido (≠ 8 dígitos)"] = (invalidCounters["ISSN inválido (≠ 8 dígitos)"] || 0) + 1;
-          continue;
-        }
-        const issn = formatIssn(rawIssn);
-        const snip = cSnip.idx >= 0 ? num(r[cSnip.idx]) : null;
-        const sjr = cSjr.idx >= 0 ? num(r[cSjr.idx]) : null;
-        const citescore = cCs.idx >= 0 ? num(r[cCs.idx]) : null;
-        const year = cYear.idx >= 0 && r[cYear.idx] ? parseInt(r[cYear.idx]) || null : null;
-
-        if (snip == null && sjr == null && citescore == null) {
-          invalidCounters["Sem nenhuma métrica (SNIP/SJR/CiteScore)"] =
-            (invalidCounters["Sem nenhuma métrica (SNIP/SJR/CiteScore)"] || 0) + 1;
-          continue;
-        }
-
-        validEntries.push({
-          issn,
-          journal: cJournal.idx >= 0 ? (r[cJournal.idx] || "").trim() || null : null,
-          snip, sjr, citescore, year,
-          source: "scopus_csv",
-        });
-      }
-
-      // Deduplicate by ISSN+year
-      const dedupMap = new Map<string, typeof validEntries[number]>();
-      for (const e of validEntries) {
-        const key = `${e.issn}|${e.year ?? ""}`;
-        const prev = dedupMap.get(key);
-        if (!prev) {
-          dedupMap.set(key, e);
-        } else {
-          dedupMap.set(key, {
-            issn: e.issn,
-            year: e.year ?? prev.year,
-            journal: e.journal ?? prev.journal,
-            snip: e.snip ?? prev.snip,
-            sjr: e.sjr ?? prev.sjr,
-            citescore: e.citescore ?? prev.citescore,
-            source: e.source,
-          });
-        }
-      }
-      const uniqueEntries = Array.from(dedupMap.values());
-
-      setPreview({
-        file,
-        totalRows: dataRows.length,
-        validRows: validEntries.length,
-        invalidRows: dataRows.length - validEntries.length,
-        invalidReasons: Object.entries(invalidCounters)
-          .map(([reason, count]) => ({ reason, count }))
-          .sort((a, b) => b.count - a.count),
-        detectedColumns,
-        missingRequired,
-        missingOptional,
-        duplicates: validEntries.length - uniqueEntries.length,
-        uniqueAfterDedup: uniqueEntries.length,
-        sampleEntries: uniqueEntries.slice(0, 5),
-        entries: uniqueEntries,
+      setColMap({
+        issn: findIdx(["issn"]),
+        year: findIdx(["year", "ano"]),
+        snip: findIdx(["snip"]),
+        sjr: findIdx(["sjr"]),
+        citescore: findIdx(["citescore", "cite score", "cs"]),
+        journal: findIdx(["journal", "title", "periodico", "periódico", "revista"]),
       });
+      setRawCsv({ file, headers: rawHeaders, rows: rows.slice(1) });
     } catch (e) {
       toast({ title: "Erro ao analisar CSV", description: (e as Error).message, variant: "destructive" });
     } finally {
@@ -298,15 +230,93 @@ export default function JournalMetricsTab() {
     }
   };
 
+  const analysis: CsvAnalysis | null = useMemo(() => {
+    if (!rawCsv) return null;
+    const { rows: dataRows } = rawCsv;
+    const invalidCounters: Record<string, number> = {};
+    const validEntries: CsvAnalysis["entries"] = [];
+
+    for (const r of dataRows) {
+      if (colMap.issn < 0) {
+        invalidCounters["Coluna ISSN não mapeada"] = (invalidCounters["Coluna ISSN não mapeada"] || 0) + 1;
+        continue;
+      }
+      const rawIssn = (r[colMap.issn] || "").trim();
+      if (!rawIssn) {
+        invalidCounters["ISSN vazio"] = (invalidCounters["ISSN vazio"] || 0) + 1;
+        continue;
+      }
+      const normalized = normalizeIssn(rawIssn);
+      if (normalized.length !== 8) {
+        invalidCounters["ISSN inválido (≠ 8 dígitos)"] = (invalidCounters["ISSN inválido (≠ 8 dígitos)"] || 0) + 1;
+        continue;
+      }
+      const issn = formatIssn(rawIssn);
+      const snip = colMap.snip >= 0 ? num(r[colMap.snip]) : null;
+      const sjr = colMap.sjr >= 0 ? num(r[colMap.sjr]) : null;
+      const citescore = colMap.citescore >= 0 ? num(r[colMap.citescore]) : null;
+      const year = colMap.year >= 0 && r[colMap.year] ? parseInt(r[colMap.year]) || null : null;
+
+      if (snip == null && sjr == null && citescore == null) {
+        invalidCounters["Sem nenhuma métrica (SNIP/SJR/CiteScore)"] =
+          (invalidCounters["Sem nenhuma métrica (SNIP/SJR/CiteScore)"] || 0) + 1;
+        continue;
+      }
+
+      validEntries.push({
+        issn,
+        journal: colMap.journal >= 0 ? (r[colMap.journal] || "").trim() || null : null,
+        snip, sjr, citescore, year,
+        source: "scopus_csv",
+      });
+    }
+
+    const dedupMap = new Map<string, CsvAnalysis["entries"][number]>();
+    for (const e of validEntries) {
+      const key = `${e.issn}|${e.year ?? ""}`;
+      const prev = dedupMap.get(key);
+      if (!prev) dedupMap.set(key, e);
+      else dedupMap.set(key, {
+        issn: e.issn,
+        year: e.year ?? prev.year,
+        journal: e.journal ?? prev.journal,
+        snip: e.snip ?? prev.snip,
+        sjr: e.sjr ?? prev.sjr,
+        citescore: e.citescore ?? prev.citescore,
+        source: e.source,
+      });
+    }
+    const uniqueEntries = Array.from(dedupMap.values());
+
+    return {
+      totalRows: dataRows.length,
+      validRows: validEntries.length,
+      invalidRows: dataRows.length - validEntries.length,
+      invalidReasons: Object.entries(invalidCounters)
+        .map(([reason, count]) => ({ reason, count }))
+        .sort((a, b) => b.count - a.count),
+      duplicates: validEntries.length - uniqueEntries.length,
+      uniqueAfterDedup: uniqueEntries.length,
+      sampleEntries: uniqueEntries.slice(0, 5),
+      entries: uniqueEntries,
+    };
+  }, [rawCsv, colMap]);
+
+  const closePreview = () => {
+    setRawCsv(null);
+    setColMap({ issn: -1, year: -1, snip: -1, sjr: -1, citescore: -1, journal: -1 });
+  };
+
+
   const confirmImport = async () => {
-    if (!preview) return;
+    if (!analysis) return;
     setImporting(true);
     try {
       const batch = 500;
       if (importMode === "replace") {
         await supabase.from("journal_metrics").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-        for (let i = 0; i < preview.entries.length; i += batch) {
-          const { error } = await supabase.from("journal_metrics").insert(preview.entries.slice(i, i + batch));
+        for (let i = 0; i < analysis.entries.length; i += batch) {
+          const { error } = await supabase.from("journal_metrics").insert(analysis.entries.slice(i, i + batch));
           if (error) {
             toast({ title: "Erro no lote", description: error.message, variant: "destructive" });
             return;
@@ -314,22 +324,20 @@ export default function JournalMetricsTab() {
         }
         toast({
           title: "Importação concluída (substituição)",
-          description: `${preview.entries.length} registros importados${preview.duplicates > 0 ? ` (${preview.duplicates} duplicatas mescladas)` : ""}.`,
+          description: `${analysis.entries.length} registros importados${analysis.duplicates > 0 ? ` (${analysis.duplicates} duplicatas mescladas)` : ""}.`,
         });
       } else {
-        // Upsert por chave (issn, year)
         let inserted = 0;
         let updated = 0;
-        // Pré-lê os pares existentes para diferenciar inseridos vs atualizados
         const keysSet = new Set(metrics.map((m) => `${m.issn}|${m.year ?? ""}`));
-        for (const e of preview.entries) {
+        for (const e of analysis.entries) {
           if (keysSet.has(`${e.issn}|${e.year ?? ""}`)) updated++;
           else inserted++;
         }
-        for (let i = 0; i < preview.entries.length; i += batch) {
+        for (let i = 0; i < analysis.entries.length; i += batch) {
           const { error } = await supabase
             .from("journal_metrics")
-            .upsert(preview.entries.slice(i, i + batch), { onConflict: "issn,year" });
+            .upsert(analysis.entries.slice(i, i + batch), { onConflict: "issn,year" });
           if (error) {
             toast({ title: "Erro no lote (upsert)", description: error.message, variant: "destructive" });
             return;
@@ -337,10 +345,10 @@ export default function JournalMetricsTab() {
         }
         toast({
           title: "Importação concluída (upsert)",
-          description: `${inserted} novos, ${updated} atualizados${preview.duplicates > 0 ? ` (${preview.duplicates} duplicatas no CSV mescladas)` : ""}.`,
+          description: `${inserted} novos, ${updated} atualizados${analysis.duplicates > 0 ? ` (${analysis.duplicates} duplicatas no CSV mescladas)` : ""}.`,
         });
       }
-      setPreview(null);
+      closePreview();
       await fetchMetrics();
     } catch (e) {
       toast({ title: "Erro", description: (e as Error).message, variant: "destructive" });
@@ -556,87 +564,139 @@ export default function JournalMetricsTab() {
         </CardContent>
       </Card>
 
-      <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+      <Dialog open={!!rawCsv} onOpenChange={(o) => !o && closePreview()}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Pré-validação do CSV</DialogTitle>
+            <DialogTitle>Mapeamento e pré-validação do CSV</DialogTitle>
             <DialogDescription>
-              {preview?.file.name} — revise antes de confirmar a importação.
+              {rawCsv?.file.name} — confirme o mapeamento das colunas antes de importar.
             </DialogDescription>
           </DialogHeader>
 
-          {preview && (
+          {rawCsv && analysis && (() => {
+            const missingRequired = FIELD_DEFS.filter((f) => f.required && colMap[f.key] < 0).map((f) => f.label);
+            const missingOptional = FIELD_DEFS.filter((f) => !f.required && colMap[f.key] < 0).map((f) => f.label);
+            return (
             <div className="space-y-4">
-              {preview.missingRequired.length > 0 && (
+              <div>
+                <p className="text-sm font-medium mb-2">Mapeamento de colunas</p>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Escolha qual coluna do seu arquivo corresponde a cada campo. ISSN é obrigatório; os demais podem ficar vazios.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {FIELD_DEFS.map((f) => (
+                    <div key={f.key} className="space-y-1">
+                      <Label className="text-xs flex items-center gap-1">
+                        {f.label}
+                        {f.required && <span className="text-destructive">*</span>}
+                      </Label>
+                      <Select
+                        value={colMap[f.key] >= 0 ? String(colMap[f.key]) : "__none"}
+                        onValueChange={(v) =>
+                          setColMap((prev) => ({ ...prev, [f.key]: v === "__none" ? -1 : parseInt(v) }))
+                        }
+                      >
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue placeholder="(não importar)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none" className="text-xs italic text-muted-foreground">
+                            (não importar)
+                          </SelectItem>
+                          {rawCsv.headers.map((h, i) => (
+                            <SelectItem key={i} value={String(i)} className="text-xs">
+                              {h || `Coluna ${i + 1}`}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {missingRequired.length > 0 && (
                 <Alert variant="destructive">
                   <XCircle className="h-4 w-4" />
-                  <AlertTitle>Coluna obrigatória ausente</AlertTitle>
+                  <AlertTitle>Coluna obrigatória não mapeada</AlertTitle>
                   <AlertDescription>
-                    {preview.missingRequired.join(", ")} — não é possível importar sem ISSN.
+                    {missingRequired.join(", ")} — selecione a coluna correspondente para continuar.
                   </AlertDescription>
                 </Alert>
               )}
 
-              {preview.missingOptional.length > 0 && preview.missingRequired.length === 0 && (
+              {missingRequired.length === 0 && missingOptional.length > 0 && (
                 <Alert>
                   <AlertTriangle className="h-4 w-4" />
-                  <AlertTitle>Colunas opcionais ausentes</AlertTitle>
+                  <AlertTitle>Campos opcionais não mapeados</AlertTitle>
                   <AlertDescription>
-                    {preview.missingOptional.join(", ")} — registros importados terão esses campos vazios.
+                    {missingOptional.join(", ")} — os registros importados terão esses campos vazios.
                   </AlertDescription>
                 </Alert>
               )}
 
               <div>
-                <p className="text-sm font-medium mb-2">Colunas detectadas</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {preview.detectedColumns.map((c) => (
-                    <div
-                      key={c.key}
-                      className={`flex items-center gap-2 rounded border px-2 py-1.5 text-xs ${
-                        c.found ? "bg-card" : "bg-muted/40 text-muted-foreground"
-                      }`}
-                    >
-                      {c.found ? (
-                        <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />
-                      ) : (
-                        <XCircle className="h-3.5 w-3.5 text-destructive shrink-0" />
-                      )}
-                      <span className="font-medium">{c.label}</span>
-                      {c.found && c.headerName && (
-                        <Badge variant="outline" className="ml-auto text-[10px] font-mono">
-                          {c.headerName}
-                        </Badge>
-                      )}
-                    </div>
-                  ))}
+                <p className="text-sm font-medium mb-2">Pré-visualização do arquivo (3 primeiras linhas)</p>
+                <div className="rounded-md border overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        {rawCsv.headers.map((h, i) => {
+                          const mapped = (Object.entries(colMap) as [FieldKey, number][]).find(([, idx]) => idx === i);
+                          return (
+                            <TableHead key={i} className="text-xs whitespace-nowrap">
+                              <div className="flex flex-col">
+                                <span>{h || `Coluna ${i + 1}`}</span>
+                                {mapped && (
+                                  <Badge variant="outline" className="text-[10px] w-fit mt-0.5">
+                                    → {mapped[0]}
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableHead>
+                          );
+                        })}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {rawCsv.rows.slice(0, 3).map((r, ri) => (
+                        <TableRow key={ri}>
+                          {rawCsv.headers.map((_, ci) => (
+                            <TableCell key={ci} className="text-xs whitespace-nowrap max-w-[160px] truncate">
+                              {r[ci] || "—"}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 <div className="rounded-lg border p-2">
                   <p className="text-[10px] uppercase text-muted-foreground">Total linhas</p>
-                  <p className="text-lg font-bold">{preview.totalRows}</p>
+                  <p className="text-lg font-bold">{analysis.totalRows}</p>
                 </div>
                 <div className="rounded-lg border p-2">
                   <p className="text-[10px] uppercase text-muted-foreground">Válidas</p>
-                  <p className="text-lg font-bold text-primary">{preview.validRows}</p>
+                  <p className="text-lg font-bold text-primary">{analysis.validRows}</p>
                 </div>
                 <div className="rounded-lg border p-2">
                   <p className="text-[10px] uppercase text-muted-foreground">Inválidas</p>
-                  <p className="text-lg font-bold text-destructive">{preview.invalidRows}</p>
+                  <p className="text-lg font-bold text-destructive">{analysis.invalidRows}</p>
                 </div>
                 <div className="rounded-lg border p-2">
                   <p className="text-[10px] uppercase text-muted-foreground">A importar</p>
-                  <p className="text-lg font-bold">{preview.uniqueAfterDedup}</p>
+                  <p className="text-lg font-bold">{analysis.uniqueAfterDedup}</p>
                 </div>
               </div>
 
-              {preview.invalidReasons.length > 0 && (
+              {analysis.invalidReasons.length > 0 && (
                 <div>
                   <p className="text-sm font-medium mb-2">Motivos de invalidação</p>
                   <ul className="space-y-1 text-xs">
-                    {preview.invalidReasons.map((r) => (
+                    {analysis.invalidReasons.map((r) => (
                       <li key={r.reason} className="flex justify-between rounded border bg-muted/30 px-2 py-1">
                         <span>{r.reason}</span>
                         <span className="font-mono font-semibold">{r.count}</span>
@@ -646,15 +706,15 @@ export default function JournalMetricsTab() {
                 </div>
               )}
 
-              {preview.duplicates > 0 && (
+              {analysis.duplicates > 0 && (
                 <p className="text-xs text-muted-foreground">
-                  {preview.duplicates} duplicatas (mesmo ISSN+ano) serão mescladas automaticamente.
+                  {analysis.duplicates} duplicatas (mesmo ISSN+ano) serão mescladas automaticamente.
                 </p>
               )}
 
-              {preview.sampleEntries.length > 0 && (
+              {analysis.sampleEntries.length > 0 && (
                 <div>
-                  <p className="text-sm font-medium mb-2">Amostra (primeiros {preview.sampleEntries.length} registros)</p>
+                  <p className="text-sm font-medium mb-2">Amostra após mapeamento ({analysis.sampleEntries.length} registros)</p>
                   <div className="rounded-md border overflow-x-auto">
                     <Table>
                       <TableHeader>
@@ -668,7 +728,7 @@ export default function JournalMetricsTab() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {preview.sampleEntries.map((e, i) => (
+                        {analysis.sampleEntries.map((e, i) => (
                           <TableRow key={i}>
                             <TableCell className="font-mono text-xs">{e.issn}</TableCell>
                             <TableCell className="text-xs max-w-[140px] truncate">{e.journal || "—"}</TableCell>
@@ -720,22 +780,23 @@ export default function JournalMetricsTab() {
                 </div>
               </div>
             </div>
-          )}
+            );
+          })()}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPreview(null)} disabled={importing}>
+            <Button variant="outline" onClick={closePreview} disabled={importing}>
               Cancelar
             </Button>
             <Button
               onClick={confirmImport}
               variant={importMode === "replace" ? "destructive" : "default"}
-              disabled={!preview || preview.uniqueAfterDedup === 0 || preview.missingRequired.length > 0 || importing}
+              disabled={!analysis || analysis.uniqueAfterDedup === 0 || colMap.issn < 0 || importing}
             >
               {importing
                 ? "Importando..."
                 : importMode === "replace"
-                  ? `Substituir tudo (${preview?.uniqueAfterDedup ?? 0})`
-                  : `Aplicar upsert (${preview?.uniqueAfterDedup ?? 0})`}
+                  ? `Substituir tudo (${analysis?.uniqueAfterDedup ?? 0})`
+                  : `Aplicar upsert (${analysis?.uniqueAfterDedup ?? 0})`}
             </Button>
           </DialogFooter>
         </DialogContent>
