@@ -309,14 +309,14 @@ export default function JournalMetricsTab() {
 
 
   const confirmImport = async () => {
-    if (!preview) return;
+    if (!analysis) return;
     setImporting(true);
     try {
       const batch = 500;
       if (importMode === "replace") {
         await supabase.from("journal_metrics").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-        for (let i = 0; i < preview.entries.length; i += batch) {
-          const { error } = await supabase.from("journal_metrics").insert(preview.entries.slice(i, i + batch));
+        for (let i = 0; i < analysis.entries.length; i += batch) {
+          const { error } = await supabase.from("journal_metrics").insert(analysis.entries.slice(i, i + batch));
           if (error) {
             toast({ title: "Erro no lote", description: error.message, variant: "destructive" });
             return;
@@ -324,22 +324,20 @@ export default function JournalMetricsTab() {
         }
         toast({
           title: "Importação concluída (substituição)",
-          description: `${preview.entries.length} registros importados${preview.duplicates > 0 ? ` (${preview.duplicates} duplicatas mescladas)` : ""}.`,
+          description: `${analysis.entries.length} registros importados${analysis.duplicates > 0 ? ` (${analysis.duplicates} duplicatas mescladas)` : ""}.`,
         });
       } else {
-        // Upsert por chave (issn, year)
         let inserted = 0;
         let updated = 0;
-        // Pré-lê os pares existentes para diferenciar inseridos vs atualizados
         const keysSet = new Set(metrics.map((m) => `${m.issn}|${m.year ?? ""}`));
-        for (const e of preview.entries) {
+        for (const e of analysis.entries) {
           if (keysSet.has(`${e.issn}|${e.year ?? ""}`)) updated++;
           else inserted++;
         }
-        for (let i = 0; i < preview.entries.length; i += batch) {
+        for (let i = 0; i < analysis.entries.length; i += batch) {
           const { error } = await supabase
             .from("journal_metrics")
-            .upsert(preview.entries.slice(i, i + batch), { onConflict: "issn,year" });
+            .upsert(analysis.entries.slice(i, i + batch), { onConflict: "issn,year" });
           if (error) {
             toast({ title: "Erro no lote (upsert)", description: error.message, variant: "destructive" });
             return;
@@ -347,10 +345,10 @@ export default function JournalMetricsTab() {
         }
         toast({
           title: "Importação concluída (upsert)",
-          description: `${inserted} novos, ${updated} atualizados${preview.duplicates > 0 ? ` (${preview.duplicates} duplicatas no CSV mescladas)` : ""}.`,
+          description: `${inserted} novos, ${updated} atualizados${analysis.duplicates > 0 ? ` (${analysis.duplicates} duplicatas no CSV mescladas)` : ""}.`,
         });
       }
-      setPreview(null);
+      closePreview();
       await fetchMetrics();
     } catch (e) {
       toast({ title: "Erro", description: (e as Error).message, variant: "destructive" });
