@@ -23,6 +23,7 @@ import ReviewerTab from "@/components/ReviewerTab";
 import ImpactTab from "@/components/ImpactTab";
 import CitationsTab from "@/components/CitationsTab";
 import IdentifiersTab from "@/components/IdentifiersTab";
+import CurriculaTab from "@/components/CurriculaTab";
 import FileUpload from "@/components/FileUpload";
 import CAPESReport from "@/components/CAPESReport";
 import WebsiteTab from "@/components/WebsiteTab";
