@@ -56,14 +56,9 @@ const reviewerKey = (journalEvent: string, year: number | null) =>
  * - existing lattes rows not matched anymore are flagged is_active=false (NOT deleted).
  * - manual rows are never touched.
  */
-// Cast to a permissive client to avoid TS depth issues with dynamic table names
-const sb = supabase as unknown as {
-  from: (t: string) => {
-    select: (cols: string) => { eq: (c: string, v: string) => Promise<{ data: any[] | null }> };
-    update: (v: any) => { eq: (c: string, v: string) => Promise<{ error: any }>; in: (c: string, v: string[]) => Promise<{ error: any }> };
-    insert: (v: any) => Promise<{ error: any }>;
-  };
-};
+// Permissive client to avoid TS depth issues with dynamic table names
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const sb: any = supabase;
 
 async function syncTable<TRow extends { id: string; is_active: boolean | null; source_origin: string | null }>(opts: {
   table: "articles" | "orientations" | "projects" | "technical_productions" | "reviewer_activities";
