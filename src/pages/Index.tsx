@@ -23,6 +23,7 @@ import ReviewerTab from "@/components/ReviewerTab";
 import ImpactTab from "@/components/ImpactTab";
 import CitationsTab from "@/components/CitationsTab";
 import IdentifiersTab from "@/components/IdentifiersTab";
+import CurriculaTab from "@/components/CurriculaTab";
 import FileUpload from "@/components/FileUpload";
 import CAPESReport from "@/components/CAPESReport";
 import WebsiteTab from "@/components/WebsiteTab";
@@ -227,6 +228,7 @@ const Index = () => {
                   <TabsTrigger value="reviewer">Parecerista</TabsTrigger>
                   <TabsTrigger value="citations">Citações</TabsTrigger>
                   <TabsTrigger value="identifiers">Identificadores</TabsTrigger>
+                  <TabsTrigger value="curricula">Currículos Lattes</TabsTrigger>
                   <TabsTrigger value="journals">Métricas Periódicos</TabsTrigger>
                   <TabsTrigger value="website">Site</TabsTrigger>
                   <TabsTrigger value="social">Presença Digital</TabsTrigger>
@@ -282,6 +284,9 @@ const Index = () => {
                 </TabsContent>
                 <TabsContent value="identifiers">
                   <IdentifiersTab researchers={data.researchers} programId={selectedProgramId!} onRefresh={fetchAll} />
+                </TabsContent>
+                <TabsContent value="curricula">
+                  <CurriculaTab researchers={data.researchers} programId={selectedProgramId!} onRefresh={fetchAll} />
                 </TabsContent>
                 <TabsContent value="journals">
                   <JournalMetricsTab />
