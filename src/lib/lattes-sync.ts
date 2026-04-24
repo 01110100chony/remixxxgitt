@@ -377,7 +377,7 @@ export async function syncLattesXml(opts: {
     .eq("researcher_id", researcherId)
     .maybeSingle();
 
-  await supabase.from("researcher_metrics").upsert(
+  await sb.from("researcher_metrics").upsert(
     {
       researcher_id: researcherId,
       program_id: opts.programId,
@@ -398,7 +398,7 @@ export async function syncLattesXml(opts: {
     total_orientations: totalOrientations,
     total_technical: totalTechnical,
   };
-  await supabase.from("lattes_processing_history").insert({
+  await sb.from("lattes_processing_history").insert({
     researcher_id: researcherId,
     program_id: opts.programId,
     user_id: opts.userId,
