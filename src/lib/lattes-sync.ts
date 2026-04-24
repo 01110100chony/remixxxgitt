@@ -78,7 +78,7 @@ async function syncTable<TRow extends { id: string; is_active: boolean | null; s
   const counts: SyncCounts = { inserted: 0, updated: 0, deactivated: 0 };
 
   // 1. Load existing rows for this researcher
-  const { data: existingRaw } = await supabase
+  const { data: existingRaw } = await sb
     .from(opts.table)
     .select("*")
     .eq("researcher_id", opts.researcherId);
@@ -105,7 +105,7 @@ async function syncTable<TRow extends { id: string; is_active: boolean | null; s
       // Reactivate if it was previously deactivated
       update.is_active = true;
       update.source_origin = "lattes";
-      const { error } = await supabase
+      const { error } = await sb
         .from(opts.table)
         .update(update as never)
         .eq("id", dbRow.id);
@@ -126,7 +126,7 @@ async function syncTable<TRow extends { id: string; is_active: boolean | null; s
   if (toInsert.length > 0) {
     for (let i = 0; i < toInsert.length; i += 200) {
       const batch = toInsert.slice(i, i + 200);
-      const { error } = await supabase.from(opts.table).insert(batch as never);
+      const { error } = await sb.from(opts.table).insert(batch as never);
       if (!error) counts.inserted += batch.length;
     }
   }
@@ -138,7 +138,7 @@ async function syncTable<TRow extends { id: string; is_active: boolean | null; s
   });
   if (toDeactivate.length > 0) {
     const ids = toDeactivate.map((r) => r.id);
-    const { error } = await supabase
+    const { error } = await sb
       .from(opts.table)
       .update({ is_active: false } as never)
       .in("id", ids);
@@ -175,7 +175,7 @@ export async function syncLattesXml(opts: {
     queries.push({ col: "name", val: parsed.name });
 
     for (const q of queries) {
-      const { data } = await supabase
+      const { data } = await sb
         .from("researchers")
         .select("id")
         .eq("program_id", opts.programId)
@@ -188,7 +188,7 @@ export async function syncLattesXml(opts: {
   let xmlPath: string | null = null;
 
   if (!researcherId) {
-    const { data: created, error } = await supabase
+    const { data: created, error } = await sb
       .from("researchers")
       .insert({
         program_id: opts.programId,
@@ -220,7 +220,7 @@ export async function syncLattesXml(opts: {
   }
 
   // 3. Update researcher metadata
-  await supabase
+  await sb
     .from("researchers")
     .update({
       name: parsed.name,
@@ -376,7 +376,7 @@ export async function syncLattesXml(opts: {
   const totalTechnical = techProds.length;
 
   // Upsert researcher_metrics with local counts (preserve API-derived h_index/citations if any)
-  const { data: existingMetric } = await supabase
+  const { data: existingMetric } = await sb
     .from("researcher_metrics")
     .select("*")
     .eq("researcher_id", researcherId)
@@ -438,7 +438,7 @@ export async function reprocessAllInProgram(opts: {
   userId: string | undefined;
   onProgress?: (current: number, total: number, name: string) => void;
 }): Promise<{ processed: SyncResult[]; missingXml: { id: string; name: string }[] }> {
-  const { data: researchers } = await supabase
+  const { data: researchers } = await sb
     .from("researchers")
     .select("id, name, lattes_xml_path, lattes_xml_filename")
     .eq("program_id", opts.programId);
