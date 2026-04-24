@@ -77,12 +77,14 @@ export type Database = {
           created_at: string
           doi: string | null
           id: string
+          is_active: boolean
           isbn: string | null
           issn: string | null
           journal: string | null
           program_id: string | null
           qualis: string | null
           researcher_id: string
+          source_origin: string
           title: string
           user_id: string | null
           year: number | null
@@ -93,12 +95,14 @@ export type Database = {
           created_at?: string
           doi?: string | null
           id?: string
+          is_active?: boolean
           isbn?: string | null
           issn?: string | null
           journal?: string | null
           program_id?: string | null
           qualis?: string | null
           researcher_id: string
+          source_origin?: string
           title: string
           user_id?: string | null
           year?: number | null
@@ -109,12 +113,14 @@ export type Database = {
           created_at?: string
           doi?: string | null
           id?: string
+          is_active?: boolean
           isbn?: string | null
           issn?: string | null
           journal?: string | null
           program_id?: string | null
           qualis?: string | null
           researcher_id?: string
+          source_origin?: string
           title?: string
           user_id?: string | null
           year?: number | null
@@ -282,12 +288,71 @@ export type Database = {
         }
         Relationships: []
       }
+      lattes_processing_history: {
+        Row: {
+          created_at: string
+          deactivated_count: number
+          details: Json
+          id: string
+          inserted_count: number
+          program_id: string | null
+          researcher_id: string
+          updated_count: number
+          user_id: string | null
+          xml_filename: string | null
+          xml_path: string | null
+        }
+        Insert: {
+          created_at?: string
+          deactivated_count?: number
+          details?: Json
+          id?: string
+          inserted_count?: number
+          program_id?: string | null
+          researcher_id: string
+          updated_count?: number
+          user_id?: string | null
+          xml_filename?: string | null
+          xml_path?: string | null
+        }
+        Update: {
+          created_at?: string
+          deactivated_count?: number
+          details?: Json
+          id?: string
+          inserted_count?: number
+          program_id?: string | null
+          researcher_id?: string
+          updated_count?: number
+          user_id?: string | null
+          xml_filename?: string | null
+          xml_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lattes_processing_history_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lattes_processing_history_researcher_id_fkey"
+            columns: ["researcher_id"]
+            isOneToOne: false
+            referencedRelation: "researchers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orientations: {
         Row: {
           created_at: string
           id: string
+          is_active: boolean
           program_id: string | null
           researcher_id: string
+          source_origin: string
           status: string
           student: string | null
           title: string | null
@@ -298,8 +363,10 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          is_active?: boolean
           program_id?: string | null
           researcher_id: string
+          source_origin?: string
           status?: string
           student?: string | null
           title?: string | null
@@ -310,8 +377,10 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          is_active?: boolean
           program_id?: string | null
           researcher_id?: string
+          source_origin?: string
           status?: string
           student?: string | null
           title?: string | null
@@ -535,9 +604,11 @@ export type Database = {
           funder: string | null
           funding: string | null
           id: string
+          is_active: boolean
           partner_institution: string | null
           program_id: string | null
           researcher_id: string
+          source_origin: string
           title: string
           type: string | null
           user_id: string | null
@@ -549,9 +620,11 @@ export type Database = {
           funder?: string | null
           funding?: string | null
           id?: string
+          is_active?: boolean
           partner_institution?: string | null
           program_id?: string | null
           researcher_id: string
+          source_origin?: string
           title: string
           type?: string | null
           user_id?: string | null
@@ -563,9 +636,11 @@ export type Database = {
           funder?: string | null
           funding?: string | null
           id?: string
+          is_active?: boolean
           partner_institution?: string | null
           program_id?: string | null
           researcher_id?: string
+          source_origin?: string
           title?: string
           type?: string | null
           user_id?: string | null
@@ -669,8 +744,10 @@ export type Database = {
           created_at: string
           gender: string | null
           id: string
+          last_processed_at: string | null
           lattes_id: string | null
           lattes_xml_filename: string | null
+          lattes_xml_path: string | null
           name: string
           orcid: string | null
           program_id: string
@@ -684,8 +761,10 @@ export type Database = {
           created_at?: string
           gender?: string | null
           id?: string
+          last_processed_at?: string | null
           lattes_id?: string | null
           lattes_xml_filename?: string | null
+          lattes_xml_path?: string | null
           name: string
           orcid?: string | null
           program_id: string
@@ -699,8 +778,10 @@ export type Database = {
           created_at?: string
           gender?: string | null
           id?: string
+          last_processed_at?: string | null
           lattes_id?: string | null
           lattes_xml_filename?: string | null
+          lattes_xml_path?: string | null
           name?: string
           orcid?: string | null
           program_id?: string
@@ -724,9 +805,11 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_active: boolean
           journal_event: string
           program_id: string | null
           researcher_id: string
+          source_origin: string
           type: string | null
           user_id: string | null
           year: number | null
@@ -734,9 +817,11 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          is_active?: boolean
           journal_event: string
           program_id?: string | null
           researcher_id: string
+          source_origin?: string
           type?: string | null
           user_id?: string | null
           year?: number | null
@@ -744,9 +829,11 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          is_active?: boolean
           journal_event?: string
           program_id?: string | null
           researcher_id?: string
+          source_origin?: string
           type?: string | null
           user_id?: string | null
           year?: number | null
@@ -773,8 +860,10 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_active: boolean
           program_id: string | null
           researcher_id: string
+          source_origin: string
           title: string | null
           type: string
           user_id: string | null
@@ -784,8 +873,10 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_active?: boolean
           program_id?: string | null
           researcher_id: string
+          source_origin?: string
           title?: string | null
           type: string
           user_id?: string | null
@@ -795,8 +886,10 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_active?: boolean
           program_id?: string | null
           researcher_id?: string
+          source_origin?: string
           title?: string | null
           type?: string
           user_id?: string | null
