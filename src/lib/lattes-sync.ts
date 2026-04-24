@@ -180,7 +180,16 @@ export async function syncLattesXml(opts: {
     }
   }
 
-  let xmlPath: string | null = null;
+  // Look up any existing xml path so we don't lose it on reprocess
+  let existingXmlPath: string | null = null;
+  if (researcherId) {
+    const { data: existingR } = await sb
+      .from("researchers")
+      .select("lattes_xml_path")
+      .eq("id", researcherId)
+      .maybeSingle();
+    existingXmlPath = (existingR?.lattes_xml_path as string | null) ?? null;
+  }
 
   if (!researcherId) {
     const { data: created, error } = await sb
@@ -202,20 +211,26 @@ export async function syncLattesXml(opts: {
   }
 
   // 2. Optionally upload XML to storage (after we know researcherId)
+  let xmlPath: string | null = existingXmlPath;
   if (opts.uploadToStorage) {
-    xmlPath = `${opts.programId}/${researcherId}.xml`;
+    const targetPath = `${opts.programId}/${researcherId}.xml`;
     const blob = new Blob([opts.xmlContent], { type: "application/xml" });
-    const { error: upErr } = await supabase.storage
+    console.log("[lattes-sync] Uploading XML to storage:", targetPath, `(${opts.xmlContent.length} chars)`);
+    const { data: upData, error: upErr } = await supabase.storage
       .from("lattes-xml")
-      .upload(xmlPath, blob, { upsert: true, contentType: "application/xml" });
+      .upload(targetPath, blob, { upsert: true, contentType: "application/xml" });
     if (upErr) {
-      console.warn("XML upload failed:", upErr.message);
-      xmlPath = null;
+      console.error("[lattes-sync] XML upload FAILED:", upErr);
+      // Surface the error so the UI shows the real problem instead of silently
+      // wiping the saved path.
+      throw new Error(`Falha no upload do XML: ${upErr.message}`);
     }
+    console.log("[lattes-sync] XML upload OK:", upData?.path || targetPath);
+    xmlPath = targetPath;
   }
 
-  // 3. Update researcher metadata
-  await sb
+  // 3. Update researcher metadata (preserve existing xml path if no new upload)
+  const { error: updErr } = await sb
     .from("researchers")
     .update({
       name: parsed.name,
@@ -228,6 +243,11 @@ export async function syncLattesXml(opts: {
       last_processed_at: new Date().toISOString(),
     } as never)
     .eq("id", researcherId);
+  if (updErr) {
+    console.error("[lattes-sync] Failed to update researcher metadata:", updErr);
+    throw new Error(`Falha ao atualizar pesquisador: ${updErr.message}`);
+  }
+  console.log("[lattes-sync] Researcher metadata updated:", { researcherId, xmlPath });
 
   // 4. Sync articles (bibliographic productions)
   const articleProds = parsed.productions.filter((p) =>
