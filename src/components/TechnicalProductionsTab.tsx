@@ -47,6 +47,18 @@ const TechnicalProductionsTab = ({ productions, researchers }: Props) => {
 
   return (
     <div className="space-y-4">
+      <DataSourceBanner
+        totalRows={productions.length}
+        fromLattes={breakdown.lattes}
+        fromManual={breakdown.manual}
+        fromApi={breakdown.api}
+        hasAnyXml={hasAnyXml}
+        inactiveCount={breakdown.inactive}
+        showInactive={showInactive}
+        onToggleInactive={setShowInactive}
+        entityLabel="produções técnicas"
+      />
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Wrench className="h-5 w-5 text-accent" />
@@ -84,18 +96,20 @@ const TechnicalProductionsTab = ({ productions, researchers }: Props) => {
               <TableHead>Título</TableHead>
               <TableHead className="w-36">Tipo</TableHead>
               <TableHead className="w-16">Ano</TableHead>
+              <TableHead className="w-20">Origem</TableHead>
               <TableHead className="w-40">Pesquisador</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Nenhuma produção técnica encontrada.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Nenhuma produção técnica encontrada.</TableCell></TableRow>
             ) : filtered.map((p, i) => (
-              <TableRow key={p.id} className="hover:bg-muted/50">
+              <TableRow key={p.id} className={`hover:bg-muted/50 ${p.is_active === false ? "opacity-50" : ""}`}>
                 <TableCell className="text-muted-foreground font-mono text-sm">{i + 1}</TableCell>
                 <TableCell className="font-medium text-sm">{p.title || "—"}</TableCell>
                 <TableCell><span className="rounded-md bg-secondary/20 px-2 py-0.5 text-xs font-medium text-secondary-foreground">{TYPE_LABELS[p.type] || p.type}</span></TableCell>
                 <TableCell className="text-sm">{p.year || "—"}</TableCell>
+                <TableCell><OriginBadge origin={(p as any).source_origin} /></TableCell>
                 <TableCell className="text-sm text-muted-foreground truncate">{getResearcherName(p.researcher_id)}</TableCell>
               </TableRow>
             ))}
