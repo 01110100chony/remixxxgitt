@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Search, GraduationCap, Info, CalendarDays } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { DataSourceBanner, OriginBadge, useSourceFilter } from "@/components/data-source";
 
 interface Props {
   orientations: OrientationRow[];
