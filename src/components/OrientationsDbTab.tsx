@@ -25,12 +25,15 @@ const OrientationsDbTab = ({ orientations, researchers }: Props) => {
   const [researcherFilter, setResearcherFilter] = useState("all");
   const [periodMode, setPeriodMode] = useState<PeriodMode>("quadrienio");
 
+  const { visibleRows, showInactive, setShowInactive, breakdown } = useSourceFilter(orientations);
+  const hasAnyXml = breakdown.lattes > 0;
+
   const [qStart, qEnd] = getQuadrienio();
   const years = useMemo(() => {
     const set = new Set<number>();
-    orientations.forEach((o) => { if (o.year) set.add(o.year); });
+    visibleRows.forEach((o) => { if (o.year) set.add(o.year); });
     return Array.from(set).sort((a, b) => a - b);
-  }, [orientations]);
+  }, [visibleRows]);
 
   const [customStart, setCustomStart] = useState<number>(years[0] || qStart);
   const [customEnd, setCustomEnd] = useState<number>(years[years.length - 1] || qEnd);
