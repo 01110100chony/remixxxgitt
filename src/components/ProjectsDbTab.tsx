@@ -31,19 +31,19 @@ const ProjectsDbTab = ({ projects, researchers }: Props) => {
   const hasAnyXml = breakdown.lattes > 0;
 
   const years = useMemo(() => {
-    const allYears = projects.map((p) => p.year_start).filter(Boolean) as number[];
+    const allYears = visibleRows.map((p) => p.year_start).filter(Boolean) as number[];
     const min = allYears.length > 0 ? Math.min(...allYears) : q[0];
     const max = allYears.length > 0 ? Math.max(...allYears) : q[1];
     return { min, max };
-  }, [projects, q]);
+  }, [visibleRows, q]);
 
   const startYear = periodMode === "quadrienio" ? q[0] : periodMode === "custom" ? customStart : years.min;
   const endYear = periodMode === "quadrienio" ? q[1] : periodMode === "custom" ? customEnd : years.max;
 
   const periodProjects = useMemo(() => {
-    if (periodMode === "all") return projects;
-    return projects.filter((p) => isProjectInPeriod(p, startYear, endYear));
-  }, [projects, periodMode, startYear, endYear]);
+    if (periodMode === "all") return visibleRows;
+    return visibleRows.filter((p) => isProjectInPeriod(p, startYear, endYear));
+  }, [visibleRows, periodMode, startYear, endYear]);
 
   const funded = periodProjects.filter((p) => p.funding === "Sim").length;
   const funders = useMemo(() => {
