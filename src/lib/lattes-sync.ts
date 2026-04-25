@@ -563,5 +563,6 @@ export async function reprocessAllInProgram(opts: {
     }
   }
 
+  emitLattesSyncedEvent({ programId: opts.programId, results: processed });
   return { processed, missingXml };
 }
