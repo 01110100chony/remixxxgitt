@@ -6,6 +6,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Wrench } from "lucide-react";
+import { DataSourceBanner, OriginBadge, useSourceFilter } from "@/components/data-source";
 
 interface Props {
   productions: TechnicalProduction[];
@@ -27,17 +28,20 @@ const TechnicalProductionsTab = ({ productions, researchers }: Props) => {
   const [typeFilter, setTypeFilter] = useState("all");
   const [researcherFilter, setResearcherFilter] = useState("all");
 
-  const types = useMemo(() => Array.from(new Set(productions.map((p) => p.type))).sort(), [productions]);
+  const { visibleRows, showInactive, setShowInactive, breakdown } = useSourceFilter(productions);
+  const hasAnyXml = breakdown.lattes > 0;
+
+  const types = useMemo(() => Array.from(new Set(visibleRows.map((p) => p.type))).sort(), [visibleRows]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return productions.filter((p) => {
+    return visibleRows.filter((p) => {
       if (typeFilter !== "all" && p.type !== typeFilter) return false;
       if (researcherFilter !== "all" && p.researcher_id !== researcherFilter) return false;
       if (q && !(p.title || "").toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [productions, search, typeFilter, researcherFilter]);
+  }, [visibleRows, search, typeFilter, researcherFilter]);
 
   const getResearcherName = (id: string) => researchers.find((r) => r.id === id)?.name || "—";
 
