@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, FolderKanban, Landmark } from "lucide-react";
 import { getQuadrienio, isProjectInPeriod } from "@/lib/orientation-utils";
+import { DataSourceBanner, OriginBadge, useSourceFilter } from "@/components/data-source";
 
 interface Props {
   projects: ProjectRow[];
@@ -26,20 +27,23 @@ const ProjectsDbTab = ({ projects, researchers }: Props) => {
   const [customStart, setCustomStart] = useState(q[0]);
   const [customEnd, setCustomEnd] = useState(q[1]);
 
+  const { visibleRows, showInactive, setShowInactive, breakdown } = useSourceFilter(projects);
+  const hasAnyXml = breakdown.lattes > 0;
+
   const years = useMemo(() => {
-    const allYears = projects.map((p) => p.year_start).filter(Boolean) as number[];
+    const allYears = visibleRows.map((p) => p.year_start).filter(Boolean) as number[];
     const min = allYears.length > 0 ? Math.min(...allYears) : q[0];
     const max = allYears.length > 0 ? Math.max(...allYears) : q[1];
     return { min, max };
-  }, [projects, q]);
+  }, [visibleRows, q]);
 
   const startYear = periodMode === "quadrienio" ? q[0] : periodMode === "custom" ? customStart : years.min;
   const endYear = periodMode === "quadrienio" ? q[1] : periodMode === "custom" ? customEnd : years.max;
 
   const periodProjects = useMemo(() => {
-    if (periodMode === "all") return projects;
-    return projects.filter((p) => isProjectInPeriod(p, startYear, endYear));
-  }, [projects, periodMode, startYear, endYear]);
+    if (periodMode === "all") return visibleRows;
+    return visibleRows.filter((p) => isProjectInPeriod(p, startYear, endYear));
+  }, [visibleRows, periodMode, startYear, endYear]);
 
   const funded = periodProjects.filter((p) => p.funding === "Sim").length;
   const funders = useMemo(() => {
@@ -64,6 +68,18 @@ const ProjectsDbTab = ({ projects, researchers }: Props) => {
 
   return (
     <div className="space-y-6">
+      <DataSourceBanner
+        totalRows={projects.length}
+        fromLattes={breakdown.lattes}
+        fromManual={breakdown.manual}
+        fromApi={breakdown.api}
+        hasAnyXml={hasAnyXml}
+        inactiveCount={breakdown.inactive}
+        showInactive={showInactive}
+        onToggleInactive={setShowInactive}
+        entityLabel="projetos"
+      />
+
       {/* Period filter */}
       <div className="flex flex-wrap items-end gap-4">
         <div>
@@ -170,14 +186,15 @@ const ProjectsDbTab = ({ projects, researchers }: Props) => {
               <TableHead>Instituição</TableHead>
               <TableHead className="w-20">Financ.</TableHead>
               <TableHead>Financiador</TableHead>
+              <TableHead className="w-20">Origem</TableHead>
               <TableHead className="w-36">Pesquisador</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Nenhum projeto encontrado.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">Nenhum projeto encontrado.</TableCell></TableRow>
             ) : filtered.map((p, i) => (
-              <TableRow key={p.id} className="hover:bg-muted/50">
+              <TableRow key={p.id} className={`hover:bg-muted/50 ${p.is_active === false ? "opacity-50" : ""}`}>
                 <TableCell className="text-muted-foreground font-mono text-sm">{i + 1}</TableCell>
                 <TableCell className="font-medium text-sm">{p.title}</TableCell>
                 <TableCell><span className="rounded-md bg-secondary/20 px-2 py-0.5 text-xs font-medium text-secondary-foreground">
@@ -187,6 +204,7 @@ const ProjectsDbTab = ({ projects, researchers }: Props) => {
                 <TableCell className="text-sm text-muted-foreground truncate max-w-xs">{p.partner_institution || "—"}</TableCell>
                 <TableCell><span className={`rounded-md px-2 py-0.5 text-xs font-medium ${p.funding === "Sim" ? "bg-green-500/20 text-green-700 dark:text-green-400" : "bg-muted text-muted-foreground"}`}>{p.funding || "Não"}</span></TableCell>
                 <TableCell className="text-sm text-muted-foreground truncate max-w-xs">{p.funder || "—"}</TableCell>
+                <TableCell><OriginBadge origin={(p as any).source_origin} /></TableCell>
                 <TableCell className="text-sm text-muted-foreground truncate">{getResearcherName(p.researcher_id)}</TableCell>
               </TableRow>
             ))}

@@ -6,6 +6,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, ClipboardCheck } from "lucide-react";
+import { DataSourceBanner, OriginBadge, useSourceFilter } from "@/components/data-source";
 
 interface Props {
   activities: ReviewerActivity[];
@@ -16,14 +17,17 @@ const ReviewerTab = ({ activities, researchers }: Props) => {
   const [search, setSearch] = useState("");
   const [researcherFilter, setResearcherFilter] = useState("all");
 
+  const { visibleRows, showInactive, setShowInactive, breakdown } = useSourceFilter(activities);
+  const hasAnyXml = breakdown.lattes > 0;
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return activities.filter((a) => {
+    return visibleRows.filter((a) => {
       if (researcherFilter !== "all" && a.researcher_id !== researcherFilter) return false;
       if (q && !a.journal_event.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [activities, search, researcherFilter]);
+  }, [visibleRows, search, researcherFilter]);
 
   const getResearcherName = (id: string) => researchers.find((r) => r.id === id)?.name || "—";
 

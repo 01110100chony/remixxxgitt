@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { parseLattesXML, ResearcherInfo } from "@/lib/lattes-parser";
 import { useToast } from "@/hooks/use-toast";
+import { LATTES_SYNCED_EVENT, type LattesSyncedDetail } from "@/lib/lattes-sync";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
 export type Program = Tables<"programs">;
@@ -150,6 +151,31 @@ export function useProgramData(programId: string | null) {
   }, [programId]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  // Reage a eventos globais de sincronização do Lattes para
+  // invalidar o cache em todas as abas automaticamente.
+  useEffect(() => {
+    if (!programId) return;
+    const handler = (ev: Event) => {
+      const detail = (ev as CustomEvent<LattesSyncedDetail>).detail;
+      if (!detail || detail.programId !== programId) return;
+      fetchAll();
+      const total = detail.results.length;
+      if (total > 1) {
+        toast({
+          title: "Dados atualizados em todas as abas",
+          description: `${total} currículo(s) sincronizados.`,
+        });
+      } else if (total === 1) {
+        toast({
+          title: "Dados atualizados em todas as abas",
+          description: detail.results[0].researcherName,
+        });
+      }
+    };
+    window.addEventListener(LATTES_SYNCED_EVENT, handler);
+    return () => window.removeEventListener(LATTES_SYNCED_EVENT, handler);
+  }, [programId, fetchAll, toast]);
 
   const uploadLattes = async (files: { name: string; content: string }[]) => {
     if (!programId) return;

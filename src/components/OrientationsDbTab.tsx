@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Search, GraduationCap, Info, CalendarDays } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { DataSourceBanner, OriginBadge, useSourceFilter } from "@/components/data-source";
 
 interface Props {
   orientations: OrientationRow[];
@@ -24,12 +25,15 @@ const OrientationsDbTab = ({ orientations, researchers }: Props) => {
   const [researcherFilter, setResearcherFilter] = useState("all");
   const [periodMode, setPeriodMode] = useState<PeriodMode>("quadrienio");
 
+  const { visibleRows, showInactive, setShowInactive, breakdown } = useSourceFilter(orientations);
+  const hasAnyXml = breakdown.lattes > 0;
+
   const [qStart, qEnd] = getQuadrienio();
   const years = useMemo(() => {
     const set = new Set<number>();
-    orientations.forEach((o) => { if (o.year) set.add(o.year); });
+    visibleRows.forEach((o) => { if (o.year) set.add(o.year); });
     return Array.from(set).sort((a, b) => a - b);
-  }, [orientations]);
+  }, [visibleRows]);
 
   const [customStart, setCustomStart] = useState<number>(years[0] || qStart);
   const [customEnd, setCustomEnd] = useState<number>(years[years.length - 1] || qEnd);
@@ -38,8 +42,8 @@ const OrientationsDbTab = ({ orientations, researchers }: Props) => {
   const effectiveStart = periodMode === "quadrienio" ? qStart : periodMode === "custom" ? customStart : 0;
   const effectiveEnd = periodMode === "quadrienio" ? qEnd : periodMode === "custom" ? customEnd : 9999;
 
-  const types = useMemo(() => Array.from(new Set(orientations.map((o) => o.type))).sort(), [orientations]);
-  const pgOnly = useMemo(() => orientations.filter((o) => isPGOrientation(o.type)), [orientations]);
+  const types = useMemo(() => Array.from(new Set(visibleRows.map((o) => o.type))).sort(), [visibleRows]);
+  const pgOnly = useMemo(() => visibleRows.filter((o) => isPGOrientation(o.type)), [visibleRows]);
 
   const pgPeriod = useMemo(() =>
     periodMode === "all"
@@ -52,7 +56,7 @@ const OrientationsDbTab = ({ orientations, researchers }: Props) => {
   const inProgress = pgPeriod.filter((o) => o.status === "in_progress").length;
   const mestrado = pgPeriod.filter((o) => isMestrado(o.type)).length;
   const doutorado = pgPeriod.filter((o) => isDoutorado(o.type)).length;
-  const nonPG = orientations.length - pgOnly.length;
+  const nonPG = visibleRows.length - pgOnly.length;
 
   const chartData = useMemo(() => {
     const yearMap = new Map<number, { year: number; mestrado: number; doutorado: number }>();
@@ -67,7 +71,7 @@ const OrientationsDbTab = ({ orientations, researchers }: Props) => {
   }, [pgPeriod]);
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return orientations.filter((o) => {
+    return visibleRows.filter((o) => {
       if (statusFilter !== "all" && o.status !== statusFilter) return false;
       if (typeFilter !== "all" && o.type !== typeFilter) return false;
       if (researcherFilter !== "all" && o.researcher_id !== researcherFilter) return false;
@@ -75,7 +79,7 @@ const OrientationsDbTab = ({ orientations, researchers }: Props) => {
       if (q && !(o.title || "").toLowerCase().includes(q) && !(o.student || "").toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [orientations, search, statusFilter, typeFilter, researcherFilter, periodMode, effectiveStart, effectiveEnd]);
+  }, [visibleRows, search, statusFilter, typeFilter, researcherFilter, periodMode, effectiveStart, effectiveEnd]);
 
   const getResearcherName = (id: string) => researchers.find((r) => r.id === id)?.name || "—";
 
@@ -87,6 +91,18 @@ const OrientationsDbTab = ({ orientations, researchers }: Props) => {
 
   return (
     <div className="space-y-6">
+      <DataSourceBanner
+        totalRows={orientations.length}
+        fromLattes={breakdown.lattes}
+        fromManual={breakdown.manual}
+        fromApi={breakdown.api}
+        hasAnyXml={hasAnyXml}
+        inactiveCount={breakdown.inactive}
+        showInactive={showInactive}
+        onToggleInactive={setShowInactive}
+        entityLabel="orientações"
+      />
+
       {/* Info banner */}
       {nonPG > 0 && (
         <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
@@ -247,14 +263,15 @@ const OrientationsDbTab = ({ orientations, researchers }: Props) => {
               <TableHead className="w-24">Status</TableHead>
               <TableHead className="w-16">Ano</TableHead>
               <TableHead>Orientando</TableHead>
+              <TableHead className="w-20">Origem</TableHead>
               <TableHead className="w-36">Orientador</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Nenhuma orientação encontrada.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Nenhuma orientação encontrada.</TableCell></TableRow>
             ) : filtered.map((o, i) => (
-              <TableRow key={o.id} className="hover:bg-muted/50">
+              <TableRow key={o.id} className={`hover:bg-muted/50 ${o.is_active === false ? "opacity-50" : ""}`}>
                 <TableCell className="text-muted-foreground font-mono text-sm">{i + 1}</TableCell>
                 <TableCell className="font-medium text-sm">{o.title || "—"}</TableCell>
                 <TableCell><span className="rounded-md bg-secondary/20 px-2 py-0.5 text-xs font-medium text-secondary-foreground">{o.type}</span></TableCell>
@@ -263,6 +280,7 @@ const OrientationsDbTab = ({ orientations, researchers }: Props) => {
                 </span></TableCell>
                 <TableCell className="text-sm">{o.year || "—"}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">{o.student || "—"}</TableCell>
+                <TableCell><OriginBadge origin={(o as any).source_origin} /></TableCell>
                 <TableCell className="text-sm text-muted-foreground truncate">{getResearcherName(o.researcher_id)}</TableCell>
               </TableRow>
             ))}

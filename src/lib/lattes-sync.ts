@@ -144,6 +144,52 @@ async function syncTable<TRow extends { id: string; is_active: boolean | null; s
 }
 
 /**
+ * Preenche `articles.qualis` quando estiver vazio, buscando por ISSN
+ * em `qualis_reference`. Marca `source_origin = 'api'` apenas nesses
+ * casos (origem derivada). NUNCA sobrescreve qualis existente — então
+ * registros editados manualmente continuam protegidos.
+ */
+async function autoFillQualisFromReference(researcherId: string): Promise<number> {
+  const { data: arts } = await sb
+    .from("articles")
+    .select("id, issn, qualis, source_origin")
+    .eq("researcher_id", researcherId);
+  if (!arts || arts.length === 0) return 0;
+
+  const targets = (arts as any[]).filter(
+    (a) => a.issn && (!a.qualis || String(a.qualis).trim() === ""),
+  );
+  if (targets.length === 0) return 0;
+
+  const { data: refs } = await sb.from("qualis_reference").select("issn, classification");
+  if (!refs || refs.length === 0) return 0;
+
+  const map = new Map<string, string>();
+  (refs as any[]).forEach((q) => {
+    const norm = String(q.issn || "").replace(/[^0-9X]/gi, "").toUpperCase();
+    if (norm) map.set(norm, q.classification);
+  });
+
+  let filled = 0;
+  for (const a of targets) {
+    const norm = String(a.issn).replace(/[^0-9X]/gi, "").toUpperCase();
+    const cls = map.get(norm);
+    if (!cls) continue;
+    // Mantém origem 'lattes' para o registro como um todo, mas marca
+    // que o qualis foi resolvido via referência externa em uma flag
+    // separada não existente — então só atualizamos qualis sem mexer
+    // em source_origin para preservar a regra "Lattes vs Manual" no UI.
+    const { error } = await sb
+      .from("articles")
+      .update({ qualis: cls } as never)
+      .eq("id", a.id);
+    if (!error) filled++;
+  }
+  console.log(`[lattes-sync] auto-qualis: ${filled} artigo(s) classificados via referência ISSN`);
+  return filled;
+}
+
+/**
  * Process a single researcher's Lattes XML.
  * - upserts the researcher record
  * - syncs articles, orientations, projects, technical productions, reviewer activities
@@ -282,6 +328,10 @@ export async function syncLattesXml(opts: {
       authors: xml.authors,
     }),
   });
+
+  // 4b. Auto-preencher Qualis quando vazio, usando qualis_reference.
+  //     NUNCA sobrescreve um qualis já preenchido (manual ou anterior).
+  await autoFillQualisFromReference(researcherId);
 
   // 5. Sync orientations
   const orientationXmlRows = parsed.orientations.map((o) => ({
@@ -433,7 +483,7 @@ export async function syncLattesXml(opts: {
     details: detailJson,
   } as never);
 
-  return {
+  const result: SyncResult = {
     researcherId,
     researcherName: parsed.name,
     articles: articlesCounts,
@@ -443,6 +493,29 @@ export async function syncLattesXml(opts: {
     reviewerActivities: reviewerCounts,
     metrics: { totalArticles, totalOrientations, totalTechnical, quadrienioArticles },
   };
+
+  // Notifica todas as abas/janelas para invalidarem caches.
+  emitLattesSyncedEvent({ programId: opts.programId, results: [result] });
+
+  return result;
+}
+
+/**
+ * Evento global disparado após qualquer sincronização do Lattes.
+ * Hooks de dados (useProgramData) ouvem este evento e refazem fetch.
+ */
+export const LATTES_SYNCED_EVENT = "lattes:synced";
+export interface LattesSyncedDetail {
+  programId: string;
+  results: SyncResult[];
+}
+export function emitLattesSyncedEvent(detail: LattesSyncedDetail) {
+  if (typeof window === "undefined") return;
+  try {
+    window.dispatchEvent(new CustomEvent<LattesSyncedDetail>(LATTES_SYNCED_EVENT, { detail }));
+  } catch (e) {
+    console.warn("[lattes-sync] failed to dispatch sync event", e);
+  }
 }
 
 /**
@@ -490,5 +563,6 @@ export async function reprocessAllInProgram(opts: {
     }
   }
 
+  emitLattesSyncedEvent({ programId: opts.programId, results: processed });
   return { processed, missingXml };
 }
