@@ -68,6 +68,18 @@ const ProjectsDbTab = ({ projects, researchers }: Props) => {
 
   return (
     <div className="space-y-6">
+      <DataSourceBanner
+        totalRows={projects.length}
+        fromLattes={breakdown.lattes}
+        fromManual={breakdown.manual}
+        fromApi={breakdown.api}
+        hasAnyXml={hasAnyXml}
+        inactiveCount={breakdown.inactive}
+        showInactive={showInactive}
+        onToggleInactive={setShowInactive}
+        entityLabel="projetos"
+      />
+
       {/* Period filter */}
       <div className="flex flex-wrap items-end gap-4">
         <div>
