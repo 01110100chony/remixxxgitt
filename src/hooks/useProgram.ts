@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { parseLattesXML, ResearcherInfo } from "@/lib/lattes-parser";
 import { useToast } from "@/hooks/use-toast";
+import { LATTES_SYNCED_EVENT, type LattesSyncedDetail } from "@/lib/lattes-sync";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
 export type Program = Tables<"programs">;
