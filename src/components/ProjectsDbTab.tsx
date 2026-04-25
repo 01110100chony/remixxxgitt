@@ -27,6 +27,9 @@ const ProjectsDbTab = ({ projects, researchers }: Props) => {
   const [customStart, setCustomStart] = useState(q[0]);
   const [customEnd, setCustomEnd] = useState(q[1]);
 
+  const { visibleRows, showInactive, setShowInactive, breakdown } = useSourceFilter(projects);
+  const hasAnyXml = breakdown.lattes > 0;
+
   const years = useMemo(() => {
     const allYears = projects.map((p) => p.year_start).filter(Boolean) as number[];
     const min = allYears.length > 0 ? Math.min(...allYears) : q[0];
