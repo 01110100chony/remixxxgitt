@@ -91,6 +91,18 @@ const OrientationsDbTab = ({ orientations, researchers }: Props) => {
 
   return (
     <div className="space-y-6">
+      <DataSourceBanner
+        totalRows={orientations.length}
+        fromLattes={breakdown.lattes}
+        fromManual={breakdown.manual}
+        fromApi={breakdown.api}
+        hasAnyXml={hasAnyXml}
+        inactiveCount={breakdown.inactive}
+        showInactive={showInactive}
+        onToggleInactive={setShowInactive}
+        entityLabel="orientações"
+      />
+
       {/* Info banner */}
       {nonPG > 0 && (
         <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
