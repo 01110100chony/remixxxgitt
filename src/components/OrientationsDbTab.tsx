@@ -42,8 +42,8 @@ const OrientationsDbTab = ({ orientations, researchers }: Props) => {
   const effectiveStart = periodMode === "quadrienio" ? qStart : periodMode === "custom" ? customStart : 0;
   const effectiveEnd = periodMode === "quadrienio" ? qEnd : periodMode === "custom" ? customEnd : 9999;
 
-  const types = useMemo(() => Array.from(new Set(orientations.map((o) => o.type))).sort(), [orientations]);
-  const pgOnly = useMemo(() => orientations.filter((o) => isPGOrientation(o.type)), [orientations]);
+  const types = useMemo(() => Array.from(new Set(visibleRows.map((o) => o.type))).sort(), [visibleRows]);
+  const pgOnly = useMemo(() => visibleRows.filter((o) => isPGOrientation(o.type)), [visibleRows]);
 
   const pgPeriod = useMemo(() =>
     periodMode === "all"
@@ -56,7 +56,7 @@ const OrientationsDbTab = ({ orientations, researchers }: Props) => {
   const inProgress = pgPeriod.filter((o) => o.status === "in_progress").length;
   const mestrado = pgPeriod.filter((o) => isMestrado(o.type)).length;
   const doutorado = pgPeriod.filter((o) => isDoutorado(o.type)).length;
-  const nonPG = orientations.length - pgOnly.length;
+  const nonPG = visibleRows.length - pgOnly.length;
 
   const chartData = useMemo(() => {
     const yearMap = new Map<number, { year: number; mestrado: number; doutorado: number }>();
