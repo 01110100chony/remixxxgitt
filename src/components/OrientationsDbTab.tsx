@@ -263,14 +263,15 @@ const OrientationsDbTab = ({ orientations, researchers }: Props) => {
               <TableHead className="w-24">Status</TableHead>
               <TableHead className="w-16">Ano</TableHead>
               <TableHead>Orientando</TableHead>
+              <TableHead className="w-20">Origem</TableHead>
               <TableHead className="w-36">Orientador</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Nenhuma orientação encontrada.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Nenhuma orientação encontrada.</TableCell></TableRow>
             ) : filtered.map((o, i) => (
-              <TableRow key={o.id} className="hover:bg-muted/50">
+              <TableRow key={o.id} className={`hover:bg-muted/50 ${o.is_active === false ? "opacity-50" : ""}`}>
                 <TableCell className="text-muted-foreground font-mono text-sm">{i + 1}</TableCell>
                 <TableCell className="font-medium text-sm">{o.title || "—"}</TableCell>
                 <TableCell><span className="rounded-md bg-secondary/20 px-2 py-0.5 text-xs font-medium text-secondary-foreground">{o.type}</span></TableCell>
@@ -279,6 +280,7 @@ const OrientationsDbTab = ({ orientations, researchers }: Props) => {
                 </span></TableCell>
                 <TableCell className="text-sm">{o.year || "—"}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">{o.student || "—"}</TableCell>
+                <TableCell><OriginBadge origin={(o as any).source_origin} /></TableCell>
                 <TableCell className="text-sm text-muted-foreground truncate">{getResearcherName(o.researcher_id)}</TableCell>
               </TableRow>
             ))}
