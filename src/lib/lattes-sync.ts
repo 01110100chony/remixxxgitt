@@ -483,7 +483,7 @@ export async function syncLattesXml(opts: {
     details: detailJson,
   } as never);
 
-  return {
+  const result: SyncResult = {
     researcherId,
     researcherName: parsed.name,
     articles: articlesCounts,
@@ -493,6 +493,29 @@ export async function syncLattesXml(opts: {
     reviewerActivities: reviewerCounts,
     metrics: { totalArticles, totalOrientations, totalTechnical, quadrienioArticles },
   };
+
+  // Notifica todas as abas/janelas para invalidarem caches.
+  emitLattesSyncedEvent({ programId: opts.programId, results: [result] });
+
+  return result;
+}
+
+/**
+ * Evento global disparado após qualquer sincronização do Lattes.
+ * Hooks de dados (useProgramData) ouvem este evento e refazem fetch.
+ */
+export const LATTES_SYNCED_EVENT = "lattes:synced";
+export interface LattesSyncedDetail {
+  programId: string;
+  results: SyncResult[];
+}
+export function emitLattesSyncedEvent(detail: LattesSyncedDetail) {
+  if (typeof window === "undefined") return;
+  try {
+    window.dispatchEvent(new CustomEvent<LattesSyncedDetail>(LATTES_SYNCED_EVENT, { detail }));
+  } catch (e) {
+    console.warn("[lattes-sync] failed to dispatch sync event", e);
+  }
 }
 
 /**
