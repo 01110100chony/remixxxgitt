@@ -10,6 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   FileText, Upload, RefreshCw, Loader2, CheckCircle2, AlertTriangle, Download, History,
+  FileCode2, PenLine, Info, ShieldCheck,
 } from "lucide-react";
 import { syncLattesXml, reprocessAllInProgram, type SyncResult } from "@/lib/lattes-sync";
 import type { Researcher } from "@/hooks/useProgram";
