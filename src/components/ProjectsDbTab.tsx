@@ -186,14 +186,15 @@ const ProjectsDbTab = ({ projects, researchers }: Props) => {
               <TableHead>Instituição</TableHead>
               <TableHead className="w-20">Financ.</TableHead>
               <TableHead>Financiador</TableHead>
+              <TableHead className="w-20">Origem</TableHead>
               <TableHead className="w-36">Pesquisador</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Nenhum projeto encontrado.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">Nenhum projeto encontrado.</TableCell></TableRow>
             ) : filtered.map((p, i) => (
-              <TableRow key={p.id} className="hover:bg-muted/50">
+              <TableRow key={p.id} className={`hover:bg-muted/50 ${p.is_active === false ? "opacity-50" : ""}`}>
                 <TableCell className="text-muted-foreground font-mono text-sm">{i + 1}</TableCell>
                 <TableCell className="font-medium text-sm">{p.title}</TableCell>
                 <TableCell><span className="rounded-md bg-secondary/20 px-2 py-0.5 text-xs font-medium text-secondary-foreground">
@@ -203,6 +204,7 @@ const ProjectsDbTab = ({ projects, researchers }: Props) => {
                 <TableCell className="text-sm text-muted-foreground truncate max-w-xs">{p.partner_institution || "—"}</TableCell>
                 <TableCell><span className={`rounded-md px-2 py-0.5 text-xs font-medium ${p.funding === "Sim" ? "bg-green-500/20 text-green-700 dark:text-green-400" : "bg-muted text-muted-foreground"}`}>{p.funding || "Não"}</span></TableCell>
                 <TableCell className="text-sm text-muted-foreground truncate max-w-xs">{p.funder || "—"}</TableCell>
+                <TableCell><OriginBadge origin={(p as any).source_origin} /></TableCell>
                 <TableCell className="text-sm text-muted-foreground truncate">{getResearcherName(p.researcher_id)}</TableCell>
               </TableRow>
             ))}
