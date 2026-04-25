@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, FolderKanban, Landmark } from "lucide-react";
 import { getQuadrienio, isProjectInPeriod } from "@/lib/orientation-utils";
+import { DataSourceBanner, OriginBadge, useSourceFilter } from "@/components/data-source";
 
 interface Props {
   projects: ProjectRow[];
