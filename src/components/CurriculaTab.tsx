@@ -238,12 +238,37 @@ const CurriculaTab = ({ researchers, programId, onRefresh }: Props) => {
           {withoutXmlCount > 0 && (
             <Alert>
               <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>{withoutXmlCount} docente(s) sem XML armazenado</AlertTitle>
-              <AlertDescription className="text-xs">
-                Clique em "Enviar XML" para cada docente abaixo. O arquivo é guardado e poderá ser reprocessado a qualquer momento sem novo upload.
+              <AlertTitle>{withoutXmlCount} docente(s) sem currículo importado</AlertTitle>
+              <AlertDescription className="text-xs space-y-1">
+                <p>
+                  Enquanto o XML não é enviado, as métricas (artigos, orientações, h-index) ficam <strong>zeradas</strong> para esse docente.
+                </p>
+                <p>
+                  Você pode <strong>enviar o XML do Lattes</strong> (recomendado) ou <strong>cadastrar produções manualmente</strong> nas abas correspondentes (Artigos, Orientações etc.).
+                </p>
               </AlertDescription>
             </Alert>
           )}
+
+          <Alert className="border-primary/30 bg-primary/5">
+            <ShieldCheck className="h-4 w-4 text-primary" />
+            <AlertTitle className="text-sm">Dados manuais são preservados</AlertTitle>
+            <AlertDescription className="text-xs space-y-1">
+              <p>
+                Reprocessar o XML <strong>nunca sobrescreve</strong> registros que você inseriu ou editou manualmente
+                (Qualis, citações, SNIP, DOI complementado).
+              </p>
+              <p className="flex flex-wrap gap-2 pt-1">
+                <Badge variant="outline" className="text-[10px] gap-1 border-primary/40 text-primary">
+                  <FileCode2 className="h-3 w-3" /> Lattes (automático)
+                </Badge>
+                <Badge variant="outline" className="text-[10px] gap-1 border-amber-500/40 text-amber-600 dark:text-amber-400">
+                  <PenLine className="h-3 w-3" /> Manual (editado por você)
+                </Badge>
+                <span className="text-muted-foreground self-center">— veja o selo de origem em cada produção.</span>
+              </p>
+            </AlertDescription>
+          </Alert>
         </CardContent>
       </Card>
 
