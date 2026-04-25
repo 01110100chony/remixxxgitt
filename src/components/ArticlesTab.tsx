@@ -5,7 +5,9 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, ArrowUp, ArrowDown } from "lucide-react";
+import { Search, ArrowUp, ArrowDown, FileCode2, PenLine } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Props {
   articles: Article[];
@@ -105,14 +107,17 @@ const ArticlesTab = ({ articles, researchers }: Props) => {
               <TableHead className="w-16">Qualis</TableHead>
               <TableHead className="w-16">Cit.</TableHead>
               <TableHead className="w-16">DOI</TableHead>
+              <TableHead className="w-20">Origem</TableHead>
               <TableHead>Autores</TableHead>
               {researchers.length > 1 && <TableHead className="w-36">Pesquisador</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={researchers.length > 1 ? 9 : 8} className="text-center text-muted-foreground py-8">Nenhum artigo encontrado.</TableCell></TableRow>
-            ) : filtered.map((a, i) => (
+              <TableRow><TableCell colSpan={researchers.length > 1 ? 10 : 9} className="text-center text-muted-foreground py-8">Nenhum artigo encontrado.</TableCell></TableRow>
+            ) : filtered.map((a, i) => {
+              const fromLattes = (a as any).source_origin === "lattes";
+              return (
               <TableRow key={a.id} className="hover:bg-muted/50">
                 <TableCell className="text-muted-foreground font-mono text-sm">{i + 1}</TableCell>
                 <TableCell className="font-medium text-sm max-w-xs" title={a.title}>{a.title}</TableCell>
@@ -121,10 +126,26 @@ const ArticlesTab = ({ articles, researchers }: Props) => {
                 <TableCell>{a.qualis ? <span className={`rounded-md px-2 py-0.5 text-xs font-bold ${qualisColor(a.qualis)}`}>{a.qualis}</span> : "—"}</TableCell>
                 <TableCell className="text-sm font-mono">{a.citations || 0}</TableCell>
                 <TableCell>{a.doi ? <span className="text-xs text-accent">✓</span> : "—"}</TableCell>
+                <TableCell>
+                  <TooltipProvider delayDuration={150}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge variant="outline" className={`text-[10px] gap-1 ${fromLattes ? "border-primary/40 text-primary" : "border-amber-500/40 text-amber-600 dark:text-amber-400"}`}>
+                          {fromLattes ? <FileCode2 className="h-3 w-3" /> : <PenLine className="h-3 w-3" />}
+                          {fromLattes ? "Lattes" : "Manual"}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent className="text-xs">
+                        {fromLattes ? "Importado automaticamente do XML do Lattes" : "Inserido ou editado manualmente — não será sobrescrito por reimportações"}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </TableCell>
                 <TableCell className="text-xs text-muted-foreground max-w-xs truncate" title={a.authors || ""}>{a.authors || "—"}</TableCell>
                 {researchers.length > 1 && <TableCell className="text-sm text-muted-foreground truncate">{getResearcherName(a.researcher_id)}</TableCell>}
               </TableRow>
-            ))}
+              );
+            })}
           </TableBody>
         </Table>
       </div>
