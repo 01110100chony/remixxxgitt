@@ -71,7 +71,7 @@ const OrientationsDbTab = ({ orientations, researchers }: Props) => {
   }, [pgPeriod]);
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return orientations.filter((o) => {
+    return visibleRows.filter((o) => {
       if (statusFilter !== "all" && o.status !== statusFilter) return false;
       if (typeFilter !== "all" && o.type !== typeFilter) return false;
       if (researcherFilter !== "all" && o.researcher_id !== researcherFilter) return false;
@@ -79,7 +79,7 @@ const OrientationsDbTab = ({ orientations, researchers }: Props) => {
       if (q && !(o.title || "").toLowerCase().includes(q) && !(o.student || "").toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [orientations, search, statusFilter, typeFilter, researcherFilter, periodMode, effectiveStart, effectiveEnd]);
+  }, [visibleRows, search, statusFilter, typeFilter, researcherFilter, periodMode, effectiveStart, effectiveEnd]);
 
   const getResearcherName = (id: string) => researchers.find((r) => r.id === id)?.name || "—";
 
