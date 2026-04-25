@@ -283,6 +283,10 @@ export async function syncLattesXml(opts: {
     }),
   });
 
+  // 4b. Auto-preencher Qualis quando vazio, usando qualis_reference.
+  //     NUNCA sobrescreve um qualis já preenchido (manual ou anterior).
+  await autoFillQualisFromReference(researcherId);
+
   // 5. Sync orientations
   const orientationXmlRows = parsed.orientations.map((o) => ({
     type: o.kind,
