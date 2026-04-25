@@ -5,9 +5,8 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, ArrowUp, ArrowDown, FileCode2, PenLine } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Search, ArrowUp, ArrowDown } from "lucide-react";
+import { DataSourceBanner, OriginBadge, useSourceFilter } from "@/components/data-source";
 
 interface Props {
   articles: Article[];
@@ -21,19 +20,23 @@ const ArticlesTab = ({ articles, researchers }: Props) => {
   const [qualisFilter, setQualisFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
 
+  const { visibleRows, showInactive, setShowInactive, breakdown } = useSourceFilter(articles);
+
+  const hasAnyXml = breakdown.lattes > 0;
+
   const years = useMemo(() => {
-    const set = new Set(articles.map((a) => a.year).filter(Boolean));
+    const set = new Set(visibleRows.map((a) => a.year).filter(Boolean));
     return Array.from(set).sort((a, b) => (b || 0) - (a || 0)).map(String);
-  }, [articles]);
+  }, [visibleRows]);
 
   const qualisValues = useMemo(() => {
-    const set = new Set(articles.map((a) => a.qualis).filter(Boolean));
+    const set = new Set(visibleRows.map((a) => a.qualis).filter(Boolean));
     return Array.from(set).sort() as string[];
-  }, [articles]);
+  }, [visibleRows]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return articles
+    return visibleRows
       .filter((a) => {
         if (yearFilter !== "all" && String(a.year) !== yearFilter) return false;
         if (researcherFilter !== "all" && a.researcher_id !== researcherFilter) return false;
@@ -42,7 +45,7 @@ const ArticlesTab = ({ articles, researchers }: Props) => {
         return true;
       })
       .sort((a, b) => sortOrder === "desc" ? (b.year || 0) - (a.year || 0) : (a.year || 0) - (b.year || 0));
-  }, [articles, search, yearFilter, researcherFilter, qualisFilter, sortOrder]);
+  }, [visibleRows, search, yearFilter, researcherFilter, qualisFilter, sortOrder]);
 
   const getResearcherName = (id: string) => researchers.find((r) => r.id === id)?.name || "—";
 
