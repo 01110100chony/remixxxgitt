@@ -241,6 +241,20 @@ const Index = () => {
                   {roles.includes("admin") && <TabsTrigger value="admin">Administração</TabsTrigger>}
                 </TabsList>
 
+                {activeTab !== "curricula" && activeTab !== "settings" && activeTab !== "admin" && activeTab !== "requests" && (
+                  <ResearchersStatusSummary
+                    researchers={data.researchers}
+                    rows={[
+                      ...data.articles,
+                      ...data.orientations,
+                      ...data.projects,
+                      ...data.technicalProductions,
+                      ...data.reviewerActivities,
+                    ]}
+                    onGoToCurricula={goToCurricula}
+                  />
+                )}
+
                 <TabsContent value="dashboard">
                   <ProgramDashboard data={data} />
                 </TabsContent>
