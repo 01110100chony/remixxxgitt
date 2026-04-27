@@ -42,11 +42,12 @@ const ArticlesTab = ({ articles, researchers }: Props) => {
         if (yearFilter !== "all" && String(a.year) !== yearFilter) return false;
         if (researcherFilter !== "all" && a.researcher_id !== researcherFilter) return false;
         if (qualisFilter !== "all" && a.qualis !== qualisFilter) return false;
+        if (originFilter !== "all" && resolveOrigin((a as any).source_origin) !== originFilter) return false;
         if (q && !a.title.toLowerCase().includes(q) && !(a.authors || "").toLowerCase().includes(q)) return false;
         return true;
       })
       .sort((a, b) => sortOrder === "desc" ? (b.year || 0) - (a.year || 0) : (a.year || 0) - (b.year || 0));
-  }, [visibleRows, search, yearFilter, researcherFilter, qualisFilter, sortOrder]);
+  }, [visibleRows, search, yearFilter, researcherFilter, qualisFilter, originFilter, sortOrder]);
 
   const getResearcherName = (id: string) => researchers.find((r) => r.id === id)?.name || "—";
 
