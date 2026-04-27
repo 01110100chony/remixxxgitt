@@ -33,6 +33,7 @@ import AdminPanel from "@/components/AdminPanel";
 import QualisImportDialog from "@/components/QualisImportDialog";
 import PlanningManagement from "@/components/PlanningManagement";
 import AccessRequestsPanel from "@/components/AccessRequestsPanel";
+import { ResearchersStatusSummary } from "@/components/ResearcherStatus";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -46,6 +47,8 @@ const Index = () => {
   const [newProgramModality, setNewProgramModality] = useState("");
   const [newProgramCode, setNewProgramCode] = useState("");
   const [qualisDialogOpen, setQualisDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const goToCurricula = useCallback(() => setActiveTab("curricula"), []);
   const { toast } = useToast();
 
   const { data, loading, fetchAll, uploadLattes, importQualis, fetchCitations, fetchAllCitations, updateMetrics, exportCSV, clearMyData } = useProgramData(selectedProgramId);
@@ -214,7 +217,7 @@ const Index = () => {
             {loading ? (
               <div className="text-center py-12 text-muted-foreground">Carregando dados...</div>
             ) : data && data.researchers.length > 0 ? (
-              <Tabs defaultValue="dashboard" className="space-y-6">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                 <TabsList className="flex-wrap h-auto gap-1">
                   <TabsTrigger value="dashboard">Visão Geral</TabsTrigger>
                   <TabsTrigger value="institutional">Visão Institucional</TabsTrigger>
@@ -237,6 +240,20 @@ const Index = () => {
                   <TabsTrigger value="settings">Configurações</TabsTrigger>
                   {roles.includes("admin") && <TabsTrigger value="admin">Administração</TabsTrigger>}
                 </TabsList>
+
+                {activeTab !== "curricula" && activeTab !== "settings" && activeTab !== "admin" && activeTab !== "requests" && (
+                  <ResearchersStatusSummary
+                    researchers={data.researchers}
+                    rows={[
+                      ...data.articles,
+                      ...data.orientations,
+                      ...data.projects,
+                      ...data.technicalProductions,
+                      ...data.reviewerActivities,
+                    ]}
+                    onGoToCurricula={goToCurricula}
+                  />
+                )}
 
                 <TabsContent value="dashboard">
                   <ProgramDashboard data={data} />

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { syncLattesXml, reprocessAllInProgram, type SyncResult } from "@/lib/lattes-sync";
 import type { Researcher } from "@/hooks/useProgram";
+import { ResearcherStatus } from "@/components/ResearcherStatus";
 
 interface Props {
   researchers: Researcher[];
@@ -302,17 +303,7 @@ const CurriculaTab = ({ researchers, programId, onRefresh }: Props) => {
                         <TableCell className="font-medium">{r.name}</TableCell>
                         <TableCell className="font-mono text-xs">{r.lattes_id || "—"}</TableCell>
                         <TableCell>
-                          {hasXml ? (
-                            <Badge variant="outline" className="text-xs gap-1 border-primary/40 text-primary">
-                              <FileCode2 className="h-3 w-3" />
-                              Dados importados do Lattes
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-xs gap-1 border-amber-500/40 text-amber-600 dark:text-amber-400">
-                              <AlertTriangle className="h-3 w-3" />
-                              Currículo não importado
-                            </Badge>
-                          )}
+                          <ResearcherStatus researcher={r} variant="badge" />
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">
                           {r.last_processed_at ? (
