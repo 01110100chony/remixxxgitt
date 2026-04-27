@@ -158,12 +158,12 @@ export function ResearcherStatus({
           <p>{meta.description}</p>
           {(onUploadXml || onReprocess || onAddManual) && (
             <div className="flex flex-wrap gap-2 pt-1">
-              {state === "no-xml" && onUploadXml && (
+              {(state === "no-xml" || state === "manual-only") && onUploadXml && (
                 <Button size="sm" variant="default" onClick={onUploadXml} className="h-7 text-xs gap-1">
                   <Upload className="h-3 w-3" /> Enviar XML
                 </Button>
               )}
-              {state !== "no-xml" && onReprocess && (
+              {(state === "xml-only" || state === "xml-plus-manual") && onReprocess && (
                 <Button size="sm" variant="outline" onClick={onReprocess} className="h-7 text-xs gap-1">
                   <RefreshCw className="h-3 w-3" /> Reprocessar
                 </Button>
