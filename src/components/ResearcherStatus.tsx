@@ -25,24 +25,43 @@ import {
   PenLine,
 } from "lucide-react";
 import type { Researcher } from "@/hooks/useProgram";
+import { resolveOrigin } from "@/components/data-source";
 
-export type ResearcherXmlState = "no-xml" | "xml-only" | "xml-plus-manual";
+/**
+ * Estados possíveis do docente:
+ *  - "no-xml":         sem XML e sem nenhuma linha manual/API → vazio total
+ *  - "manual-only":    sem XML, mas com produções inseridas manualmente
+ *  - "xml-only":       XML processado, todas as linhas vieram do XML
+ *  - "xml-plus-manual": XML + linhas manuais/API complementares
+ */
+export type ResearcherXmlState = "no-xml" | "manual-only" | "xml-only" | "xml-plus-manual";
 
 export interface ResearcherStatusInput {
   researcher: Pick<Researcher, "id" | "name" | "lattes_xml_path" | "last_processed_at">;
-  /** Conjunto de linhas relacionadas ao docente em uma aba (artigos, orientações...). */
+  /**
+   * Linhas de uma ou mais abas (artigos, orientações, projetos, técnicas, parecerista...).
+   * O estado é derivado da ORIGEM REAL (`source_origin`) das linhas pertencentes ao docente.
+   */
   rows?: Array<{ researcher_id: string; source_origin?: string | null; is_active?: boolean | null }>;
 }
 
 export function getResearcherState({ researcher, rows = [] }: ResearcherStatusInput): ResearcherXmlState {
   const hasXml = !!researcher.lattes_xml_path;
-  if (!hasXml) return "no-xml";
   const own = rows.filter((r) => r.researcher_id === researcher.id && r.is_active !== false);
-  const hasManual = own.some((r) => {
-    const o = (r.source_origin || "manual").toLowerCase();
-    return o !== "lattes" && o !== "xml";
-  });
-  return hasManual ? "xml-plus-manual" : "xml-only";
+
+  let hasLattesRows = false;
+  let hasComplementaryRows = false; // manual ou api
+  for (const r of own) {
+    const o = resolveOrigin(r.source_origin);
+    if (o === "lattes") hasLattesRows = true;
+    else hasComplementaryRows = true;
+    if (hasLattesRows && hasComplementaryRows) break;
+  }
+
+  if (hasXml || hasLattesRows) {
+    return hasComplementaryRows ? "xml-plus-manual" : "xml-only";
+  }
+  return hasComplementaryRows ? "manual-only" : "no-xml";
 }
 
 const STATE_META: Record<
@@ -73,6 +92,15 @@ const STATE_META: Record<
     icon: FileCheck2,
     badgeCls: "border-primary/40 text-primary bg-primary/10",
     alertCls: "border-primary/20 bg-primary/5",
+  },
+  "manual-only": {
+    label: "Apenas Manual",
+    title: "Sem XML — somente dados manuais",
+    description:
+      "Este docente ainda não teve o XML do Lattes importado, mas já há produções cadastradas manualmente. Envie o XML para sincronização completa.",
+    icon: PenLine,
+    badgeCls: "border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10",
+    alertCls: "border-amber-500/30 bg-amber-500/5",
   },
   "xml-plus-manual": {
     label: "XML + Manual",
@@ -130,12 +158,12 @@ export function ResearcherStatus({
           <p>{meta.description}</p>
           {(onUploadXml || onReprocess || onAddManual) && (
             <div className="flex flex-wrap gap-2 pt-1">
-              {state === "no-xml" && onUploadXml && (
+              {(state === "no-xml" || state === "manual-only") && onUploadXml && (
                 <Button size="sm" variant="default" onClick={onUploadXml} className="h-7 text-xs gap-1">
                   <Upload className="h-3 w-3" /> Enviar XML
                 </Button>
               )}
-              {state !== "no-xml" && onReprocess && (
+              {(state === "xml-only" || state === "xml-plus-manual") && onReprocess && (
                 <Button size="sm" variant="outline" onClick={onReprocess} className="h-7 text-xs gap-1">
                   <RefreshCw className="h-3 w-3" /> Reprocessar
                 </Button>
@@ -167,12 +195,12 @@ export function ResearcherStatus({
       <p className="text-xs text-muted-foreground">{meta.description}</p>
       {(onUploadXml || onReprocess || onAddManual) && (
         <div className="flex flex-wrap gap-2 pt-1">
-          {state === "no-xml" && onUploadXml && (
+          {(state === "no-xml" || state === "manual-only") && onUploadXml && (
             <Button size="sm" variant="default" onClick={onUploadXml} className="h-7 text-xs gap-1">
               <Upload className="h-3 w-3" /> Enviar XML
             </Button>
           )}
-          {state !== "no-xml" && onReprocess && (
+          {(state === "xml-only" || state === "xml-plus-manual") && onReprocess && (
             <Button size="sm" variant="outline" onClick={onReprocess} className="h-7 text-xs gap-1">
               <RefreshCw className="h-3 w-3" /> Reprocessar
             </Button>
@@ -203,22 +231,35 @@ export function ResearchersStatusSummary({
   onGoToCurricula?: () => void;
   className?: string;
 }) {
-  const counts = { "no-xml": 0, "xml-only": 0, "xml-plus-manual": 0 } as Record<ResearcherXmlState, number>;
+  const counts: Record<ResearcherXmlState, number> = {
+    "no-xml": 0,
+    "manual-only": 0,
+    "xml-only": 0,
+    "xml-plus-manual": 0,
+  };
   researchers.forEach((r) => { counts[getResearcherState({ researcher: r, rows })]++; });
 
   if (researchers.length === 0) return null;
 
   const noXml = counts["no-xml"];
+  const manualOnly = counts["manual-only"];
   const xmlOnly = counts["xml-only"];
   const mixed = counts["xml-plus-manual"];
+  const pendingXml = noXml + manualOnly; // todos os que ainda precisam de XML
 
-  if (noXml === researchers.length) {
+  if (pendingXml === researchers.length) {
     return (
       <Alert className={`border-amber-500/30 bg-amber-500/5 ${className}`}>
         <FileX2 className="h-4 w-4 text-amber-600 dark:text-amber-400" />
         <AlertTitle className="text-sm">Nenhum docente tem XML processado</AlertTitle>
         <AlertDescription className="text-xs space-y-2">
-          <p>Envie o XML do Lattes na aba <strong>Currículos Lattes</strong> para análise completa, ou cadastre registros manualmente.</p>
+          <p>
+            {manualOnly > 0
+              ? `${manualOnly} docente(s) já têm dados manuais cadastrados, mas o XML ainda não foi importado.`
+              : "Envie o XML do Lattes na aba "}
+            {manualOnly === 0 && <strong>Currículos Lattes</strong>}
+            {manualOnly === 0 && " para análise completa, ou cadastre registros manualmente."}
+          </p>
           {onGoToCurricula && (
             <Button size="sm" variant="default" onClick={onGoToCurricula} className="h-7 text-xs gap-1">
               <Upload className="h-3 w-3" /> Ir para Currículos Lattes
@@ -242,14 +283,19 @@ export function ResearchersStatusSummary({
           <Layers className="h-3 w-3" /> {mixed} XML + Manual
         </Badge>
       )}
-      {noXml > 0 && (
+      {manualOnly > 0 && (
         <Badge variant="outline" className="gap-1 border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10">
-          <FileX2 className="h-3 w-3" /> {noXml} sem XML
+          <PenLine className="h-3 w-3" /> {manualOnly} só Manual
         </Badge>
       )}
-      {noXml > 0 && onGoToCurricula && (
+      {noXml > 0 && (
+        <Badge variant="outline" className="gap-1 border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10">
+          <FileX2 className="h-3 w-3" /> {noXml} sem dados
+        </Badge>
+      )}
+      {pendingXml > 0 && onGoToCurricula && (
         <Button size="sm" variant="ghost" onClick={onGoToCurricula} className="h-6 ml-auto text-xs gap-1">
-          <Upload className="h-3 w-3" /> Enviar XML pendentes
+          <Upload className="h-3 w-3" /> Enviar XML pendentes ({pendingXml})
         </Button>
       )}
     </div>
