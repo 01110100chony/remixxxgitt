@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { syncLattesXml, reprocessAllInProgram, type SyncResult } from "@/lib/lattes-sync";
 import type { Researcher } from "@/hooks/useProgram";
+import { ResearcherStatus } from "@/components/ResearcherStatus";
 
 interface Props {
   researchers: Researcher[];
