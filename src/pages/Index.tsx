@@ -33,6 +33,7 @@ import AdminPanel from "@/components/AdminPanel";
 import QualisImportDialog from "@/components/QualisImportDialog";
 import PlanningManagement from "@/components/PlanningManagement";
 import AccessRequestsPanel from "@/components/AccessRequestsPanel";
+import { ResearchersStatusSummary } from "@/components/ResearcherStatus";
 
 const Index = () => {
   const navigate = useNavigate();
