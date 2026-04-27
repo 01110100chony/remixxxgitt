@@ -86,6 +86,15 @@ const ArticlesTab = ({ articles, researchers }: Props) => {
               </SelectContent>
             </Select>
           )}
+          <Select value={originFilter} onValueChange={(v) => setOriginFilter(v as any)}>
+            <SelectTrigger className="w-32"><SelectValue placeholder="Origem" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas origens</SelectItem>
+              <SelectItem value="lattes">XML ({breakdown.lattes})</SelectItem>
+              <SelectItem value="manual">Manual ({breakdown.manual})</SelectItem>
+              <SelectItem value="api">API ({breakdown.api})</SelectItem>
+            </SelectContent>
+          </Select>
           {researchers.length > 1 && (
             <Select value={researcherFilter} onValueChange={setResearcherFilter}>
               <SelectTrigger className="w-44"><SelectValue placeholder="Pesquisador" /></SelectTrigger>
