@@ -93,6 +93,15 @@ const STATE_META: Record<
     badgeCls: "border-primary/40 text-primary bg-primary/10",
     alertCls: "border-primary/20 bg-primary/5",
   },
+  "manual-only": {
+    label: "Apenas Manual",
+    title: "Sem XML — somente dados manuais",
+    description:
+      "Este docente ainda não teve o XML do Lattes importado, mas já há produções cadastradas manualmente. Envie o XML para sincronização completa.",
+    icon: PenLine,
+    badgeCls: "border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10",
+    alertCls: "border-amber-500/30 bg-amber-500/5",
+  },
   "xml-plus-manual": {
     label: "XML + Manual",
     title: "Dados Lattes com complementação manual",
