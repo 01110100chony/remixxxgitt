@@ -46,6 +46,8 @@ const Index = () => {
   const [newProgramModality, setNewProgramModality] = useState("");
   const [newProgramCode, setNewProgramCode] = useState("");
   const [qualisDialogOpen, setQualisDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const goToCurricula = useCallback(() => setActiveTab("curricula"), []);
   const { toast } = useToast();
 
   const { data, loading, fetchAll, uploadLattes, importQualis, fetchCitations, fetchAllCitations, updateMetrics, exportCSV, clearMyData } = useProgramData(selectedProgramId);
