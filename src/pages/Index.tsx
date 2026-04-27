@@ -216,7 +216,7 @@ const Index = () => {
             {loading ? (
               <div className="text-center py-12 text-muted-foreground">Carregando dados...</div>
             ) : data && data.researchers.length > 0 ? (
-              <Tabs defaultValue="dashboard" className="space-y-6">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                 <TabsList className="flex-wrap h-auto gap-1">
                   <TabsTrigger value="dashboard">Visão Geral</TabsTrigger>
                   <TabsTrigger value="institutional">Visão Institucional</TabsTrigger>
