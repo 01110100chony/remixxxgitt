@@ -6,7 +6,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, ArrowUp, ArrowDown } from "lucide-react";
-import { DataSourceBanner, OriginBadge, useSourceFilter } from "@/components/data-source";
+import { DataSourceBanner, OriginBadge, useSourceFilter, resolveOrigin } from "@/components/data-source";
 
 interface Props {
   articles: Article[];
@@ -18,6 +18,7 @@ const ArticlesTab = ({ articles, researchers }: Props) => {
   const [yearFilter, setYearFilter] = useState("all");
   const [researcherFilter, setResearcherFilter] = useState("all");
   const [qualisFilter, setQualisFilter] = useState("all");
+  const [originFilter, setOriginFilter] = useState<"all" | "lattes" | "manual" | "api">("all");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
 
   const { visibleRows, showInactive, setShowInactive, breakdown } = useSourceFilter(articles);
@@ -41,11 +42,12 @@ const ArticlesTab = ({ articles, researchers }: Props) => {
         if (yearFilter !== "all" && String(a.year) !== yearFilter) return false;
         if (researcherFilter !== "all" && a.researcher_id !== researcherFilter) return false;
         if (qualisFilter !== "all" && a.qualis !== qualisFilter) return false;
+        if (originFilter !== "all" && resolveOrigin((a as any).source_origin) !== originFilter) return false;
         if (q && !a.title.toLowerCase().includes(q) && !(a.authors || "").toLowerCase().includes(q)) return false;
         return true;
       })
       .sort((a, b) => sortOrder === "desc" ? (b.year || 0) - (a.year || 0) : (a.year || 0) - (b.year || 0));
-  }, [visibleRows, search, yearFilter, researcherFilter, qualisFilter, sortOrder]);
+  }, [visibleRows, search, yearFilter, researcherFilter, qualisFilter, originFilter, sortOrder]);
 
   const getResearcherName = (id: string) => researchers.find((r) => r.id === id)?.name || "—";
 
@@ -84,6 +86,15 @@ const ArticlesTab = ({ articles, researchers }: Props) => {
               </SelectContent>
             </Select>
           )}
+          <Select value={originFilter} onValueChange={(v) => setOriginFilter(v as any)}>
+            <SelectTrigger className="w-32"><SelectValue placeholder="Origem" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas origens</SelectItem>
+              <SelectItem value="lattes">XML ({breakdown.lattes})</SelectItem>
+              <SelectItem value="manual">Manual ({breakdown.manual})</SelectItem>
+              <SelectItem value="api">API ({breakdown.api})</SelectItem>
+            </SelectContent>
+          </Select>
           {researchers.length > 1 && (
             <Select value={researcherFilter} onValueChange={setResearcherFilter}>
               <SelectTrigger className="w-44"><SelectValue placeholder="Pesquisador" /></SelectTrigger>
