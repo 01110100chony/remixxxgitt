@@ -231,22 +231,35 @@ export function ResearchersStatusSummary({
   onGoToCurricula?: () => void;
   className?: string;
 }) {
-  const counts = { "no-xml": 0, "xml-only": 0, "xml-plus-manual": 0 } as Record<ResearcherXmlState, number>;
+  const counts: Record<ResearcherXmlState, number> = {
+    "no-xml": 0,
+    "manual-only": 0,
+    "xml-only": 0,
+    "xml-plus-manual": 0,
+  };
   researchers.forEach((r) => { counts[getResearcherState({ researcher: r, rows })]++; });
 
   if (researchers.length === 0) return null;
 
   const noXml = counts["no-xml"];
+  const manualOnly = counts["manual-only"];
   const xmlOnly = counts["xml-only"];
   const mixed = counts["xml-plus-manual"];
+  const pendingXml = noXml + manualOnly; // todos os que ainda precisam de XML
 
-  if (noXml === researchers.length) {
+  if (pendingXml === researchers.length) {
     return (
       <Alert className={`border-amber-500/30 bg-amber-500/5 ${className}`}>
         <FileX2 className="h-4 w-4 text-amber-600 dark:text-amber-400" />
         <AlertTitle className="text-sm">Nenhum docente tem XML processado</AlertTitle>
         <AlertDescription className="text-xs space-y-2">
-          <p>Envie o XML do Lattes na aba <strong>Currículos Lattes</strong> para análise completa, ou cadastre registros manualmente.</p>
+          <p>
+            {manualOnly > 0
+              ? `${manualOnly} docente(s) já têm dados manuais cadastrados, mas o XML ainda não foi importado.`
+              : "Envie o XML do Lattes na aba "}
+            {manualOnly === 0 && <strong>Currículos Lattes</strong>}
+            {manualOnly === 0 && " para análise completa, ou cadastre registros manualmente."}
+          </p>
           {onGoToCurricula && (
             <Button size="sm" variant="default" onClick={onGoToCurricula} className="h-7 text-xs gap-1">
               <Upload className="h-3 w-3" /> Ir para Currículos Lattes
@@ -270,14 +283,19 @@ export function ResearchersStatusSummary({
           <Layers className="h-3 w-3" /> {mixed} XML + Manual
         </Badge>
       )}
-      {noXml > 0 && (
+      {manualOnly > 0 && (
         <Badge variant="outline" className="gap-1 border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10">
-          <FileX2 className="h-3 w-3" /> {noXml} sem XML
+          <PenLine className="h-3 w-3" /> {manualOnly} só Manual
         </Badge>
       )}
-      {noXml > 0 && onGoToCurricula && (
+      {noXml > 0 && (
+        <Badge variant="outline" className="gap-1 border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10">
+          <FileX2 className="h-3 w-3" /> {noXml} sem dados
+        </Badge>
+      )}
+      {pendingXml > 0 && onGoToCurricula && (
         <Button size="sm" variant="ghost" onClick={onGoToCurricula} className="h-6 ml-auto text-xs gap-1">
-          <Upload className="h-3 w-3" /> Enviar XML pendentes
+          <Upload className="h-3 w-3" /> Enviar XML pendentes ({pendingXml})
         </Button>
       )}
     </div>
