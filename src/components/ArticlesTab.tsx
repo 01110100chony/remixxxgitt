@@ -18,6 +18,7 @@ const ArticlesTab = ({ articles, researchers }: Props) => {
   const [yearFilter, setYearFilter] = useState("all");
   const [researcherFilter, setResearcherFilter] = useState("all");
   const [qualisFilter, setQualisFilter] = useState("all");
+  const [originFilter, setOriginFilter] = useState<"all" | "lattes" | "manual" | "api">("all");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
 
   const { visibleRows, showInactive, setShowInactive, breakdown } = useSourceFilter(articles);
