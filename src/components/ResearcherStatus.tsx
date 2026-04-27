@@ -25,24 +25,43 @@ import {
   PenLine,
 } from "lucide-react";
 import type { Researcher } from "@/hooks/useProgram";
+import { resolveOrigin } from "@/components/data-source";
 
-export type ResearcherXmlState = "no-xml" | "xml-only" | "xml-plus-manual";
+/**
+ * Estados possíveis do docente:
+ *  - "no-xml":         sem XML e sem nenhuma linha manual/API → vazio total
+ *  - "manual-only":    sem XML, mas com produções inseridas manualmente
+ *  - "xml-only":       XML processado, todas as linhas vieram do XML
+ *  - "xml-plus-manual": XML + linhas manuais/API complementares
+ */
+export type ResearcherXmlState = "no-xml" | "manual-only" | "xml-only" | "xml-plus-manual";
 
 export interface ResearcherStatusInput {
   researcher: Pick<Researcher, "id" | "name" | "lattes_xml_path" | "last_processed_at">;
-  /** Conjunto de linhas relacionadas ao docente em uma aba (artigos, orientações...). */
+  /**
+   * Linhas de uma ou mais abas (artigos, orientações, projetos, técnicas, parecerista...).
+   * O estado é derivado da ORIGEM REAL (`source_origin`) das linhas pertencentes ao docente.
+   */
   rows?: Array<{ researcher_id: string; source_origin?: string | null; is_active?: boolean | null }>;
 }
 
 export function getResearcherState({ researcher, rows = [] }: ResearcherStatusInput): ResearcherXmlState {
   const hasXml = !!researcher.lattes_xml_path;
-  if (!hasXml) return "no-xml";
   const own = rows.filter((r) => r.researcher_id === researcher.id && r.is_active !== false);
-  const hasManual = own.some((r) => {
-    const o = (r.source_origin || "manual").toLowerCase();
-    return o !== "lattes" && o !== "xml";
-  });
-  return hasManual ? "xml-plus-manual" : "xml-only";
+
+  let hasLattesRows = false;
+  let hasComplementaryRows = false; // manual ou api
+  for (const r of own) {
+    const o = resolveOrigin(r.source_origin);
+    if (o === "lattes") hasLattesRows = true;
+    else hasComplementaryRows = true;
+    if (hasLattesRows && hasComplementaryRows) break;
+  }
+
+  if (hasXml || hasLattesRows) {
+    return hasComplementaryRows ? "xml-plus-manual" : "xml-only";
+  }
+  return hasComplementaryRows ? "manual-only" : "no-xml";
 }
 
 const STATE_META: Record<
