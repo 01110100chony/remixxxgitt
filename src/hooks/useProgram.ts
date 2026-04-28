@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { parseLattesXML, ResearcherInfo } from "@/lib/lattes-parser";
+// parseLattesXML/ResearcherInfo agora ficam encapsulados em syncLattesXml
 import { useToast } from "@/hooks/use-toast";
 import { LATTES_SYNCED_EVENT, type LattesSyncedDetail, syncLattesXml, emitLattesSyncedEvent } from "@/lib/lattes-sync";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
