@@ -45,8 +45,19 @@ export interface ResearcherStatusInput {
   rows?: Array<{ researcher_id: string; source_origin?: string | null; is_active?: boolean | null }>;
 }
 
+/**
+ * Considera o XML "processado" SOMENTE quando há tanto o arquivo salvo
+ * (`lattes_xml_path`) quanto o timestamp de processamento (`last_processed_at`).
+ * Um XML enviado mas não processado conta como pendente.
+ */
+export function isXmlProcessed(
+  researcher: Pick<Researcher, "lattes_xml_path" | "last_processed_at">,
+): boolean {
+  return !!researcher.lattes_xml_path && !!researcher.last_processed_at;
+}
+
 export function getResearcherState({ researcher, rows = [] }: ResearcherStatusInput): ResearcherXmlState {
-  const hasXml = !!researcher.lattes_xml_path;
+  const xmlProcessed = isXmlProcessed(researcher);
   const own = rows.filter((r) => r.researcher_id === researcher.id && r.is_active !== false);
 
   let hasLattesRows = false;
@@ -58,7 +69,7 @@ export function getResearcherState({ researcher, rows = [] }: ResearcherStatusIn
     if (hasLattesRows && hasComplementaryRows) break;
   }
 
-  if (hasXml || hasLattesRows) {
+  if (xmlProcessed || hasLattesRows) {
     return hasComplementaryRows ? "xml-plus-manual" : "xml-only";
   }
   return hasComplementaryRows ? "manual-only" : "no-xml";
