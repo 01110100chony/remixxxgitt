@@ -179,178 +179,39 @@ export function useProgramData(programId: string | null) {
 
   const uploadLattes = async (files: { name: string; content: string }[]) => {
     if (!programId) return;
+
+    let success = 0;
+    const results = [];
     for (const file of files) {
-      const parsed = parseLattesXML(file.content);
-
-      // Upsert researcher
-      const { data: researcher, error: rError } = await supabase
-        .from("researchers")
-        .upsert(
-          {
-            program_id: programId,
-            name: parsed.name,
-            gender: parsed.gender,
-            research_line: parsed.researchLines.join("; ") || null,
-            lattes_xml_filename: file.name,
-            lattes_id: parsed.lattesId || null,
-            orcid: parsed.orcid || null,
-            user_id: user?.id,
-          } as any,
-          { onConflict: "program_id,name", ignoreDuplicates: false }
-        )
-        .select()
-        .single();
-
-      // If upsert with onConflict fails (no unique constraint), try insert or find
-      let researcherId: string;
-      if (rError) {
-        const { data: existing } = await supabase
-          .from("researchers")
-          .select("id")
-          .eq("program_id", programId)
-          .eq("name", parsed.name)
-          .single();
-        if (existing) {
-          researcherId = existing.id;
-          await supabase.from("researchers").update({
-            gender: parsed.gender,
-            research_line: parsed.researchLines.join("; ") || null,
-            lattes_xml_filename: file.name,
-            lattes_id: parsed.lattesId || null,
-            orcid: parsed.orcid || null,
-          }).eq("id", researcherId);
-        } else {
-          const { data: newR } = await supabase
-            .from("researchers")
-            .insert({
-              program_id: programId,
-              name: parsed.name,
-              gender: parsed.gender,
-              research_line: parsed.researchLines.join("; ") || null,
-              lattes_xml_filename: file.name,
-              lattes_id: parsed.lattesId || null,
-              orcid: parsed.orcid || null,
-              user_id: user?.id,
-            } as any)
-            .select()
-            .single();
-          researcherId = newR!.id;
-        }
-      } else {
-        researcherId = researcher!.id;
-      }
-
-      // Clear old data for this researcher
-      await Promise.all([
-        supabase.from("articles").delete().eq("researcher_id", researcherId),
-        supabase.from("orientations").delete().eq("researcher_id", researcherId),
-        supabase.from("projects").delete().eq("researcher_id", researcherId),
-        supabase.from("technical_productions").delete().eq("researcher_id", researcherId),
-        supabase.from("reviewer_activities").delete().eq("researcher_id", researcherId),
-      ]);
-
-      // Insert articles
-      if (parsed.productions.length > 0) {
-        const articles = parsed.productions
-          .filter((p) => ["article", "book", "bookChapter", "eventWork"].includes(p.type))
-          .map((p) => ({
-            researcher_id: researcherId,
-            program_id: programId,
-            title: p.title,
-            year: p.year !== "—" ? parseInt(p.year) || null : null,
-            journal: p.extra?.journal || null,
-            issn: p.extra?.issn || null,
-            doi: p.extra?.doi || null,
-            isbn: p.extra?.isbn || null,
-            authors: p.authors,
-            user_id: user?.id,
-          }));
-        if (articles.length > 0) {
-          await supabase.from("articles").insert(articles);
-        }
-      }
-
-      // Insert orientations
-      if (parsed.orientations.length > 0) {
-        const orientations = parsed.orientations.map((o) => ({
-          researcher_id: researcherId,
-          program_id: programId,
-          type: o.kind,
-          status: o.type === "concluded" ? "concluded" : "in_progress",
-          title: o.title,
-          student: o.student,
-          year: o.year !== "—" ? parseInt(o.year) || null : null,
-          user_id: user?.id,
-        }));
-        await supabase.from("orientations").insert(orientations as any);
-      }
-
-      // Insert projects
-      if (parsed.projects.length > 0) {
-        const projects = parsed.projects.map((p) => ({
-          researcher_id: researcherId,
-          program_id: programId,
-          title: p.title,
-          year_start: p.yearStart !== "—" ? parseInt(p.yearStart) || null : null,
-          year_end: p.yearEnd !== "em andamento" && p.yearEnd !== "—" ? parseInt(p.yearEnd) || null : null,
-          funding: p.funding,
-          partner_institution: p.institution !== "—" ? p.institution : null,
-          funder: p.funder !== "—" ? p.funder : null,
-          type: p.type,
-          user_id: user?.id,
-        }));
-        await supabase.from("projects").insert(projects as any);
-      }
-
-      // Insert technical productions
-      const techProds = parsed.productions.filter((p) =>
-        ["software", "product", "technicalReport", "consultancy"].includes(p.type)
-      );
-      if (techProds.length > 0) {
-        const techInserts = techProds.map((p) => ({
-          researcher_id: researcherId,
-          program_id: programId,
-          type: p.type,
-          title: p.title,
-          description: p.authors,
-          year: p.year !== "—" ? parseInt(p.year) || null : null,
-          user_id: user?.id,
-        }));
-        await supabase.from("technical_productions").insert(techInserts as any);
-      }
-
-      // Insert social insertion as technical productions
-      const socialProds = parsed.productions.filter((p) =>
-        ["interview", "mediaParticipation", "eventOrganization"].includes(p.type)
-      );
-      if (socialProds.length > 0) {
-        const socialInserts = socialProds.map((p) => ({
-          researcher_id: researcherId,
-          program_id: programId,
-          type: p.type,
-          title: p.title,
-          description: p.authors,
-          year: p.year !== "—" ? parseInt(p.year) || null : null,
-          user_id: user?.id,
-        }));
-        await supabase.from("technical_productions").insert(socialInserts as any);
-      }
-
-      // Insert reviewer activities
-      if (parsed.reviewerActivities && parsed.reviewerActivities.length > 0) {
-        const reviewerInserts = parsed.reviewerActivities.map((r) => ({
-          researcher_id: researcherId,
-          program_id: programId,
-          journal_event: r.journalEvent,
-          type: r.type || null,
-          year: r.year ? parseInt(r.year) || null : null,
-          user_id: user?.id,
-        }));
-        await supabase.from("reviewer_activities").insert(reviewerInserts as any);
+      try {
+        const result = await syncLattesXml({
+          programId,
+          userId: user?.id,
+          xmlContent: file.content,
+          xmlFilename: file.name,
+          uploadToStorage: true, // salva no bucket lattes-xml e grava lattes_xml_path
+        });
+        results.push(result);
+        success++;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Erro desconhecido";
+        console.error(`[useProgram.uploadLattes] Falha em ${file.name}:`, err);
+        toast({
+          title: `Falha ao processar ${file.name}`,
+          description: msg,
+          variant: "destructive",
+        });
       }
     }
 
-    toast({ title: "Upload concluído", description: `${files.length} arquivo(s) processado(s) e salvo(s).` });
+    if (success > 0) {
+      toast({
+        title: "Upload concluído",
+        description: `${success} de ${files.length} arquivo(s) processado(s). Dados manuais preservados.`,
+      });
+      // Dispara evento global de sincronização para invalidar caches em todas as abas
+      emitLattesSyncedEvent({ programId, results });
+    }
     await fetchAll();
   };
 
