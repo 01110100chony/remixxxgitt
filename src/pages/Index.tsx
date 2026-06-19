@@ -114,7 +114,7 @@ const Index = () => {
         <div className="container flex items-center gap-3 py-4">
           <BookOpen className="h-7 w-7 text-accent" />
           <h1 className="text-2xl font-bold text-foreground tracking-tight">
-            Lattes <span className="text-accent">Reader</span>
+            PPG<span className="text-accent">360</span>
             <span className="text-xs font-normal text-muted-foreground ml-2">Painel PPG</span>
           </h1>
           <div className="ml-auto flex items-center gap-2">
@@ -344,7 +344,7 @@ const Index = () => {
         {!selectedProgramId && !programsLoading && programs.length === 0 && (
           <div className="text-center py-16 text-muted-foreground">
             <BookOpen className="h-16 w-16 mx-auto mb-4 opacity-50" />
-            <p className="text-xl font-medium mb-2">Bem-vindo ao Lattes Reader</p>
+            <p className="text-xl font-medium mb-2">Bem-vindo ao PPG360</p>
             <p className="text-sm mb-4">Crie um programa de pós-graduação para começar.</p>
             {isCoordinatorOrAdmin ? (
               <Button onClick={() => setShowCreateProgram(true)}>
