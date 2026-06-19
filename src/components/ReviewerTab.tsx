@@ -6,7 +6,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, ClipboardCheck } from "lucide-react";
-import { DataSourceBanner, OriginBadge, useSourceFilter } from "@/components/data-source";
+import { DataSourceBanner, OriginBadge, useSourceFilter, hasAnyProcessedXml } from "@/components/data-source";
 
 interface Props {
   activities: ReviewerActivity[];
@@ -18,7 +18,7 @@ const ReviewerTab = ({ activities, researchers }: Props) => {
   const [researcherFilter, setResearcherFilter] = useState("all");
 
   const { visibleRows, showInactive, setShowInactive, breakdown } = useSourceFilter(activities);
-  const hasAnyXml = breakdown.lattes > 0;
+  const hasAnyXml = hasAnyProcessedXml(researchers) || breakdown.lattes > 0;
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();

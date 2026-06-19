@@ -23,6 +23,18 @@ export const resolveOrigin = (raw: SourceOrigin): "lattes" | "manual" | "api" =>
   return "manual";
 };
 
+/**
+ * Verdade canônica para "este programa já teve algum XML processado".
+ * Baseia-se no estado do docente (lattes_xml_path + last_processed_at),
+ * não nas linhas da aba atual — assim uma aba vazia (ex.: parecerista
+ * sem registros no XML) não engana o usuário com "Currículo não importado".
+ */
+export function hasAnyProcessedXml(
+  researchers: Array<{ lattes_xml_path?: string | null; last_processed_at?: string | null }>,
+): boolean {
+  return researchers.some((r) => !!r.lattes_xml_path && !!r.last_processed_at);
+}
+
 const ORIGIN_META = {
   lattes: {
     label: "XML",
