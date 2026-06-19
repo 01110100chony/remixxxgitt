@@ -491,7 +491,7 @@ export default function CAPESReport({ data, startYear, endYear }: CAPESReportPro
         doc.setFontSize(8);
         doc.setFont("helvetica", "normal");
         doc.setTextColor(150, 150, 150);
-        doc.text(`Lattes Reader — Relatório CAPES — ${program.name}`, margin, 290);
+        doc.text(`PPG360 — Relatório CAPES — ${program.name}`, margin, 290);
         doc.text(`Página ${i} de ${pageCount}`, W - margin, 290, { align: "right" });
       }
 
