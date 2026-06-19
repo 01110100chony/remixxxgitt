@@ -6,7 +6,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, ArrowUp, ArrowDown } from "lucide-react";
-import { DataSourceBanner, OriginBadge, useSourceFilter, resolveOrigin } from "@/components/data-source";
+import { DataSourceBanner, OriginBadge, useSourceFilter, resolveOrigin, hasAnyProcessedXml } from "@/components/data-source";
 
 interface Props {
   articles: Article[];
@@ -23,7 +23,7 @@ const ArticlesTab = ({ articles, researchers }: Props) => {
 
   const { visibleRows, showInactive, setShowInactive, breakdown } = useSourceFilter(articles);
 
-  const hasAnyXml = breakdown.lattes > 0;
+  const hasAnyXml = hasAnyProcessedXml(researchers) || breakdown.lattes > 0;
 
   const years = useMemo(() => {
     const set = new Set(visibleRows.map((a) => a.year).filter(Boolean));

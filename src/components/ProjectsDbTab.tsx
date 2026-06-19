@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, FolderKanban, Landmark } from "lucide-react";
 import { getQuadrienio, isProjectInPeriod } from "@/lib/orientation-utils";
-import { DataSourceBanner, OriginBadge, useSourceFilter } from "@/components/data-source";
+import { DataSourceBanner, OriginBadge, useSourceFilter, hasAnyProcessedXml } from "@/components/data-source";
 
 interface Props {
   projects: ProjectRow[];
@@ -28,7 +28,7 @@ const ProjectsDbTab = ({ projects, researchers }: Props) => {
   const [customEnd, setCustomEnd] = useState(q[1]);
 
   const { visibleRows, showInactive, setShowInactive, breakdown } = useSourceFilter(projects);
-  const hasAnyXml = breakdown.lattes > 0;
+  const hasAnyXml = hasAnyProcessedXml(researchers) || breakdown.lattes > 0;
 
   const years = useMemo(() => {
     const allYears = visibleRows.map((p) => p.year_start).filter(Boolean) as number[];

@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Search, GraduationCap, Info, CalendarDays } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { DataSourceBanner, OriginBadge, useSourceFilter } from "@/components/data-source";
+import { DataSourceBanner, OriginBadge, useSourceFilter, hasAnyProcessedXml } from "@/components/data-source";
 
 interface Props {
   orientations: OrientationRow[];
@@ -26,7 +26,7 @@ const OrientationsDbTab = ({ orientations, researchers }: Props) => {
   const [periodMode, setPeriodMode] = useState<PeriodMode>("quadrienio");
 
   const { visibleRows, showInactive, setShowInactive, breakdown } = useSourceFilter(orientations);
-  const hasAnyXml = breakdown.lattes > 0;
+  const hasAnyXml = hasAnyProcessedXml(researchers) || breakdown.lattes > 0;
 
   const [qStart, qEnd] = getQuadrienio();
   const years = useMemo(() => {
