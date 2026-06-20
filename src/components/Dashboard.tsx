@@ -145,7 +145,7 @@ const Dashboard = ({ data }: DashboardProps) => {
                 <XAxis dataKey="year" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} tickLine={false} />
                 <YAxis allowDecimals={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} tickLine={false} />
                 <Tooltip contentStyle={tooltipStyle} />
-                <Bar dataKey="count" name="Produções" fill="hsl(var(--accent))" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="count" name="Produções" fill="#6366f1" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
