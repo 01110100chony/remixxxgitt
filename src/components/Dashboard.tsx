@@ -17,13 +17,13 @@ interface DashboardProps {
 }
 
 const COLORS = [
-  "hsl(var(--accent))", "hsl(var(--primary))", "#f59e0b", "#10b981",
-  "#8b5cf6", "#ec4899", "#06b6d4", "#f97316", "#84cc16", "#ef4444",
+  "#6366f1", "#ec4899", "#f59e0b", "#10b981",
+  "#8b5cf6", "#06b6d4", "#f97316", "#84cc16", "#3b82f6", "#ef4444",
 ];
 
 const GENDER_COLORS: Record<string, string> = {
-  Homem: "hsl(var(--primary))",
-  Mulher: "hsl(var(--accent))",
+  Homem: "#3b82f6",
+  Mulher: "#ec4899",
   "Não informado": "hsl(var(--muted-foreground))",
 };
 
