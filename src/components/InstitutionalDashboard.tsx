@@ -46,13 +46,13 @@ const tooltipStyle = {
   fontSize: "13px",
 };
 
-const TYPE_COLORS = ["hsl(var(--accent))", "hsl(var(--primary))", "#f59e0b", "#8b5cf6", "#10b981"];
+const TYPE_COLORS = ["#6366f1", "#ec4899", "#f59e0b", "#8b5cf6", "#10b981", "#06b6d4", "#f97316"];
 
 const SNIP_BUCKETS = [
   { key: "<0.5", min: -Infinity, max: 0.5, color: "#ef4444" },
   { key: "0.5–1", min: 0.5, max: 1, color: "#f59e0b" },
   { key: "1–2", min: 1, max: 2, color: "#10b981" },
-  { key: ">2", min: 2, max: Infinity, color: "hsl(var(--accent))" },
+  { key: ">2", min: 2, max: Infinity, color: "#6366f1" },
 ];
 
 function normalizeIssn(s: string | null | undefined): string {
