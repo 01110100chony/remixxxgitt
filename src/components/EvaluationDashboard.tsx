@@ -18,7 +18,7 @@ import { Settings2, Award, TrendingUp, BookOpen, GraduationCap, Globe, Users, Sh
 import EvaluationReport from "@/components/EvaluationReport";
 
 const COLORS = [
-  "hsl(var(--accent))", "hsl(var(--primary))", "#f59e0b", "#10b981", "#8b5cf6", "#ec4899",
+  "#6366f1", "#ec4899", "#f59e0b", "#10b981", "#8b5cf6", "#06b6d4", "#f97316", "#84cc16", "#3b82f6", "#ef4444",
 ];
 const DIMENSION_ICONS: Record<string, typeof BookOpen> = {
   producao: BookOpen, formacao: GraduationCap, impacto: TrendingUp,
