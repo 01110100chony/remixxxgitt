@@ -46,13 +46,13 @@ const tooltipStyle = {
   fontSize: "13px",
 };
 
-const TYPE_COLORS = ["hsl(var(--accent))", "hsl(var(--primary))", "#f59e0b", "#8b5cf6", "#10b981"];
+const TYPE_COLORS = ["#6366f1", "#ec4899", "#f59e0b", "#8b5cf6", "#10b981", "#06b6d4", "#f97316"];
 
 const SNIP_BUCKETS = [
   { key: "<0.5", min: -Infinity, max: 0.5, color: "#ef4444" },
   { key: "0.5–1", min: 0.5, max: 1, color: "#f59e0b" },
   { key: "1–2", min: 1, max: 2, color: "#10b981" },
-  { key: ">2", min: 2, max: Infinity, color: "hsl(var(--accent))" },
+  { key: ">2", min: 2, max: Infinity, color: "#6366f1" },
 ];
 
 function normalizeIssn(s: string | null | undefined): string {
@@ -388,7 +388,7 @@ const InstitutionalDashboard = ({ data }: Props) => {
                         <XAxis type="number" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} />
                         <YAxis type="category" dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} width={120} />
                         <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => v.toFixed(2)} />
-                        <Bar dataKey="avg" name="SNIP médio" fill="hsl(var(--accent))" radius={[0, 3, 3, 0]} />
+                        <Bar dataKey="avg" name="SNIP médio" fill="#6366f1" radius={[0, 3, 3, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -413,7 +413,7 @@ const InstitutionalDashboard = ({ data }: Props) => {
                   <XAxis dataKey="year" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
                   <YAxis allowDecimals={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
                   <Tooltip contentStyle={tooltipStyle} />
-                  <Bar dataKey="count" name="Produções" fill="hsl(var(--accent))" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="count" name="Produções" fill="#6366f1" radius={[3, 3, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             )}

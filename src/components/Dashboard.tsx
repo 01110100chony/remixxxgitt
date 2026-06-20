@@ -17,13 +17,13 @@ interface DashboardProps {
 }
 
 const COLORS = [
-  "hsl(var(--accent))", "hsl(var(--primary))", "#f59e0b", "#10b981",
-  "#8b5cf6", "#ec4899", "#06b6d4", "#f97316", "#84cc16", "#ef4444",
+  "#6366f1", "#ec4899", "#f59e0b", "#10b981",
+  "#8b5cf6", "#06b6d4", "#f97316", "#84cc16", "#3b82f6", "#ef4444",
 ];
 
 const GENDER_COLORS: Record<string, string> = {
-  Homem: "hsl(var(--primary))",
-  Mulher: "hsl(var(--accent))",
+  Homem: "#3b82f6",
+  Mulher: "#ec4899",
   "Não informado": "hsl(var(--muted-foreground))",
 };
 
@@ -86,15 +86,15 @@ const Dashboard = ({ data }: DashboardProps) => {
       {/* KPIs row 1 */}
       <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
         {[
-          { label: "Produções", value: allProductions.length, icon: BookOpen },
-          { label: "Pesquisadores", value: researchers.length, icon: Users },
-          { label: "Orientações", value: allOrientations.length, icon: GraduationCap },
-          { label: "Projetos", value: allProjects.length, icon: FolderKanban },
-          { label: "Parcerias", value: institutions.length, icon: Handshake },
-          { label: "Financiadores", value: funders.length, icon: Landmark },
-        ].map(({ label, value, icon: Icon }) => (
+          { label: "Produções", value: allProductions.length, icon: BookOpen, color: "#6366f1" },
+          { label: "Pesquisadores", value: researchers.length, icon: Users, color: "#ec4899" },
+          { label: "Orientações", value: allOrientations.length, icon: GraduationCap, color: "#10b981" },
+          { label: "Projetos", value: allProjects.length, icon: FolderKanban, color: "#f59e0b" },
+          { label: "Parcerias", value: institutions.length, icon: Handshake, color: "#8b5cf6" },
+          { label: "Financiadores", value: funders.length, icon: Landmark, color: "#06b6d4" },
+        ].map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="rounded-lg border bg-card p-4 text-center">
-            <Icon className="h-4 w-4 text-accent mx-auto mb-1.5" />
+            <Icon className="h-4 w-4 mx-auto mb-1.5" style={{ color }} />
             <div className="text-2xl font-bold text-foreground">{value}</div>
             <div className="text-xs text-muted-foreground">{label}</div>
           </div>
@@ -102,28 +102,28 @@ const Dashboard = ({ data }: DashboardProps) => {
       </div>
 
       {/* Quadriênio highlight */}
-      <div className="rounded-lg border border-accent/30 bg-accent/5 p-5">
+      <div className="rounded-lg border p-5" style={{ borderColor: "#6366f155", backgroundColor: "#6366f10d" }}>
         <div className="flex items-center gap-2 mb-3">
-          <Star className="h-4 w-4 text-accent" />
+          <Star className="h-4 w-4" style={{ color: "#6366f1" }} />
           <span className="text-sm font-semibold text-foreground">Quadriênio {qStart}–{qEnd}</span>
         </div>
         <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
           <div className="text-center">
-            <div className="text-2xl font-bold text-accent">{qProductions.length}</div>
+            <div className="text-2xl font-bold" style={{ color: "#6366f1" }}>{qProductions.length}</div>
             <div className="text-xs text-muted-foreground">Produções</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-accent">
+            <div className="text-2xl font-bold" style={{ color: "#ec4899" }}>
               {allProductions.length > 0 ? ((qProductions.length / allProductions.length) * 100).toFixed(0) : 0}%
             </div>
             <div className="text-xs text-muted-foreground">do total</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-accent">{fundedProjects.length}</div>
+            <div className="text-2xl font-bold" style={{ color: "#10b981" }}>{fundedProjects.length}</div>
             <div className="text-xs text-muted-foreground">Projetos financiados</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-accent">
+            <div className="text-2xl font-bold" style={{ color: "#f59e0b" }}>
               {researchers.length > 0 ? (qProductions.length / researchers.length).toFixed(1) : 0}
             </div>
             <div className="text-xs text-muted-foreground">Média / docente</div>
@@ -145,7 +145,7 @@ const Dashboard = ({ data }: DashboardProps) => {
                 <XAxis dataKey="year" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} tickLine={false} />
                 <YAxis allowDecimals={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} tickLine={false} />
                 <Tooltip contentStyle={tooltipStyle} />
-                <Bar dataKey="count" name="Produções" fill="hsl(var(--accent))" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="count" name="Produções" fill="#6366f1" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
