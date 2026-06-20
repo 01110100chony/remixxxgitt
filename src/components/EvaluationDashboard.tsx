@@ -275,7 +275,7 @@ const EvaluationDashboard = ({ data }: Props) => {
                     <PolarGrid stroke="hsl(var(--border))" />
                     <PolarAngleAxis dataKey="dimension" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
                     <PolarRadiusAxis angle={30} domain={[0, 10]} tick={{ fontSize: 10 }} />
-                    <Radar name="Score" dataKey="score" stroke="hsl(var(--accent))" fill="hsl(var(--accent))" fillOpacity={0.3} />
+                    <Radar name="Score" dataKey="score" stroke="#6366f1" fill="#6366f1" fillOpacity={0.3} />
                   </RadarChart>
                 </ResponsiveContainer>
               </div>
@@ -313,7 +313,7 @@ const EvaluationDashboard = ({ data }: Props) => {
                     <XAxis dataKey="year" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} />
                     <YAxis allowDecimals={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} />
                     <Tooltip contentStyle={tooltipStyle} />
-                    <Line type="monotone" dataKey="count" name="Artigos" stroke="hsl(var(--accent))" strokeWidth={2} dot={{ r: 3 }} />
+                    <Line type="monotone" dataKey="count" name="Artigos" stroke="#6366f1" strokeWidth={2} dot={{ r: 3 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -344,7 +344,7 @@ const EvaluationDashboard = ({ data }: Props) => {
                     <YAxis dataKey="name" type="category" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} width={75} />
                     <Tooltip contentStyle={tooltipStyle} />
                     <Legend />
-                    <Bar dataKey="artigos" name="Artigos" fill="hsl(var(--accent))" radius={[0, 3, 3, 0]} />
+                    <Bar dataKey="artigos" name="Artigos" fill="#6366f1" radius={[0, 3, 3, 0]} />
                     <Bar dataKey="orientacoes" name="Orientações" fill="hsl(var(--primary))" radius={[0, 3, 3, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -482,7 +482,7 @@ const EvaluationDashboard = ({ data }: Props) => {
                     <PolarGrid stroke="hsl(var(--border))" />
                     <PolarAngleAxis dataKey="dimension" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
                     <PolarRadiusAxis angle={30} domain={[0, 5]} tick={{ fontSize: 10 }} />
-                    <Radar name="Score" dataKey="score" stroke="hsl(var(--accent))" fill="hsl(var(--accent))" fillOpacity={0.3} />
+                    <Radar name="Score" dataKey="score" stroke="#6366f1" fill="#6366f1" fillOpacity={0.3} />
                   </RadarChart>
                 </ResponsiveContainer>
               </div>
@@ -573,7 +573,7 @@ const EvaluationDashboard = ({ data }: Props) => {
                     <XAxis dataKey="year" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} />
                     <YAxis allowDecimals={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} />
                     <Tooltip contentStyle={tooltipStyle} />
-                    <Line type="monotone" dataKey="count" name="Artigos" stroke="hsl(var(--accent))" strokeWidth={2} dot={{ r: 3 }} />
+                    <Line type="monotone" dataKey="count" name="Artigos" stroke="#6366f1" strokeWidth={2} dot={{ r: 3 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>

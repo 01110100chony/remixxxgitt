@@ -388,7 +388,7 @@ const InstitutionalDashboard = ({ data }: Props) => {
                         <XAxis type="number" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} />
                         <YAxis type="category" dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} width={120} />
                         <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => v.toFixed(2)} />
-                        <Bar dataKey="avg" name="SNIP médio" fill="hsl(var(--accent))" radius={[0, 3, 3, 0]} />
+                        <Bar dataKey="avg" name="SNIP médio" fill="#6366f1" radius={[0, 3, 3, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -413,7 +413,7 @@ const InstitutionalDashboard = ({ data }: Props) => {
                   <XAxis dataKey="year" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
                   <YAxis allowDecimals={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
                   <Tooltip contentStyle={tooltipStyle} />
-                  <Bar dataKey="count" name="Produções" fill="hsl(var(--accent))" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="count" name="Produções" fill="#6366f1" radius={[3, 3, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             )}
