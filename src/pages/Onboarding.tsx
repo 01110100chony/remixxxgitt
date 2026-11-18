@@ -222,7 +222,7 @@ const Onboarding = () => {
         <div className="container flex items-center gap-3 py-4">
           <BookOpen className="h-7 w-7 text-accent" />
           <h1 className="text-2xl font-bold text-foreground tracking-tight">
-            Lattes <span className="text-accent">Reader</span>
+            PPG<span className="text-accent">360</span>
           </h1>
           <Button variant="ghost" size="sm" className="ml-auto" onClick={() => navigate("/")}>
             Ir ao painel

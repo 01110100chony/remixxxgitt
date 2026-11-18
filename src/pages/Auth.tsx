@@ -89,7 +89,7 @@ const Auth = () => {
           <div className="flex items-center justify-center gap-2">
             <BookOpen className="h-8 w-8 text-accent" />
             <h1 className="text-3xl font-bold text-foreground tracking-tight">
-              Lattes <span className="text-accent">Reader</span>
+              PPG<span className="text-accent">360</span>
             </h1>
           </div>
           <p className="text-muted-foreground text-sm">Plataforma de análise de PPG</p>
