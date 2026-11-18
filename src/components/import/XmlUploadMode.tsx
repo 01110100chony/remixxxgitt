@@ -1,3 +1,4 @@
+import { decodeLattesXml } from "@/lib/decode-xml";
 import { Upload, FileText, Search, CheckCircle2, XCircle, AlertTriangle, Loader2, ExternalLink, Users } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -49,7 +50,7 @@ const XmlUploadMode = ({ onFilesLoad, loadedFiles, programId, researchers: exist
       const results = await Promise.all(
         xmlFiles.map(async (file) => {
           const buffer = await file.arrayBuffer();
-          const text = new TextDecoder("iso-8859-1").decode(buffer);
+          const text = decodeLattesXml(buffer);
           return { name: file.name, content: text };
         })
       );

@@ -1,0 +1,2 @@
+- [x] Testar fluxo completo com conta de teste
+- [x] Criar XML Lattes sintético

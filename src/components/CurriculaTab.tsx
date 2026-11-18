@@ -1,3 +1,4 @@
+import { decodeLattesXml } from "@/lib/decode-xml";
 import { useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -93,7 +94,7 @@ const CurriculaTab = ({ researchers, programId, onRefresh }: Props) => {
     setProcessing({ researcherId: targetId, global: false, current: 1, total: 1, currentName: target.name });
     try {
       const buffer = await file.arrayBuffer();
-      const xmlContent = new TextDecoder("iso-8859-1").decode(buffer);
+      const xmlContent = decodeLattesXml(buffer);
       const result = await syncLattesXml({
         programId,
         userId: user?.id,
