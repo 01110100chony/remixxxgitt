@@ -1,1 +1,0 @@
-ALTER TABLE public.qualis_reference ADD COLUMN IF NOT EXISTS journal text;
